@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block body %}
+<!--header and nav -->
+<div id="visualisation">
+	<div class="row">
+		<div class="large-12 columns">
+			<ul class="pagination right">
+				<li><a href="/">Web browsing</a></li>
+				<li class="current"><a href="#">Device details</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="row">
+		<div class="large-12 columns">
+			<dl class="sub-nav right" data-bind="foreach:hosts">
+				<dd data-bind="click:function(){$parent.selectnewhost($data)}, css:{active:$parent.amselectedhost($data)}"><a href="#" data-bind="text:$data"></a></dd>
+			</dl>
+		</div>
+	</div>
+	<div class="row">
+		<div class="large-12 columns">
+			<dl class="sub-nav" data-bind="foreach:categories">
+				<dd data-bind="click:function(){$parent.selectnewcategory($data)}, css:{active:$parent.amselectedcategory($data)}"><a href="#" data-bind="text:$data"></a></dd>
+			</dl>
+		</div>
+	</div>
+  	<div class="row">
+  		
+  		<h3 data-bind="text:selectedcategory"></h3>
+  		<div data-bind="if: selectedcategory()=='processes'">
+  			<div class=row">
+  				<div class="small-12 columns">
+  					<dl class="sub-nav" data-bind="foreach:alphabet">
+						<dd data-bind="click:function(){$parent.selectnewletter($data)}, css:{active:$parent.amselectedletter($data)}"><a href="#" data-bind="text:$data"></a></dd>
+					</dl>
+					<hr>
+  					<!--<ul class="button-group" data-bind="foreach:alphabet">
+  						<li><a href="#" class="button tiny" data-bind="text:$data, click:function(){$parent.selectnewletter($data)}"></a></li>
+  					</ul>-->
+  				</div>
+  			</div>
+  			<div class="row">
+				<div class="large-6 columns">
+					<ul class="button-group" data-bind="foreach:filteredprocesses">
+						<li><a href="#" class="button tiny success" data-bind="text:$data, click:function(){$parent.selectnewprocess($data)}"></a></li>
+					</ul>
+				</div>
+				<div class="large-6 columns">
+					<h3 data-bind="text:selectedprocess"></h3>
+					<div id="devicegraph" class="renderdev"></div> 
+				</div>	
+			</div>
+		</div>
+		
+	</div> <!-- end of row-->
+</div>	<!-- end of viz -->
+<script data-main="{{url_for('static', filename='js/devices.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
+{% endblock %}

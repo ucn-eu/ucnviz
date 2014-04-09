@@ -1,0 +1,78 @@
+ html, body {
+	 width: 100%;
+	 height: 100%;
+	 margin: 0;
+	 padding-top: 20px;
+ }
+ 
+.stations, .stations svg {
+	 position: absolute;
+}
+
+.stations svg {
+	 width: 60px;
+	 height: 20px;
+	 padding-right: 100px;
+	 font: 10px sans-serif;
+}
+
+.stations circle {
+	 fill: brown;
+	 stroke: black;
+	 stroke-width: 1.5px;
+}
+ 
+
+path { 
+	stroke: steelblue;
+	stroke-width: 2;
+	fill: none;
+}            
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: grey;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+
+.brush .extent {
+	stroke: #fff;
+	fill-opacity: .125;
+	shape-rendering: crispEdges;
+}		    
+.loader {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: rgba(255,255,255,0.8);
+	text-align: center;
+	z-index: 99;
+	display: none;
+}
+.loader p {
+	margin-top: 180px;
+}
+
+.render {
+	height: 400px;
+	width: 630px;
+}
+
+.activityrender {
+	height: 200px;
+	width: 630px;
+}
+
+.renderdev {
+	height: 400px;
+	width: 450px;
+}
+
+.flotr-axis-title .flotr-axis-title-y1{
+	-moz-transform:rotate(-90deg) translate(-64px, -45px);
+}
+
