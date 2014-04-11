@@ -30,8 +30,8 @@ require.config({
 require(['webgraph2', 'knockout', 'ajaxservice', 'modernizr', 'foundation'], function(webgraph2, ko, ajaxservice) {
     //graph.init();
     //webgraph.init();
-    ajaxservice.ajaxGetJson('hosts', {}, function(data){
-		webgraph2.init(data.hosts);
+    ajaxservice.ajaxGetJson('bootstrap', {}, function(data){
+		webgraph2.init(data.hosts, data.tags);
 		ko.applyBindings(webgraph2, $("#visualisation")[0]);
 	});
 });

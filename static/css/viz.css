@@ -64,12 +64,19 @@ path {
 
 .activityrender {
 	height: 200px;
-	width: 630px;
+	width: 520px;
 }
 
 .renderdev {
 	height: 400px;
 	width: 450px;
+}
+
+p{
+	
+	font-size: 11px;
+	line-height: 2;
+	margin: 0;
 }
 
 .flotr-axis-title .flotr-axis-title-y1{

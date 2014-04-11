@@ -213,6 +213,13 @@ class NetDB( object ):
 		result = self.conn.execute(sql)
 		activity = [{"tag":row[0], "ts":row[1]} for row in result]
 		return activity
+	
+	def fetch_tags(self):
+		sql = "SELECT tag FROM TAG"
+		result = self.conn.execute(sql)
+		tags = [row[0] for row in result]
+		tags.sort()
+		return tags
 		
 	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
 		timerange = ""
@@ -246,7 +253,11 @@ class NetDB( object ):
 		print "inserting %s %s %s" % (host,domain,tag)
 		self.conn.execute("INSERT INTO TAGS(host,domain,tag) VALUES (?,?,?)", (host,domain,tag))
 		self.conn.commit()
-		
+	
+	def insert_tag(self,tag):
+		self.conn.execute("INSERT INTO TAG(tag) VALUES('%s')" % tag)
+		self.conn.commit()
+	
 	def insert_process(self, process):
 		if self.connected is not True:
 			self.connect()
@@ -297,8 +308,11 @@ class NetDB( object ):
 			(host CHAR(16),
 			domain CHAR(128),
 			tag  CHAR(128),
-			UNIQUE(host, domain, tag) ON CONFLICT REPLACE);''')		
+			UNIQUE(host, domain) ON CONFLICT REPLACE);''')		
 		
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS TAG
+			(tag CHAR(128) PRIMARY KEY);''')
+			
 		log.debug("created tables successfully!")
 		
 	

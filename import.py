@@ -9,8 +9,6 @@ import time
 
 def read(type, datafile=None):
 
-	
-	
 	if type == "urls":
 		insert_urls(datafile)
 		
@@ -19,6 +17,13 @@ def read(type, datafile=None):
 		
 	if type == "iphone_processes":
 		insert_iphone_processes(datafile)
+	
+	if type=="tags":
+		insert_tags(["research", "work", "gaming", "finance", "family", "video streaming", "shopping", "health", "social", "hobby", "news", "entertainment"])
+
+def insert_tags(tags):
+	for tag in tags:
+		netdb.insert_tag(tag)
 		
 def insert_iphone_processes(datafile):
 	datafiles = [f for f in listdir(datafile) if isdir(join(datafile,f))]
@@ -86,17 +91,28 @@ if __name__ == '__main__' :
 	#add ch to logger
 	logger.addHandler(ch)
 	
+# 	if len(sys.argv) == 3
+# 		if sys.argv[1] == "createTables":
+# 			netdb = NetDB(name=sys.argv[2])
+# 			netdb.createTables()
+# 		exit(1)
 	
-	if len(sys.argv) < 4:
-		print "python import.py type dbname datafile"
+	if len(sys.argv) < 3:
+		print "python import.py type dbname [datafile]"
 		exit(1)
+	
+	
 	
 	type 	= sys.argv[1]
 	dbname 	= sys.argv[2]
-	datafile = sys.argv[3]
+	datafile = None
+	
+	if len(sys.argv) == 4:
+		datafile = sys.argv[3] 
 	
 	netdb = NetDB(name=dbname)
 	netdb.createTables()
+	
 	read(type, datafile) 
 
 	

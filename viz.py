@@ -76,11 +76,12 @@ def summary():
 	print queries
 	return jsonify(summary=summary, zones=zones, top=top, queries=queries)
 
-@app.route("/hosts")
+@app.route("/bootstrap")
 def hosts():
 	netDB.connect()
- 	hosts = netDB.fetch_hosts("10.8.0")
-	return jsonify(hosts=hosts)
+	hosts = netDB.fetch_hosts("10.8.0")
+	tags  = netDB.fetch_tags()
+	return jsonify(hosts=hosts, tags=tags)
 	
 @app.route("/queries")
 def queries():

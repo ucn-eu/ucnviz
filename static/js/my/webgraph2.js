@@ -5,8 +5,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		barwidths = [60*60*24*1000,60*60*1000,60*1000],
 		
 		barmultiplier 	= [12*60*60*1000, 30*60*1000, 30*1000],
-		
-		defaulttags		= ["research", "work", "gaming", "finance", "family", "video streaming", "shopping", "health", "social", "hobby", "news", "entertainment"];
 				
 		ctype	 = "browsing",
 			
@@ -22,11 +20,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		topsites = ko.observableArray([]),
 		
-		tags	 = ko.observableArray(defaulttags),
+		tags	 = ko.observableArray([]),
 		
 		chosentag = ko.observable(""),
-		
-		
 		
 		urlsfortagging = ko.observableArray([]),
 		
@@ -80,9 +76,11 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			ajaxservice.ajaxGetJson('summary', parameters[depth()], renderroot);
 		},
 		
-		init = function(hlist){
+		init = function(hlist,taglist){
 			
 			hosts(hlist);
+			tags(taglist);
+			
 			selectedhost(hosts()[0]);
 		
 			parameters[0] = {host: selectedhost(), bin:60*60*24};
@@ -312,35 +310,31 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			activity = data.activity;			
 			readings = [];
 				
-			
-    
     		start 	= Number.MAX_VALUE;
 			end 	= 0;
     		data 	= [];
     		readings = [];
     		
-    		for (i = 0; i < defaulttags.length; i++){
+    		for (i = 0; i < tags().length; i++){
     			readings[i] = [];
     		}
+    		
+    		console.log(tags());
     		
 			for(i = 0; i < activity.length; i++){
 				start = Math.min(start, activity[i].ts);
 				end = Math.max(end, activity[i].ts);
-				readings[defaulttags.indexOf(activity[i].tag)].push([activity[i].ts*1000, defaulttags.indexOf(activity[i].tag), 1000]);
+				readings[tags().indexOf(activity[i].tag)].push([activity[i].ts*1000, tags().indexOf(activity[i].tag)-0.5, 1000]);
 			}
 			
 			Flotr._.each(readings, function(d){
+				
 				data.push({
 					data:d,
 					timeline:Flotr._.clone(timeline)
 				});
 			});
 			
-			yticks = [];
-			
-			for (i = 0; i < defaulttags.length; i++){
-				yticks[i] = [i,defaulttags[i]];
-			}
 			options = {
 				  xaxis : {
 					mode : 'time',
@@ -350,19 +344,28 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					showLabels : false
 				  },
 				  yaxis : {
-				  	ticks: yticks,
-					showLabels: activity.length > 1,
-					/*min : 0,
-					/*max : row,
+					min: -1,
+					max:tags().length-1,
 					showLabels : false,
-					/*noTicks: row,*/
+					noTicks:tags().length-1,
 				  },
 				  selection : {
 					mode : 'x'
 				  }
 			};
 			
+			$(container).height((tags().length+1) * 20);
+			
+			key = document.getElementById("activitykey");
+			
 			Flotr.draw(container, data, options);
+			
+			$('#activitykey p').remove();
+			
+			_.each(tags().reverse(),function(val,k) {
+      			$(key).append('<p>'+val+'</p>');
+    		});
+    
 		},
 		
 		/* 
@@ -470,6 +473,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		urlsfortagging:urlsfortagging,
 		chosenurlstotag:chosenurlstotag,
 		shouldshowtags:shouldshowtags,
-		tagurls:tagurls
+		tagurls:tagurls,
+		tags: tags,
+		chosentag: chosentag,
 	}
 });
