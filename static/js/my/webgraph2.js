@@ -28,6 +28,16 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		chosenurlstotag	= ko.observableArray([]),
 		
+		newtag			= ko.observable(""),
+		
+		tagadded = function(){	
+			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
+		},
+		
+		addtag 	= function(){
+			ajaxservice.ajaxGetJson('addtag', {tag:newtag()}, tagadded);
+		},
+		
 		shouldshowtags = ko.computed(function(){
 			return urlsfortagging().length > 0;
 		});
@@ -307,7 +317,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			container = document.getElementById("activitygraph");
 			timeline  = { show : true, barWidth : .8 };
 			 
-			activity = data.activity;			
+			activity = data.activity;	
+			tags(data.tags);		
 			readings = [];
 				
     		start 	= Number.MAX_VALUE;
@@ -476,5 +487,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		tagurls:tagurls,
 		tags: tags,
 		chosentag: chosentag,
+		newtag: newtag,
+		addtag: addtag,
 	}
 });

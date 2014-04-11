@@ -1,7 +1,7 @@
 define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime'], function($,ajaxservice,ko,moment){
 	
 	var
-		categories = ko.observableArray(["processes", "data"]),
+		categories = ko.observableArray(["processes"]),
 		
 		alphabet = "abcdefghijklmnopqrstuvwxyz".split(''),
 		

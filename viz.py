@@ -146,6 +146,13 @@ def tagurls():
 		
 	return jsonify(success=True)
 
+@app.route("/addtag")
+def addtag():
+	tag	 = request.args.get('tag')
+	netDB.connect()
+	netDB.insert_tag(tag)
+	return jsonify(success=True)
+	
 @app.route("/activity")
 def activity():
 	host 	= request.args.get('host')
@@ -153,7 +160,8 @@ def activity():
  	tots	= request.args.get('tots') or None
  	netDB.connect()
 	activity = netDB.fetch_tags_for_host(host,fromts,tots)
-	return jsonify(activity=activity)
+	tags  = netDB.fetch_tags()
+	return jsonify(activity=activity, tags=tags)
 	
 @app.route("/range")
 def range():
