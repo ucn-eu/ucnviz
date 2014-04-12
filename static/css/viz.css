@@ -59,12 +59,14 @@ path {
 
 .render {
 	height: 400px;
-	width: 630px;
 }
 
 .activityrender {
-	height: 200px;
 	width: 520px;
+}
+
+.key{
+	
 }
 
 .renderdev {
@@ -73,9 +75,7 @@ path {
 }
 
 p{
-	
 	font-size: 11px;
-	line-height: 1.95;
 	margin: 0;
 }
 

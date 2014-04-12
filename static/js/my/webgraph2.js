@@ -30,6 +30,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		newtag			= ko.observable(""),
 		
+		depth = ko.observable(0),
+		
 		tagadded = function(){	
 			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
 		},
@@ -40,6 +42,22 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		shouldshowtags = ko.computed(function(){
 			return urlsfortagging().length > 0;
+		});
+		
+		squidclass = ko.computed(function(){
+			if (depth() == 3){
+				return "columns small-9";
+			}else{
+				return "columns small-12";
+			}
+		});
+		
+		squidgraphstyle = ko.computed(function(){
+			if (depth() == 3){
+				return "width: 630px;";
+			}else{
+				return "width: 530px;";
+			}
 		});
 		
 		selectedhost = ko.observable(),
@@ -79,7 +97,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		 
 		colorindex = 0,
 		
-		depth = ko.observable(0),
+		
 		
 		clickcallback = function(){
 			depth(depth() - 1);
@@ -183,7 +201,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		renderroot = function(data){
-			
+			placeholder.height(400);
 			ctype	 = "browsing";
 			
 			var 
@@ -319,7 +337,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			 
 			activity = data.activity;	
 			tags(data.tags);		
-			readings = [];
 				
     		start 	= Number.MAX_VALUE;
 			end 	= 0;
@@ -331,7 +348,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
     		}
     		
     		console.log(tags());
-    		
+    		console.log(readings);
 			for(i = 0; i < activity.length; i++){
 				start = Math.min(start, activity[i].ts);
 				end = Math.max(end, activity[i].ts);
@@ -374,15 +391,91 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			$('#activitykey p').remove();
 			
 			_.each(tags().reverse(),function(val,k) {
-      			$(key).append('<p>'+val+'</p>');
+      			$(key).append('<p style="height:' + (tags().length+1)/20 + 'px;">'+val+'</p>');
     		});
     
 		},
 		
+		
+		renderzoom = function(from,netdata){
+			
+			ctype	 = "zoom";
+			container = document.getElementById("squidgraph");
+			traffic = netdata.traffic;			
+			labels = [];
+			timeline = {
+            	show: true,
+            	barWidth: 0.5,
+        	};
+			
+			start 	= Number.MAX_VALUE;
+			end 	= 0;
+    		data 	= [];
+    		readings = [];
+    		
+			for(i = 0; i < traffic.length; i++){
+				start = Math.min(start, traffic[i].ts);
+				end = Math.max(end, traffic[i].ts);
+				idx = labels.indexOf(traffic[i].url);
+				
+				if (idx == -1){
+					labels.push(traffic[i].url);
+					readings.push([]);
+				}
+		
+				readings[labels.indexOf(traffic[i].url)].push([traffic[i].ts*1000, labels.indexOf(traffic[i].url)-0.5, 1000]);
+			}
+			
+			Flotr._.each(readings, function(d){
+				
+				data.push({
+					data:d,
+					timeline:Flotr._.clone(timeline)
+				});
+			});
+			
+			options = {
+				  xaxis : {
+					mode : 'time',
+					min: start * 1000,
+					max: end * 1000,
+					noTicks: 48,
+					showLabels : false
+				  },
+				  yaxis : {
+					min: -1,
+					max:readings.length-1,
+					showLabels : false,
+					noTicks:readings.length-1,
+				  },
+				  selection : {
+					mode : 'y'
+				  }
+			};
+			
+			$(container).height((readings.length+1) * 20);
+			
+			key = document.getElementById("zoomkey");
+			
+			Flotr.draw(container, data, options);
+			
+			$('#zoomkey p').remove();
+			
+			_.each(labels.reverse(),function(val,k) {
+      			$(key).append('<p style="height:' + ((labels.length+1)*20)/labels.length + 'px;">'+val+'</p>');
+    		});
+    
+			//incase already attached..
+			Flotr.EventAdapter.stopObserving(container, 'flotr:click', clickcallback);
+			
+			//and add
+			Flotr.EventAdapter.observe(container, 'flotr:click', clickcallback);  
+		}
+		
 		/* 
 		 * use different charting lib here (flotr) as renders gantt style charts better than flot
 		 */
-		renderzoom = function(from,netdata){
+		/*renderzoom = function(from,netdata){
 			
 			ctype	 = "zoom";
 				
@@ -400,9 +493,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
             	show: true,
             	barWidth: 0.5,
         	};
-			/* start point, id, len */
-			/* calculates the horizontal widths based on the difference between the ma and min start points
-			   means need at least one different start point, with big difference*/
+			// start point, id, len 
+			// calculates the horizontal widths based on the difference between the ma and min start points
+			//   means need at least one different start point, with big difference
 			
 			
 			for (i = 0; i < traffic.length; i++){
@@ -462,7 +555,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			//and add
 			Flotr.EventAdapter.observe(container, 'flotr:click', clickcallback);  
-		}
+		}*/
 		
 		
 	
@@ -489,5 +582,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		chosentag: chosentag,
 		newtag: newtag,
 		addtag: addtag,
+		depth:depth,
+		squidclass: squidclass,
+		squidgraphstyle: squidgraphstyle
 	}
 });
