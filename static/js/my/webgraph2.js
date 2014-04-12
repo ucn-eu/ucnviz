@@ -391,7 +391,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			$('#activitykey p').remove();
 			
 			_.each(tags().reverse(),function(val,k) {
-      			$(key).append('<p style="height:' + (tags().length+1)/20 + 'px;">'+val+'</p>');
+      			$(key).append('<p style="height:' + ((tags().length+1)*20)/tags().length + 'px;">'+val+'</p>');
     		});
     
 		},
