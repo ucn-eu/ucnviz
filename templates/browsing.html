@@ -49,15 +49,15 @@
 										<div class="small-12 columns">
 											<hr>
 											<h3>Tags <small> annotate your browsing </small></h3>
-											<div class="small-6 columns">
-												<select multiple style="height:150px;" data-bind="options:urlsfortagging, optionsText: function(item){return item.domain + '(' + item.requests + ')'}, selectedOptions:chosenurlstotag"></select>
+											<div class="small-7 columns">
+												<select multiple style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
 											</div>
-											<div class="small-6 columns">
+											<div class="small-5 columns">
 												<div class="row">
-													<div class="small-10 columns">
+													<div class="small-7 columns">
 														<select data-bind="options:tags, value:chosentag"></select>
 													</div>
-													<div class="small-2 columns">
+													<div class="small-5 columns">
 														<a href="#" data-bind="click:function(){tagurls()}" class="button tiny">TAG!</a>
 													</div>
 												</div>

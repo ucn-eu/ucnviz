@@ -181,10 +181,13 @@ class NetDB( object ):
 		if fromts and tots:
 			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
 		
-		sql = "SELECT DISTINCT(domain), COUNT(domain) as requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC" % (host,timerange)
+		sql = "SELECT DISTINCT(u.domain), COUNT(u.domain) as requests, t.tag FROM URLS u LEFT JOIN TAGS t ON u.domain = t.domain AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.domain ORDER BY requests DESC" % (host, timerange)
+		
+		print sql
+		#sql = "SELECT DISTINCT(domain), COUNT(domain) as requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC" % (host,timerange)
 		
 		result = self.conn.execute(sql)
-		urls = [{"domain":row[0], "requests":row[1]} for row in result]
+		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
 		
 		return urls
 	

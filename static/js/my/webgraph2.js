@@ -68,6 +68,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			depth(0);
 			selectedhost(host);
 			parameters[0] = {host: selectedhost(), bin:60*60*24};
+			urlsfortagging([]);
 			ajaxservice.ajaxGetJson('summary',parameters[0], renderroot);
 			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
 		},
@@ -181,12 +182,15 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		updatetagdata = function(data){
-			console.log(data.urls);
-			
 			urlsfortagging(data.urls);
-			/*for (i =0; i< data.urls.length; i++){
-				urlsfortagging.push(data.urls[i].domain);
-			}*/
+		},
+		
+		rendertagselectionitem = function(item){
+			tag = "";
+			if (item.tag)
+				tag = "| " + item.tag;
+				 
+			return item.domain + ' | ' + item.requests + tag;
 		},
 		
 		zoomoutvisible = ko.computed(function(){
@@ -340,9 +344,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		renderactivity = function(data){
 		
-			console.log("GOT THIS FOR CACTIVITY");
-			console.log(data);
-			
 			container = document.getElementById("activitygraph");
 			timeline  = { show : true, barWidth : .8 };
 			 
@@ -483,93 +484,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			Flotr.EventAdapter.observe(container, 'flotr:click', clickcallback); 
 			Flotr.EventAdapter.observe(container, 'flotr:select', selectcallback);  
 		}
-		
-		/* 
-		 * use different charting lib here (flotr) as renders gantt style charts better than flot
-		 */
-		/*renderzoom = function(from,netdata){
-			
-			ctype	 = "zoom";
-				
-			container = document.getElementById("squidgraph");
-			traffic = netdata.traffic;			
-			unitwidth = 5;
-			readings = [];
-			labels = [];
-			data = [];
-			id = 0;
-			markers = [];
-			yticks = [];
-			max = 30;
-			timeline = {
-            	show: true,
-            	barWidth: 0.5,
-        	};
-			// start point, id, len 
-			// calculates the horizontal widths based on the difference between the ma and min start points
-			//   means need at least one different start point, with big difference
-			
-			
-			for (i = 0; i < traffic.length; i++){
-				start = parseInt(traffic[i].ts) - from; 
-				idx = labels.indexOf(traffic[i].url);
-				if (idx == -1){
-					readings.push([[start*unitwidth,id++,unitwidth]]);
-					labels.push(traffic[i].url);
-				}else{
-					readings[idx].push([start*unitwidth,idx,unitwidth]);
-				} 
-			}
-				
-			// Timeline
-			Flotr._.each(readings.slice(0,max), function(d) {
-				data.push({
-					data: d,
-					timeline: Flotr._.clone(timeline)
-				});
-			});
-
-			// Markers
-			Flotr._.each(readings.slice(0,max), function(d) {
-				
-				point = d[0];
-				if (point)
-				markers.push([point[0], point[1]]);
-			});
-	
-			
-			for (i = 0; i < labels.length; i++){
-				yticks[i] = [i,labels[i]];
-			}
-		
-			graph = Flotr.draw(container, data, {
-				xaxis: {
-					noTicks: 10,
-					tickFormatter: function(x) {
-						return parseInt(x) / unitwidth;
-					}
-				},
-				yaxis: {
-            		ticks: yticks,
-					showLabels: true,
-				},
-				grid: {
-					horizontalLines: false,
-					minorVerticalLines: true
-				},
-				selection: {
-					mode: 'y'
-				},
-			});
-			
-			//incase already attached..
-			Flotr.EventAdapter.stopObserving(container, 'flotr:click', clickcallback);
-			
-			//and add
-			Flotr.EventAdapter.observe(container, 'flotr:click', clickcallback);  
-		}*/
-		
-		
 	
 	return{
 		init:init,
@@ -596,6 +510,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		addtag: addtag,
 		depth:depth,
 		squidclass: squidclass,
-		squidgraphstyle: squidgraphstyle
+		squidgraphstyle: squidgraphstyle,
+		rendertagselectionitem:rendertagselectionitem
 	}
 });
