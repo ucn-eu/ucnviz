@@ -252,6 +252,12 @@ class NetDB( object ):
 		requests = [row[0] for row in result]
 		return requests
 	
+	def fetch_netdata_for_host(self, host):
+		sql = "SELECT ts,wifiup,wifidown,cellup,celldown from NETDATA WHERE host = '%s' ORDER BY ts DESC" % (host)
+		result = self.conn.execute(sql)
+		netdata = [{"ts":row[0], "wifiup":row[1], "wifidown":row[2], "cellup":row[3], "celldown":row[4]} for row in result]
+		return netdata
+		
 	def insert_tag_for_host(self, host,domain,tag):
 		print "inserting %s %s %s" % (host,domain,tag)
 		self.conn.execute("INSERT INTO TAGS(host,domain,tag) VALUES (?,?,?)", (host,domain,tag))
@@ -261,6 +267,13 @@ class NetDB( object ):
 		self.conn.execute("INSERT INTO TAG(tag) VALUES('%s')" % tag)
 		self.conn.commit()
 	
+	def insert_network_data(self, netdata):
+		if self.connected is not True:
+			self.connect()
+		self.conn.execute("INSERT INTO NETDATA(ts, host, wifiup, wifidown,cellup,celldown) VALUES(?,?,?,?,?,?)", (netdata['ts'],netdata['host'], netdata['wifiup'], netdata['wifidown'],netdata['cellup'], netdata['celldown']))
+		self.conn.commit()
+		
+		
 	def insert_process(self, process):
 		if self.connected is not True:
 			self.connect()
@@ -307,6 +320,15 @@ class NetDB( object ):
 			starttime INTEGER,
 			UNIQUE(ts, name) ON CONFLICT IGNORE);''')
 		
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS NETDATA
+			(ts INTEGER,
+			host CHAR(16),
+			wifiup  INTEGER,
+			wifidown INTEGER,
+			cellup INTEGER,
+			celldown INTEGER,
+			UNIQUE(ts, host, wifiup, wifidown, cellup, celldown) ON CONFLICT IGNORE);''')
+			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS TAGS
 			(host CHAR(16),
 			domain CHAR(128),

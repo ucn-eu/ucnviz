@@ -18,13 +18,36 @@ def read(type, datafile=None):
 	if type == "iphone_processes":
 		insert_iphone_processes(datafile)
 	
+	if type == "iphone_data":
+		insert_iphone_data(datafile)
+		
 	if type=="tags":
 		insert_tags(["research", "work", "gaming", "finance", "family", "video streaming", "shopping", "health", "social", "hobby", "news", "entertainment"])
 
 def insert_tags(tags):
 	for tag in tags:
 		netdb.insert_tag(tag)
-		
+
+def insert_iphone_data(datafile):
+	datafiles = [f for f in listdir(datafile) if isdir(join(datafile,f))]
+	devicefiles = []
+
+	for device in datafiles:
+		devicedir = join(datafile,device)
+		devicefiles = [f for f in listdir(devicedir) if isfile(join(devicedir,f))]
+		for dev in devicefiles:
+			json_data=open(join(devicedir, dev))
+			dobj = datetime.strptime(dev.split(".")[0], '%d-%m-%y_%H:%M:%S')
+			ts = time.mktime(dobj.timetuple())
+			data = json.load(json_data)
+			
+			if isinstance(data, list) is False:
+				data = [data]
+				
+			for item in data:
+				netdata = item['network']
+				netdb.insert_network_data({'ts':ts, 'host':device, 'wifiup':netdata['wifiup'], 'wifidown':netdata['wifidown'], 'cellup':netdata['cellup'], 'celldown':netdata['celldown']})	
+	
 def insert_iphone_processes(datafile):
 	datafiles = [f for f in listdir(datafile) if isdir(join(datafile,f))]
 	devicefiles = []

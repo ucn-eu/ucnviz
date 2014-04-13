@@ -17,41 +17,38 @@
 			</dl>
 		</div>
 	</div>
-	<div class="row">
-		<div class="large-12 columns">
-			<dl class="sub-nav" data-bind="foreach:categories">
-				<dd data-bind="click:function(){$parent.selectnewcategory($data)}, css:{active:$parent.amselectedcategory($data)}"><a href="#" data-bind="text:$data"></a></dd>
-			</dl>
-		</div>
-	</div>
-  	<div class="row">
-  		
-  		<h3 data-bind="text:selectedcategory"></h3>
-  		<div data-bind="if: selectedcategory()=='processes'">
+	
+  	<div class="row">	
+  		<div>
+  			
   			<div class=row">
   				<div class="small-12 columns">
+  					<h3> Data usage <small> Mb </small></h3>
+  					<div id="netgraph" class="rendernetdata"></div>
+  				</div>
+  			</div>
+  		
+  			<div class=row">
+  				<div class="small-12 columns">
+  					<h3> Processes <small> running time </small></h3>
   					<dl class="sub-nav" data-bind="foreach:alphabet">
 						<dd data-bind="click:function(){$parent.selectnewletter($data)}, css:{active:$parent.amselectedletter($data)}"><a href="#" data-bind="text:$data"></a></dd>
 					</dl>
 					<hr>
-  					<!--<ul class="button-group" data-bind="foreach:alphabet">
-  						<li><a href="#" class="button tiny" data-bind="text:$data, click:function(){$parent.selectnewletter($data)}"></a></li>
-  					</ul>-->
   				</div>
   			</div>
   			<div class="row">
-				<div class="large-6 columns">
+				<div class="large-4 columns">
 					<ul class="button-group" data-bind="foreach:filteredprocesses">
 						<li><a href="#" class="button tiny success" data-bind="text:$data, click:function(){$parent.selectnewprocess($data)}"></a></li>
 					</ul>
 				</div>
-				<div class="large-6 columns">
+				<div class="large-8 columns">
 					<h3 data-bind="text:selectedprocess"></h3>
 					<div id="devicegraph" class="renderdev"></div> 
 				</div>	
 			</div>
-		</div>
-		
+		</div>		
 	</div> <!-- end of row-->
 </div>	<!-- end of viz -->
 <script data-main="{{url_for('static', filename='js/devices.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>

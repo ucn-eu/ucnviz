@@ -71,7 +71,12 @@ path {
 
 .renderdev {
 	height: 400px;
-	width: 450px;
+	width: 650px;
+}
+
+.rendernetdata{
+	height: 280px;
+	width: 800px;
 }
 
 #zoomkey{

@@ -107,8 +107,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		selectcallback = function(range,item){
-			console.log(item);
-			console.log(range);
 			fromts = parseInt(range.x1/1000);
 			tots   = parseInt(range.x2/1000);
 			ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
@@ -171,8 +169,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			for (i = 0; i < chosenurlstotag().length; i++)
 				domains.push(chosenurlstotag()[i].domain);
-			
-			console.log(domains);
 			
 			ajaxservice.ajaxGetJson('tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, urlstagged);	
 		},
@@ -359,8 +355,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
     			readings[i] = [];
     		}
     		
-    		console.log(tags());
-    		console.log(readings);
+    	
 			for(i = 0; i < activity.length; i++){
 				start = Math.min(start, activity[i].ts);
 				end = Math.max(end, activity[i].ts);

@@ -157,11 +157,18 @@ def addtag():
 def activity():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
- 	tots	= request.args.get('tots') or None
- 	netDB.connect()
+	tots	= request.args.get('tots') or None
+	netDB.connect()
 	activity = netDB.fetch_tags_for_host(host,fromts,tots)
 	tags  = netDB.fetch_tags()
 	return jsonify(activity=activity, tags=tags)
+
+@app.route("/netdata")
+def netdata():
+	host 	= request.args.get('host')
+	netDB.connect()
+	netdata =  netDB.fetch_netdata_for_host(host)
+	return jsonify(netdata=netdata)
 	
 @app.route("/range")
 def range():
