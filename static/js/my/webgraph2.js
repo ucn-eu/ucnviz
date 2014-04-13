@@ -46,7 +46,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		squidclass = ko.computed(function(){
 			if (depth() == 3){
-				return "columns small-9";
+				return "columns small-8";
 			}else{
 				return "columns small-12";
 			}
@@ -69,6 +69,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			selectedhost(host);
 			parameters[0] = {host: selectedhost(), bin:60*60*24};
 			ajaxservice.ajaxGetJson('summary',parameters[0], renderroot);
+			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
 		},
 		
 		toggleoverlay = function(){
@@ -104,6 +105,14 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			ajaxservice.ajaxGetJson('summary', parameters[depth()], renderroot);
 		},
 		
+		selectcallback = function(range,item){
+			console.log(item);
+			console.log(range);
+			fromts = parseInt(range.x1/1000);
+			tots   = parseInt(range.x2/1000);
+			ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
+		},
+		
 		init = function(hlist,taglist){
 			
 			hosts(hlist);
@@ -118,8 +127,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			placeholder.bind("plotselected", function(event,ranges){
 				selected = true;
-				console.log(ranges);
-				console.log(event);
 				fromts = parseInt(ranges.xaxis.from/1000);
 				tots   = parseInt(ranges.xaxis.to/1000);
 				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
@@ -332,6 +339,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		
 		renderactivity = function(data){
+		
+			console.log("GOT THIS FOR CACTIVITY");
+			console.log(data);
+			
 			container = document.getElementById("activitygraph");
 			timeline  = { show : true, barWidth : .8 };
 			 
@@ -449,7 +460,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					noTicks:readings.length-1,
 				  },
 				  selection : {
-					mode : 'y'
+					mode : 'x'
 				  }
 			};
 			
@@ -467,9 +478,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
     
 			//incase already attached..
 			Flotr.EventAdapter.stopObserving(container, 'flotr:click', clickcallback);
-			
+			Flotr.EventAdapter.stopObserving(container, 'flotr:select', selectcallback);
 			//and add
-			Flotr.EventAdapter.observe(container, 'flotr:click', clickcallback);  
+			Flotr.EventAdapter.observe(container, 'flotr:click', clickcallback); 
+			Flotr.EventAdapter.observe(container, 'flotr:select', selectcallback);  
 		}
 		
 		/* 

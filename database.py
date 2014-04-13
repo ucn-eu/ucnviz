@@ -209,7 +209,7 @@ class NetDB( object ):
 		if fromts and tots:
 			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
 			
-		sql = "SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE u.host='%s' %s AND t.domain = u.domain" % (host, timerange)
+		sql = "SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain" % (host, timerange)
 		result = self.conn.execute(sql)
 		activity = [{"tag":row[0], "ts":row[1]} for row in result]
 		return activity

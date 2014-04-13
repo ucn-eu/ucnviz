@@ -74,9 +74,14 @@ path {
 	width: 450px;
 }
 
+#zoomkey{
+	width: 200px;
+	overflow:hidden;
+}
 p{
 	font-size: 11px;
 	margin: 0;
+	overflow:hidden;
 }
 
 .flotr-axis-title .flotr-axis-title-y1{
