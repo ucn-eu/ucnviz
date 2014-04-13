@@ -1,4 +1,4 @@
-define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime', 'flotselection'], function($,ajaxservice,ko,moment){
+define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime', 'flotselection', 'flotsymbol'], function($,ajaxservice,ko,moment){
 	
 	var
 	
@@ -304,7 +304,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			subtitle(domain + " " + timerange);
 			
 			toplot = [
-				{data:pdata, points:{symbol:"circle"}}
+				{data:pdata, points:{symbol:"cross"}}
 			]
 			
 			var markings = [];
@@ -328,7 +328,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				series:{
 					points:{
 						show:true,
-						radius: 2
+						radius: 3
 					}
 				},
 				xaxis: { mode:"time"},

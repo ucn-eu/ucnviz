@@ -13,7 +13,8 @@ require.config({
 		  'flotr': '../flotr2/flotr2-amd',
 		  'flot': '../flot/jquery.flot',
 		  'flottime': '../flot/jquery.flot.time',
-		  'flotselection': '../flot/jquery.flot.selection.min'
+		  'flotselection': '../flot/jquery.flot.selection.min',
+		  'flotsymbol': '../flot/jquery.flot.symbol.min'
         },
         
         shim: {
@@ -22,7 +23,8 @@ require.config({
         	"gmaps"      : ["jquery"],
         	"flot"		 : ["jquery"],
         	"flottime"	 : ["flot"],
-        	"flotselection": ["flot"]
+        	"flotselection": ["flot"],
+        	"flotsymbol": ["flot"]
     	}
 })
 
