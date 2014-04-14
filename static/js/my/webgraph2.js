@@ -10,6 +10,12 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 		subtitle = ko.observable(""),
 		
+		tagtoview = ko.observable(),
+		
+		showtag   = ko.observable(false),
+		
+		domainsfortag = ko.observableArray([]),
+		
 		queries	 = ko.observableArray([]),
 		
 		overlay	 = ko.observable(false),
@@ -21,6 +27,18 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		topsites = ko.observableArray([]),
 		
 		tags	 = ko.observableArray([]),
+		
+		reversedtags = ko.computed(function(){
+			reversed = [];
+			for (i = tags().length-1; i >=0; i--){ 
+				reversed.push(tags()[i]);
+			}
+			return reversed;
+		}),
+		
+		tagheight = ko.computed(function(){
+			return ((tags().length+1)*20)/tags().length + "px"
+		}),
 		
 		chosentag = ko.observable(""),
 		
@@ -129,8 +147,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			placeholder.bind("plotselected", function(event,ranges){
 				selected = true;
-				fromts = parseInt(ranges.xaxis.from/1000);
-				tots   = parseInt(ranges.xaxis.to/1000);
+				fromts = parseInt((ranges.xaxis.from + barmultiplier[depth()])/1000);
+				tots   = parseInt((ranges.xaxis.to + barmultiplier[depth()]) /1000);
 				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 				setTimeout(function(){selected=false},100);
@@ -180,6 +198,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		urlstagged = function(data){
 			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
 			ajaxservice.ajaxGetJson('urlsfortagging',tagparameters[0], updatetagdata);
+			ajaxservice.ajaxGetJson('urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
 		},
 		
 		updatetagdata = function(data){
@@ -192,6 +211,18 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				tag = "| " + item.tag;
 				 
 			return item.domain + ' | ' + item.requests + tag;
+		},
+		
+		removetag = function(tag){
+			console.log("would remove tag" + tag);
+			ajaxservice.ajaxGetJson('removetag',{host: selectedhost(), tag:tag}, tagremoved);
+		},
+		
+		tagremoved = function(data){
+			//reload dependent data
+			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('urlsfortagging',tagparameters[0], updatetagdata);
+			ajaxservice.ajaxGetJson('urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
 		},
 		
 		zoomoutvisible = ko.computed(function(){
@@ -274,6 +305,16 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		requestsfordomain = function(adomain){
 			parameters[depth()]['domain'] = adomain;
 			ajaxservice.ajaxGetJson('domainsummary',parameters[depth()], curry(renderdomain,adomain));
+		},
+		
+		getdomainsfortag	 = function(tag){
+			tagtoview(tag);
+			showtag(true);
+			ajaxservice.ajaxGetJson('urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
+		},
+		
+		updatedomainsfortag = function(data){
+			domainsfortag(data.urls);
 		},
 		
 		renderdomain = function(domain,data){
@@ -396,15 +437,15 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			$(container).height((tags().length+1) * 20);
 			
-			key = document.getElementById("activitykey");
+			//key = document.getElementById("activitykey");
 			
 			Flotr.draw(container, data, options);
 			
-			$('#activitykey p').remove();
+			//$('#activitykey p').remove();
 			
-			_.each(tags().reverse(),function(val,k) {
-      			$(key).append('<p style="height:' + ((tags().length+1)*20)/tags().length + 'px;">'+val+'</p>');
-    		});
+			//_.each(tags().reverse(),function(val,k) {
+      		//	$(key).append('<p style="height:' + ((tags().length+1)*20)/tags().length + 'px;"><a href="#">'+val+'</a></p>');
+    		//});
     
 		},
 		
@@ -505,9 +546,17 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		shouldshowtags:shouldshowtags,
 		tagurls:tagurls,
 		tags: tags,
+		tagheight: tagheight,
+		reversedtags:reversedtags,
 		chosentag: chosentag,
 		newtag: newtag,
 		addtag: addtag,
+		getdomainsfortag: getdomainsfortag,
+		domainsfortag:domainsfortag,
+		tagtoview: tagtoview,
+		showtag:showtag,
+		removetag: removetag,
+		
 		depth:depth,
 		squidclass: squidclass,
 		squidgraphstyle: squidgraphstyle,

@@ -175,6 +175,14 @@ class NetDB( object ):
 
 		return urls
 	
+	def fetch_urls_for_tag(self, host, tag):
+		sql = "SELECT domain FROM tags WHERE tag = '%s' AND host = '%s'" % (tag, host)
+		print sql
+		result = self.conn.execute(sql)
+		urls = [row[0] for row in result]
+		return urls
+		
+		
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None):
 		timerange = ""
 		
@@ -265,6 +273,12 @@ class NetDB( object ):
 	
 	def insert_tag(self,tag):
 		self.conn.execute("INSERT INTO TAG(tag) VALUES('%s')" % tag)
+		self.conn.commit()
+	
+	def remove_tag_for_host(self,host,tag):
+		sql = "DELETE FROM TAGS WHERE host='%s' AND domain = '%s'" % (host,tag)
+		print sql
+		self.conn.execute(sql)
 		self.conn.commit()
 	
 	def insert_network_data(self, netdata):

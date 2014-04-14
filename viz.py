@@ -132,9 +132,18 @@ def urlsfortagging():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
  	tots	= request.args.get('tots') or None
+ 	netDB.connect()
 	urls = netDB.fetch_urls_for_tagging(host, fromts, tots)
 	return jsonify(urls=urls)
 
+@app.route("/urlsfortag")
+def urlsfortag():
+	host 	= request.args.get('host')
+	tag		= request.args.get('tag')
+	netDB.connect()
+	urls = netDB.fetch_urls_for_tag(host, tag)
+	return jsonify(urls=urls)
+	
 @app.route("/tagurls")
 def tagurls():
 	host = request.args.get('host')
@@ -152,7 +161,15 @@ def addtag():
 	netDB.connect()
 	netDB.insert_tag(tag)
 	return jsonify(success=True)
-	
+
+@app.route("/removetag")
+def removetag():
+	host = request.args.get('host')
+	tag	 = request.args.get('tag')
+	netDB.connect()
+	netDB.remove_tag_for_host(host,tag)
+	return jsonify(success=True)
+
 @app.route("/activity")
 def activity():
 	host 	= request.args.get('host')

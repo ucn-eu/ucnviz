@@ -75,15 +75,47 @@
 									</div>
 								</div>
 							</div>
+							
+							<div class="row" data-bind="visible:showtag">
+								<hr>
+								<div class="large-10 columns">
+									<h3 data-bind="text: 'domains for ' + tagtoview()"></h3>
+									<table>
+										<thead>
+											<tr>
+												<th>domain</th>
+												<th></th>
+											</tr>
+										</thead>
+	
+										<tbody data-bind="foreach:domainsfortag">
+											<tr>
+												<td data-bind="text:$data"></td>
+												<td> <a href="#" data-bind="click:function(){removetag($data)}">remove</a></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>	
+								<div class="large-2 columns">
+									<a href="#" data-bind="click:function(){showtag(false)}"class="button tiny radius success">hide</a>
+								</div>
+							</div>			
+							
+							
 							<div class="row">
+								<hr>
 								<h3>Tagged activity <small> updated as you tag your urls </small></h3>
 								<div class="large-2 columns key">
-									<div id="activitykey"></div>
+									<div data-bind="foreach:reversedtags">
+										<p data-bind="style:{height:$parent.tagheight()}"><a href="#", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}"></a></p>
+									</div>
 								</div>
 								<div class="large-10 columns">
 									<div id="activitygraph" class="activityrender"></div>
 								</div>		
-							</div>			
+							</div>	
+							
+							
 						</div>
 					</div>
 					<hr>
