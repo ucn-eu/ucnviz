@@ -89,6 +89,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		parameters = [],
 		
+		tagparameters = [],
+		
 		placeholder = $("#squidgraph"),
 		
 		
@@ -109,6 +111,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		selectcallback = function(range,item){
 			fromts = parseInt(range.x1/1000);
 			tots   = parseInt(range.x2/1000);
+			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 			ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 		},
 		
@@ -128,6 +131,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				selected = true;
 				fromts = parseInt(ranges.xaxis.from/1000);
 				tots   = parseInt(ranges.xaxis.to/1000);
+				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 				setTimeout(function(){selected=false},100);
 			});
@@ -170,11 +174,12 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			for (i = 0; i < chosenurlstotag().length; i++)
 				domains.push(chosenurlstotag()[i].domain);
 			
-			ajaxservice.ajaxGetJson('tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, urlstagged);	
+			ajaxservice.ajaxGetJson('tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, urlstagged);
 		},
 		
 		urlstagged = function(data){
 			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('urlsfortagging',tagparameters[0], updatetagdata);
 		},
 		
 		updatetagdata = function(data){
