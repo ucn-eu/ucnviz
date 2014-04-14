@@ -51,6 +51,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		depth = ko.observable(0),
 		
 		tagadded = function(){	
+			newtag("")
 			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
 		},
 		
