@@ -470,14 +470,14 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			for(i = 0; i < traffic.length; i++){
 				start = Math.min(start, traffic[i].ts);
 				end = Math.max(end, traffic[i].ts);
-				idx = labels.indexOf(traffic[i].url);
+				idx = labels.indexOf(traffic[i].domain);
 				
 				if (idx == -1){
-					labels.push(traffic[i].url);
+					labels.push(traffic[i].domain);
 					readings.push([]);
 				}
 		
-				readings[labels.indexOf(traffic[i].url)].push([traffic[i].ts*1000, labels.indexOf(traffic[i].url)-0.5, 1000]);
+				readings[labels.indexOf(traffic[i].domain)].push([traffic[i].ts*1000, labels.indexOf(traffic[i].domain)-0.5, 1000]);
 			}
 			
 			Flotr._.each(readings, function(d){

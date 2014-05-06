@@ -3,9 +3,26 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 	var
 		categories = ko.observableArray(["processes", "data"]),
 		
-		alphabet = "abcdefghijklmnopqrstuvwxyz".split(''),
+		//alphabet = ko.observableArray("abcdefghijklmnopqrstuvwxyz".split('')),
 		
-		selectedletter = ko.observable(alphabet[0]),
+		fromts,
+		
+		tots,
+		
+		processes 	= ko.observableArray([]),
+		
+		alphabet = ko.computed(function(){
+			filteredalphabet = []
+			for (i = 0; i < processes().length; i++){
+				startletter = processes()[i].toLowerCase()[0]
+				if (filteredalphabet.indexOf(startletter) == -1){
+					filteredalphabet.push(startletter);
+				}
+			}
+			return filteredalphabet;
+		}),
+		
+		selectedletter = ko.observable(alphabet()[0]),
 			
 		placeholder = $("#devicegraph"),
 		
@@ -14,8 +31,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 		title	 = ko.observable(""),	
 		
 		hosts	= ko.observableArray([]),
-			
-		processes 	= ko.observableArray([]),
+		
+		filtered = ko.observable(false),
 		
 		selectedprocess = ko.observable(""),
 		
@@ -49,7 +66,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 			selectedletter(letter);
 		},
 		
-		
+		togglefiltered = function(){
+			filtered(!filtered());
+			ajaxservice.ajaxGetJson('processes',{host:selectedhost(), filtered:filtered()}, updateprocesslist);
+		},
 	
 		amselectedletter = function(letter){
 			return  selectedletter() == letter;
@@ -85,12 +105,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 			}
 			
 			$.plot(placeholder, [d], {
-				xaxis: { mode: "time", max:data.max*1000},
+				xaxis: { mode: "time"},
 				yaxis: { tickFormatter: function(n){
 						
 						d = maxts-mints;
-						
-						console.log(d);
 						
 						if (d == 0)
 							 d = n;
@@ -134,12 +152,14 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 		
 		updateprocesslist = function(data){
 			processes(data.processes);
+			fromts = data.min * 1000;
+			tots = data.max * 1000;
 		},
 		
 		init = function(hlist){
 			hosts(hlist);
 			selectedhost(hosts()[0]);
-			ajaxservice.ajaxGetJson('processes',{host:selectedhost()}, updateprocesslist);
+			ajaxservice.ajaxGetJson('processes',{host:selectedhost(), filtered:filtered()}, updateprocesslist);
 			ajaxservice.ajaxGetJson('netdata',{host:selectedhost()}, rendernetdata);
 		}
 		
@@ -164,6 +184,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 		selectnewletter:selectnewletter,
 		amselectedletter:amselectedletter,
 		filteredprocesses:filteredprocesses,
+		filtered: filtered,
+		togglefiltered:togglefiltered,
 	}
 });
 

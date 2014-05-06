@@ -29,12 +29,15 @@
   			</div>
   		
   			<div class=row">
-  				<div class="small-12 columns">
-  					<h3> Processes <small> running time </small></h3>
+  				<h3> Processes <small> running time </small></h3>
+  				<div class="small-10 columns">
   					<dl class="sub-nav" data-bind="foreach:alphabet">
 						<dd data-bind="click:function(){$parent.selectnewletter($data)}, css:{active:$parent.amselectedletter($data)}"><a href="#" data-bind="text:$data"></a></dd>
 					</dl>
 					<hr>
+  				</div>
+  				<div class="small-2 columns">
+  					<a href="#" data-bind="css:{alert:filtered()}, click:function(){togglefiltered()}" class="button tiny">filter out system apps</a>
   				</div>
   			</div>
   			<div class="row">

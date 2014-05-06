@@ -22,9 +22,19 @@ def devicehosts():
 @app.route("/processes")
 def processes():
 	host = request.args.get('host')
+	filter = request.args.get('filtered')
 	netDB.connect()
 	processes = netDB.fetch_device_processes(host)
-	return jsonify(processes=processes)
+	minmax	  = netDB.fetch_min_max_processes(host)
+		
+	if filter == "true":
+	 	filtered = []
+		for process in processes:
+ 			if process not in background:
+ 				filtered.append(process)
+ 		return jsonify(processes=filtered)
+ 				
+	return jsonify(processes=processes, min=minmax[0], max=minmax[1])
 
 @app.route("/process")
 def process():
@@ -44,6 +54,17 @@ def browsing():
 	traffic = netDB.fetch_urls_for_host(host=host, fromts=fromts, tots=tots)
 	return jsonify(traffic=traffic)
 
+def filter(traffic):
+	filtered = []
+	
+	for domain in traffic:
+		if any(domain['domain'] in s for s in blocked):
+			print "blocked %s" % domain['domain']
+		else:
+			filtered.append(domain)
+	
+	return filtered
+	
 @app.route("/summary")
 def summary():
 	host 	= request.args.get('host')
@@ -71,9 +92,6 @@ def summary():
 	zones	= netDB.fetch_zones_for_host(host,fromts, tots)
 	top		= netDB.fetch_top_urls_for_host(host, 20, fromts, tots)
 	queries = netDB.fetch_queries_for_host(host,fromts, tots)
-	
-	print "queries results are"
-	print queries
 	return jsonify(summary=summary, zones=zones, top=top, queries=queries)
 
 @app.route("/bootstrap")
@@ -200,5 +218,14 @@ def location_data():
 	return jsonify(data)
 
 if __name__ == "__main__":
+	blocked = []
+	background = []
+	
+	with open("ad_domains.txt") as f:
+		blocked = [x.strip() for x in f.readlines()]
+	
+	with open("backgroundapps.txt") as f:
+		background = [x.strip() for x in f.readlines()]
+		
 	netDB = NetDB(name="netdata.db")
 	app.run(debug=True)

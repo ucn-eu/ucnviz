@@ -37,7 +37,6 @@ class NetDB( object ):
 			whereclause = "AND (ts >= %d AND ts < %d)" % (fromts, tots)
 			
 		sql = "SELECT ts, domain from URLS where host = '%s' %s ORDER BY ts ASC" % (host,whereclause)
-		print sql
 		result = self.conn.execute(sql)
 		urls = [{"ts":row[0], "domain":row[1]} for row in result]
 		#get the start of day time of the smallest ts
@@ -58,8 +57,6 @@ class NetDB( object ):
 				bin = 1	
 				
 			bins[label] = bin  
-		
-		print binhistory
 		
 		return sorted(bins.iteritems(), key=operator.itemgetter(0))
 		
@@ -98,9 +95,15 @@ class NetDB( object ):
 		hosts.sort()
 		return hosts
 		
+	def fetch_min_max_processes(self, host):
+		sql = "select min(starttime) as min, max(starttime) as max FROM processes WHERE host = '%s'" %  host
+		result = self.conn.execute(sql)
+		minmax = result.fetchone()
+		return minmax
+		#return {min:minmax[0], max:minmax[1]}
+	
 	def fetch_details_for_process(self, host, processname):
 		sql = "SELECT ts,starttime FROM PROCESSES WHERE host = '%s' AND name = '%s' ORDER BY ts ASC" % (host, processname)
-		print sql
 		result = self.conn.execute(sql)
 		hosts = [{"ts":row[0], "duration":row[0]-row[1]} for row in result]
 		return hosts
@@ -144,7 +147,7 @@ class NetDB( object ):
 			
 		sql = "SELECT ts,domain,path FROM URLS WHERE host = '%s' AND path <> '' AND domain IN (%s) %s ORDER BY ts DESC" % (host, ",".join("'{0}'".format(w) for w in domains), timerange)
 		
-		print sql
+
 		
 		result = self.conn.execute(sql)	
 		
@@ -171,13 +174,13 @@ class NetDB( object ):
 		sql = "SELECT ts,host,domain FROM URLS WHERE host = '%s' %s ORDER BY ts DESC" % (host,timerange)
 		
 		result = self.conn.execute(sql)
-		urls = [{"ts":row[0], "url":row[2]} for row in result]
+		urls = [{"ts":row[0], "domain":row[2]} for row in result]
 
 		return urls
 	
 	def fetch_urls_for_tag(self, host, tag):
 		sql = "SELECT domain FROM tags WHERE tag = '%s' AND host = '%s'" % (tag, host)
-		print sql
+		
 		result = self.conn.execute(sql)
 		urls = [row[0] for row in result]
 		return urls
@@ -191,7 +194,7 @@ class NetDB( object ):
 		
 		sql = "SELECT DISTINCT(u.domain), COUNT(u.domain) as requests, t.tag FROM URLS u LEFT JOIN TAGS t ON u.domain = t.domain AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.domain ORDER BY requests DESC" % (host, timerange)
 		
-		print sql
+		
 		#sql = "SELECT DISTINCT(domain), COUNT(domain) as requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC" % (host,timerange)
 		
 		result = self.conn.execute(sql)
@@ -254,7 +257,7 @@ class NetDB( object ):
 		
 		sql = "SELECT ts FROM URLS WHERE host = '%s' AND domain = '%s' %s ORDER BY ts DESC" % (host,domain,timerange)
 		
-		print sql
+
 		
 		result = self.conn.execute(sql)
 		requests = [row[0] for row in result]
@@ -267,7 +270,7 @@ class NetDB( object ):
 		return netdata
 		
 	def insert_tag_for_host(self, host,domain,tag):
-		print "inserting %s %s %s" % (host,domain,tag)
+		
 		self.conn.execute("INSERT INTO TAGS(host,domain,tag) VALUES (?,?,?)", (host,domain,tag))
 		self.conn.commit()
 	
@@ -277,7 +280,6 @@ class NetDB( object ):
 	
 	def remove_tag_for_host(self,host,tag):
 		sql = "DELETE FROM TAGS WHERE host='%s' AND domain = '%s'" % (host,tag)
-		print sql
 		self.conn.execute(sql)
 		self.conn.commit()
 	
