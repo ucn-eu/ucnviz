@@ -2,6 +2,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 	
 	var
 	
+		cache  	  = [],
+		
 		barwidths = [60*60*24*1000,60*60*1000,60*1000],
 		
 		barmultiplier 	= [12*60*60*1000, 30*60*1000, 30*1000],
@@ -121,6 +123,20 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		colorindex = 0,
 		
 		
+		calculatebin = function(difference){
+			if (difference < 60 * 60){ // if range < 1 hour, minute by minute bins
+				b = 1;
+			}
+			else if(difference <= (24 * 60 * 60)){ //if range is > 1hr and less than a day, show hourly bins
+				b = 60; //60 * 60;
+			}else if (difference < (24*60*60*7)){ //if range is > day and <= 1 week
+				b = 60 * 60; //60 * 60 * 24;
+			}else{
+				b = 60 * 60 * 24;//60 * 60 * 24 * 30;
+			} 
+			console.log("set bin to " + b);
+			return b;
+		},
 		
 		clickcallback = function(){
 			depth(depth() - 1);
@@ -140,25 +156,92 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			tags(taglist);
 			
 			selectedhost(hosts()[0]);
-		
+			
 			parameters[0] = {host: selectedhost(), bin:60*60*24};
-	
 			ajaxservice.ajaxGetJson('summary',parameters[0], renderroot);
 			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
 			
-			placeholder.bind("plotselected", function(event,ranges){
+			/*placeholder.bind("plotselected", function(event,ranges){
 				selected = true;
 				fromts = parseInt((ranges.xaxis.from + barmultiplier[depth()])/1000);
 				tots   = parseInt((ranges.xaxis.to + barmultiplier[depth()]) /1000);
 				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 				setTimeout(function(){selected=false},100);
+			});*/
+			
+			placeholder.bind("plotselected", function(event,ranges){
+				
+				
+				bin	 = parameters[depth()].bin;
+				data = cache[depth()].summary;
+				 
+				formatstr = "";
+				
+				if (bin == 60 * 60 * 24){
+					formatstr =  'YYYY/MM/DD'
+				}else if (bin == 60 * 60){
+					formatstr = 'YYYY/MM/DD HH:00'
+				}else if (bin == 60){
+					formatstr = 'YYYY/MM/DD HH:mm'
+				}else{
+					formatstr = 'YYYY/MM/DD HH:mm:ss'
+				}
+				
+				fromts 	= parseInt((ranges.xaxis.from + (bin/2)*1000)/1000);
+				tots   	= parseInt((ranges.xaxis.to + (bin/2)*1000)/1000);
+				frm 	= moment.unix(fromts);
+				to 		= moment.unix(tots);
+				start 	= (moment(frm.format(formatstr), formatstr).valueOf()) / 1000;
+				end   	= (moment(to.format(formatstr), formatstr).valueOf()) / 1000;
+				total	= 0;
+				
+				for (i = start; i <= end; i += bin){
+					m = moment.unix(i);
+					for (j = 0; j < data.length; j++){
+						if (data[j][0] == m.format(formatstr)){
+							total += data[j][1];
+							break;
+						}
+					}
+				}
+				
+				console.log("total is " + total);
+				
+				torange 		= [60*60*24,60*60,60];
+				selected = true;
+				
+				
+				
+				var difference = tots - fromts;
+				bin = calculatebin(difference);
+				
+				parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};//fromts + torange[depth()]};
+					
+				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
+				
+				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
+				
+				
+				if (total > 50){
+					depth(depth()+1);
+					ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
+						
+				}else{
+					console.log("BROWSING CHART!!");
+					depth(depth()+1);
+					ajaxservice.ajaxGetJson('browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
+				}
+					
+				setTimeout(function(){selected=false},100);
 			});
 			
 			placeholder.bind("plotclick", function(event,pos,item){
 				
+				
 				if (selected)
 					return;
+				
 				urlsfortagging([]);
 			
 				
@@ -234,6 +317,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			if (depth() > 0){
 				depth(depth()-1);
 			}
+			console.log("getting parematers for depth " + depth());
+			console.log(parameters[depth()]);
+			
 			ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
 		},
 		
@@ -245,6 +331,11 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		renderroot = function(data){
+			
+			cache[depth()] = data;
+		
+			bin = parameters[depth()].bin;
+			
 			placeholder.height(400);
 			ctype	 = "browsing";
 			
@@ -271,10 +362,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			m2 = moment.unix(maxts/1000);
 			
 		
-			if (depth() == 0)
-				subtitle(m1.format('MMM Do YYYY') + " to " + m2.format('MMM Do YYYY'));
-			else
-				subtitle(m1.format('h:mm:ss a') + " to " + m2.format('h:mm:ss a'));
+			//if (depth() == 0)
+			//	subtitle(m1.format('MMM Do YYYY') + " to " + m2.format('MMM Do YYYY'));
+			//else
+				subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
 				
 			var data = [{ data: d1, label: "site requests", color: "#2CA089" }];
 			
@@ -295,7 +386,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			}
 
 			var plot = $.plot(placeholder, data, {
-				bars: { show: true, barWidth:barwidths[depth()], align:'center', fill: 0.4 },
+				bars: { show: true, barWidth:bin*1000, /*barwidths[depth()],*/ align:'center', fill: 0.4 },
 				xaxis: { mode:"time"},
 				yaxis: {},
 				grid: { markings: markings, clickable:true },

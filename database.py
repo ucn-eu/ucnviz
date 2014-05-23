@@ -40,6 +40,10 @@ class NetDB( object ):
 		result = self.conn.execute(sql)
 		urls = [{"ts":row[0], "domain":row[1]} for row in result]
 		#get the start of day time of the smallest ts
+		
+		if len(urls) <= 0:
+			return []
+			
 		startts = time.mktime(datetime.strptime(datetime.fromtimestamp(urls[0]['ts']).strftime('%Y-%m-%d'), '%Y-%m-%d').timetuple())
 
 		bins = {}
@@ -64,6 +68,8 @@ class NetDB( object ):
 		if (label in binhistory):
 			if (domain in binhistory[label]):
 				return True
+			else:
+				binhistory[label].append(domain)
 		else:
 			binhistory[label] = [domain]
 
@@ -133,8 +139,6 @@ class NetDB( object ):
 					'ebay.co.uk':'_nkw=',
 					'youtube.com':'search_query='
 		}
-	
-		
 		
 		for key in searchsplits.keys():
 			searchsplits['%s.%s'%('www',key)] = searchsplits[key]
@@ -147,10 +151,7 @@ class NetDB( object ):
 			
 		sql = "SELECT ts,domain,path FROM URLS WHERE host = '%s' AND path <> '' AND domain IN (%s) %s ORDER BY ts DESC" % (host, ",".join("'{0}'".format(w) for w in domains), timerange)
 		
-
-		
 		result = self.conn.execute(sql)	
-		
 		
 		urls = [{"ts":row[0], "domain":row[1], "path":row[2]} for row in result]
 		
@@ -177,6 +178,21 @@ class NetDB( object ):
 		urls = [{"ts":row[0], "domain":row[2]} for row in result]
 
 		return urls
+	
+	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
+		timerange = ""
+		
+		if fromts and tots:
+			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
+		
+		sql = "SELECT DISTINCT(domain), count(domain) AS requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC LIMIT %d" % (host, timerange, limit)
+		
+	
+		result = self.conn.execute(sql)
+		urls = [{"domain":row[0], "requests":row[1]} for row in result]
+		
+		return urls
+	
 	
 	def fetch_urls_for_tag(self, host, tag):
 		sql = "SELECT domain FROM tags WHERE tag = '%s' AND host = '%s'" % (tag, host)
@@ -235,20 +251,6 @@ class NetDB( object ):
 		tags.sort()
 		return tags
 		
-	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
-		timerange = ""
-		
-		if fromts and tots:
-			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
-		
-		sql = "SELECT DISTINCT(domain), count(domain) AS requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC LIMIT %d" % (host, timerange, limit)
-		
-	
-		result = self.conn.execute(sql)
-		urls = [{"domain":row[0], "requests":row[1]} for row in result]
-		
-		return urls
-	
 	def fetch_domain_requests_for_host(self, host,domain,fromts, tots):
 		timerange = ""
 		
