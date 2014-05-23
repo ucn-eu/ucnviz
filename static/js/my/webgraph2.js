@@ -168,7 +168,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			}else{
 				s = 'YYYY/MM/DD HH:mm:ss'
 			}
-			console.log("FORMAT STR IS " + s);
+
 			return s;
 		},
 		
@@ -182,19 +182,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			parameters[0] = {host: selectedhost(), bin:60*60*24};
 			ajaxservice.ajaxGetJson('summary',parameters[0], renderroot);
 			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
-			
-			/*placeholder.bind("plotselected", function(event,ranges){
-				selected = true;
-				fromts = parseInt((ranges.xaxis.from + barmultiplier[depth()])/1000);
-				tots   = parseInt((ranges.xaxis.to + barmultiplier[depth()]) /1000);
-				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
-				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
-				setTimeout(function(){selected=false},100);
-			});*/
-			
+				
 			placeholder.bind("plotselected", function(event,ranges){
 				
-				console.log(ranges);
+				
 				
 				bin	 = parameters[depth()].bin;
 				data = cache[depth()].summary;
@@ -203,9 +194,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				
 				fromts 	= parseInt((ranges.xaxis.from + (bin/2)*1000)/1000);
 				tots   	= parseInt((ranges.xaxis.to + (bin/2)*1000)/1000);
-				console.log("from ts = " + ranges.xaxis.from + " to ts = " + ranges.xaxis.to );
-				console.log("adlterated from ts = " + fromts + " to ts = " + tots);
-				
 				frm 	= moment.unix(fromts);
 				to 		= moment.unix(tots);
 				start 	= (moment(frm.format(fs), fs).valueOf()) / 1000;
@@ -213,11 +201,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				total	= 0;
 				
 				
-				console.log(data);
 				
 				for (i = start; i <= end; i += bin){
 					m = moment.unix(i);
-					console.log("chceking for " + m.format(fs));
 					for (j = 0; j < data.length; j++){
 						if (data[j][0] == m.format(fs)){
 							total += data[j][1];
@@ -226,14 +212,11 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					}
 				}
 				
-				console.log("TOTAL IS " + total);
 				
-			
 				selected = true;				
 				var difference = tots - fromts;
 				bin = calculatebin(difference);
 				
-				console.log("** FROM TS IS " + frm.format(fs) + "TO TS IS " +   to.format(fs));
 				parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
 					
 				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
@@ -246,7 +229,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
 						
 				}else{
-					console.log("rendering browsinG!!");
+					
 					depth(depth()+1);
 					ajaxservice.ajaxGetJson('browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 				}
@@ -278,13 +261,11 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					fromts 	= (moment(frm.format(fs), fs).valueOf()) / 1000;
 					tots    = fromts + bin;
 					
-					console.log("from is " + moment.unix(fromts).format(fs) + " to is " +  moment.unix(tots).format(fs) );
+					
 					bin = calculatebin(tots-fromts);
 					
 					parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
-			
-					//parameters[depth()+1] = {host: selectedhost(), bin:Math.pow(60,2-depth()),fromts:fromts, tots:fromts + torange[depth()]};
-						
+				
 					if (total > ZOOMVALUE){
 						depth(depth()+1);
 						ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
@@ -330,7 +311,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		removetag = function(tag){
-			console.log("would remove tag" + tag);
+			
 			ajaxservice.ajaxGetJson('removetag',{host: selectedhost(), tag:tag}, tagremoved);
 		},
 		
@@ -349,8 +330,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			if (depth() > 0){
 				depth(depth()-1);
 			}
-			console.log("getting parematers for depth " + depth());
-			console.log(parameters[depth()]);
 			
 			ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
 		},
@@ -413,7 +392,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 						colorlookup[zones[i]['name']] = zcolor
 						zonekey.push({"name":zones[i]['name'], "color":zcolor});
 					}
-					markings.push({color: zcolor, xaxis:{from: (zones[i].enter*1000)-barmultiplier[depth()], to: (zones[i].exit*1000)-barmultiplier[depth()]}});
+					//markings.push({color: zcolor, xaxis:{from: (zones[i].enter*1000)-barmultiplier[depth()], to: (zones[i].exit*1000)-barmultiplier[depth()]}});
+					markings.push({color: zcolor, xaxis:{from: (zones[i].enter*1000)-((bin/2)*1000), to: (zones[i].exit*1000)-((bin/2)*1000)}});
 				}
 			}
 
@@ -489,7 +469,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 						colorlookup[zones[i]['name']] = zcolor
 						zonekey.push({"name":zones[i]['name'], "color":zcolor});
 					}
-					markings.push({color: zcolor, xaxis:{from: (zones[i].enter*1000)-barmultiplier[depth()], to: (zones[i].exit*1000)-barmultiplier[depth()]}});
+					markings.push({color: zcolor, xaxis:{from: (zones[i].enter*1000)-((bin/2)*1000), to: (zones[i].exit*1000)-((bin/2)*1000)}});
+			
+					//markings.push({color: zcolor, xaxis:{from: (zones[i].enter*1000)-barmultiplier[depth()], to: (zones[i].exit*1000)-barmultiplier[depth()]}});
 				}
 			}
 
