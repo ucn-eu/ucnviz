@@ -61,7 +61,8 @@ class NetDB( object ):
 				bin = 1	
 				
 			bins[label] = bin  
-		
+		print "returning: "
+		print sorted(bins.iteritems(), key=operator.itemgetter(0))
 		return sorted(bins.iteritems(), key=operator.itemgetter(0))
 		
 	def seen(self, binhistory, domain, label):
@@ -79,7 +80,7 @@ class NetDB( object ):
 		bintime = startts + (((ts-startts) / int(binsize)) * binsize)
 		
 		#set date date grouping based on bin size
-		dformat = '%Y/%m/01'
+		dformat = '%Y/%m/%d %H:%M:%S'
 		
 		if binsize >= 60*60*24:
 			dformat = '%Y/%m/%d'
@@ -87,7 +88,7 @@ class NetDB( object ):
 			dformat = '%Y/%m/%d %H:00'
 		elif binsize >= 60: 
 			dformat = '%Y/%m/%d %H:%M'
-			
+		
 		return datetime.fromtimestamp(bintime).strftime(dformat)
 	
 	def fetch_device_hosts(self):

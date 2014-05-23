@@ -2,13 +2,15 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 	
 	var
 	
+		ZOOMVALUE = 50,
+		
 		cache  	  = [],
 		
 		barwidths = [60*60*24*1000,60*60*1000,60*1000],
 		
 		barmultiplier 	= [12*60*60*1000, 30*60*1000, 30*1000],
 				
-		ctype	 = "browsing",
+		ctype	 = ko.observable("browsing"),
 			
 		subtitle = ko.observable(""),
 		
@@ -66,15 +68,19 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		});
 		
 		squidclass = ko.computed(function(){
-			if (depth() == 3){
+			if (ctype() == "zoom"){
 				return "columns small-8";
 			}else{
 				return "columns small-12";
 			}
 		});
 		
+		showkey = ko.computed(function(){
+			return ctype() == "zoom";
+		});
+		
 		squidgraphstyle = ko.computed(function(){
-			if (depth() == 3){
+			if (ctype() == "browsing"){
 				return "width: 630px;";
 			}else{
 				return "width: 530px;";
@@ -97,7 +103,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		toggleoverlay = function(){
 			overlay(!overlay());
 			if (depth() <= 2){
-				if (ctype == "browsing")
+				if (ctype() == "browsing")
 					ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
 				else
 					ajaxservice.ajaxGetJson('domainsummary',parameters[depth()], curry(renderdomain,parameters[depth()]['domain']));
@@ -134,7 +140,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			}else{
 				b = 60 * 60 * 24;//60 * 60 * 24 * 30;
 			} 
-			console.log("set bin to " + b);
+			
 			return b;
 		},
 		
@@ -148,6 +154,22 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			tots   = parseInt(range.x2/1000);
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 			ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
+		},
+		
+		formatstr = function(bin){
+			s = "";
+				
+			if (bin == 60 * 60 * 24){
+				s =  'YYYY/MM/DD'
+			}else if (bin == 60 * 60){
+				s = 'YYYY/MM/DD HH:00'
+			}else if (bin == 60){
+				s = 'YYYY/MM/DD HH:mm'
+			}else{
+				s = 'YYYY/MM/DD HH:mm:ss'
+			}
+			console.log("FORMAT STR IS " + s);
+			return s;
 		},
 		
 		init = function(hlist,taglist){
@@ -172,63 +194,59 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			placeholder.bind("plotselected", function(event,ranges){
 				
+				console.log(ranges);
 				
 				bin	 = parameters[depth()].bin;
 				data = cache[depth()].summary;
 				 
-				formatstr = "";
-				
-				if (bin == 60 * 60 * 24){
-					formatstr =  'YYYY/MM/DD'
-				}else if (bin == 60 * 60){
-					formatstr = 'YYYY/MM/DD HH:00'
-				}else if (bin == 60){
-					formatstr = 'YYYY/MM/DD HH:mm'
-				}else{
-					formatstr = 'YYYY/MM/DD HH:mm:ss'
-				}
+				fs = formatstr(bin);
 				
 				fromts 	= parseInt((ranges.xaxis.from + (bin/2)*1000)/1000);
 				tots   	= parseInt((ranges.xaxis.to + (bin/2)*1000)/1000);
+				console.log("from ts = " + ranges.xaxis.from + " to ts = " + ranges.xaxis.to );
+				console.log("adlterated from ts = " + fromts + " to ts = " + tots);
+				
 				frm 	= moment.unix(fromts);
 				to 		= moment.unix(tots);
-				start 	= (moment(frm.format(formatstr), formatstr).valueOf()) / 1000;
-				end   	= (moment(to.format(formatstr), formatstr).valueOf()) / 1000;
+				start 	= (moment(frm.format(fs), fs).valueOf()) / 1000;
+				end   	= (moment(to.format(fs), fs).valueOf()) / 1000;
 				total	= 0;
+				
+				
+				console.log(data);
 				
 				for (i = start; i <= end; i += bin){
 					m = moment.unix(i);
+					console.log("chceking for " + m.format(fs));
 					for (j = 0; j < data.length; j++){
-						if (data[j][0] == m.format(formatstr)){
+						if (data[j][0] == m.format(fs)){
 							total += data[j][1];
 							break;
 						}
 					}
 				}
 				
-				console.log("total is " + total);
+				console.log("TOTAL IS " + total);
 				
-				torange 		= [60*60*24,60*60,60];
-				selected = true;
-				
-				
-				
+			
+				selected = true;				
 				var difference = tots - fromts;
 				bin = calculatebin(difference);
 				
-				parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};//fromts + torange[depth()]};
+				console.log("** FROM TS IS " + frm.format(fs) + "TO TS IS " +   to.format(fs));
+				parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
 					
 				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 				
 				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 				
 				
-				if (total > 50){
+				if (total > ZOOMVALUE){
 					depth(depth()+1);
 					ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
 						
 				}else{
-					console.log("BROWSING CHART!!");
+					console.log("rendering browsinG!!");
 					depth(depth()+1);
 					ajaxservice.ajaxGetJson('browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 				}
@@ -238,29 +256,43 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			placeholder.bind("plotclick", function(event,pos,item){
 				
-				
 				if (selected)
 					return;
 				
-				urlsfortagging([]);
-			
-				
-				torange 		= [60*60*24,60*60,60];
-		
 				if (item){
-
-					fromts = item.datapoint[0]/1000;
-					parameters[depth()+1] = {host: selectedhost(), bin:Math.pow(60,2-depth()),fromts:fromts, tots:fromts + torange[depth()]};
-							
-					if (depth() < 2){
+					data 	= cache[depth()].summary;
+					bin 	= parameters[depth()].bin;
+					fs 		= formatstr(bin);
+				
+					fts 	= parseInt(item.datapoint[0] + (bin/2)*1000)/1000;
+					frm 	= moment.unix(fts);
+				
+					total = 0;
+					for (i = 0; i < data.length; i++){
+						if (data[i][0] == frm.format(fs)){
+							total = data[i][1];
+							break;
+						}
+					}
+				
+					fromts 	= (moment(frm.format(fs), fs).valueOf()) / 1000;
+					tots    = fromts + bin;
+					
+					console.log("from is " + moment.unix(fromts).format(fs) + " to is " +  moment.unix(tots).format(fs) );
+					bin = calculatebin(tots-fromts);
+					
+					parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
+			
+					//parameters[depth()+1] = {host: selectedhost(), bin:Math.pow(60,2-depth()),fromts:fromts, tots:fromts + torange[depth()]};
+						
+					if (total > ZOOMVALUE){
 						depth(depth()+1);
 						ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
 						
 					}else{
 						depth(depth()+1);
-						ajaxservice.ajaxGetJson('browsing' ,{host: selectedhost(), fromts: fromts, tots: fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
+						ajaxservice.ajaxGetJson('browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 					}
-					
 				}else{
 					zoomout();
 				}
@@ -337,7 +369,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			bin = parameters[depth()].bin;
 			
 			placeholder.height(400);
-			ctype	 = "browsing";
+			ctype("browsing");
 			
 			var 
     			d1 = [],
@@ -411,7 +443,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		renderdomain = function(domain,data){
 			
-			ctype	 = "domain";
+			ctype("domain");
 			
 			rdata = data.requests;
 			zones = data.zones;
@@ -544,7 +576,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		renderzoom = function(from,netdata){
 			
-			ctype	 = "zoom";
+			ctype("zoom");
 			container = document.getElementById("squidgraph");
 			traffic = netdata.traffic;			
 			labels = [];
@@ -652,6 +684,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		depth:depth,
 		squidclass: squidclass,
 		squidgraphstyle: squidgraphstyle,
-		rendertagselectionitem:rendertagselectionitem
+		rendertagselectionitem:rendertagselectionitem,
+		showkey:showkey,
 	}
 });
