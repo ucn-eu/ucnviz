@@ -11,6 +11,9 @@ def read(type, datafile=None):
 
 	if type == "urls":
 		insert_urls(datafile)
+	
+	if type == "homes":
+		insert_homes(datafile)
 		
 	if type == "zones":
 		insert_zones(datafile)
@@ -95,6 +98,14 @@ def insert_urls(datafile):
 			url = {'ts':items[0].split(".")[0], 'host':items[2], 'domain':tld, 'path': path}
 			netdb.insert_url(url)			
 
+def insert_homes(datafile):
+	with open(datafile) as f:
+		content = f.readlines()
+	
+	for line in content:
+		items = line.split()
+		host = {'house':items[1], 'host':items[0]}
+		netdb.add_host_to_house(host)
 			
 if __name__ == '__main__' :
 	#create logger

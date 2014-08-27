@@ -56,11 +56,11 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		tagadded = function(){	
 			newtag("")
-			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
 		},
 		
 		addtag 	= function(){
-			ajaxservice.ajaxGetJson('addtag', {tag:newtag()}, tagadded);
+			ajaxservice.ajaxGetJson('tag/add', {tag:newtag()}, tagadded);
 		},
 		
 		shouldshowtags = ko.computed(function(){
@@ -96,17 +96,17 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			selectedhost(host);
 			parameters[0] = {host: selectedhost(), bin:60*60*24};
 			urlsfortagging([]);
-			ajaxservice.ajaxGetJson('summary',parameters[0], renderroot);
-			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('web/summary',parameters[0], renderroot);
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
 		},
 		
 		toggleoverlay = function(){
 			overlay(!overlay());
 			if (depth() <= 2){
 				if (ctype() == "browsing")
-					ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
+					ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
 				else
-					ajaxservice.ajaxGetJson('domainsummary',parameters[depth()], curry(renderdomain,parameters[depth()]['domain']));
+					ajaxservice.ajaxGetJson('web/domainsummary',parameters[depth()], curry(renderdomain,parameters[depth()]['domain']));
 			}
 		},
 		
@@ -146,14 +146,14 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		clickcallback = function(){
 			depth(depth() - 1);
-			ajaxservice.ajaxGetJson('summary', parameters[depth()], renderroot);
+			ajaxservice.ajaxGetJson('web/summary', parameters[depth()], renderroot);
 		},
 		
 		selectcallback = function(range,item){
 			fromts = parseInt(range.x1/1000);
 			tots   = parseInt(range.x2/1000);
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
-			ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
+			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 		},
 		
 		formatstr = function(bin){
@@ -180,8 +180,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			selectedhost(hosts()[0]);
 			
 			parameters[0] = {host: selectedhost(), bin:60*60*24};
-			ajaxservice.ajaxGetJson('summary',parameters[0], renderroot);
-			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('web/summary',parameters[0], renderroot);
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
 				
 			placeholder.bind("plotselected", function(event,ranges){
 				
@@ -221,17 +221,17 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					
 				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 				
-				ajaxservice.ajaxGetJson('urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
+				ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 				
 				
 				if (total > ZOOMVALUE){
 					depth(depth()+1);
-					ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
+					ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
 						
 				}else{
 					
 					depth(depth()+1);
-					ajaxservice.ajaxGetJson('browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
+					ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 				}
 					
 				setTimeout(function(){selected=false},100);
@@ -268,11 +268,11 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				
 					if (total > ZOOMVALUE){
 						depth(depth()+1);
-						ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
+						ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
 						
 					}else{
 						depth(depth()+1);
-						ajaxservice.ajaxGetJson('browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
+						ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 					}
 				}else{
 					zoomout();
@@ -289,13 +289,13 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			for (i = 0; i < chosenurlstotag().length; i++)
 				domains.push(chosenurlstotag()[i].domain);
 			
-			ajaxservice.ajaxGetJson('tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, urlstagged);
+			ajaxservice.ajaxGetJson('tag/tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, urlstagged);
 		},
 		
 		urlstagged = function(data){
-			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
-			ajaxservice.ajaxGetJson('urlsfortagging',tagparameters[0], updatetagdata);
-			ajaxservice.ajaxGetJson('urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
 		},
 		
 		updatetagdata = function(data){
@@ -312,14 +312,14 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		removetag = function(tag){
 			
-			ajaxservice.ajaxGetJson('removetag',{host: selectedhost(), tag:tag}, tagremoved);
+			ajaxservice.ajaxGetJson('tag/remove',{host: selectedhost(), tag:tag}, tagremoved);
 		},
 		
 		tagremoved = function(data){
 			//reload dependent data
-			ajaxservice.ajaxGetJson('activity',{host: selectedhost()}, renderactivity);
-			ajaxservice.ajaxGetJson('urlsfortagging',tagparameters[0], updatetagdata);
-			ajaxservice.ajaxGetJson('urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
 		},
 		
 		zoomoutvisible = ko.computed(function(){
@@ -331,7 +331,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				depth(depth()-1);
 			}
 			
-			ajaxservice.ajaxGetJson('summary',parameters[depth()], renderroot);
+			ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
 		},
 		
 		curry = function(fn){
@@ -408,13 +408,13 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		requestsfordomain = function(adomain){
 			parameters[depth()]['domain'] = adomain;
-			ajaxservice.ajaxGetJson('domainsummary',parameters[depth()], curry(renderdomain,adomain));
+			ajaxservice.ajaxGetJson('web/domainsummary',parameters[depth()], curry(renderdomain,adomain));
 		},
 		
 		getdomainsfortag	 = function(tag){
 			tagtoview(tag);
 			showtag(true);
-			ajaxservice.ajaxGetJson('urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
 		},
 		
 		updatedomainsfortag = function(data){

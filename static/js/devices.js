@@ -26,7 +26,7 @@ require.config({
 
 //'async!https://maps.google.com/maps/api/js?v=3&libraries=drawing&sensor=false'
 require(['devicegraph', 'knockout', 'ajaxservice', 'modernizr', 'foundation'], function(devicegraph, ko, ajaxservice) {
-    ajaxservice.ajaxGetJson('devicehosts', {}, function(data){
+    ajaxservice.ajaxGetJson('devices/hosts', {}, function(data){
 		devicegraph.init(data.hosts);
 		ko.applyBindings(devicegraph, $("#visualisation")[0]);
 	});

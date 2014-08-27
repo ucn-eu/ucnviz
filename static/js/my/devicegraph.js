@@ -40,7 +40,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 	
 		selectnewprocess = function(processname){
 			selectedprocess(processname);
-			ajaxservice.ajaxGetJson('process',{host:selectedhost(), process:processname}, processdetails);
+			ajaxservice.ajaxGetJson('devices/process',{host:selectedhost(), process:processname}, processdetails);
 		},
 		
 		selectnewhost = function(host){
@@ -68,7 +68,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 		
 		togglefiltered = function(){
 			filtered(!filtered());
-			ajaxservice.ajaxGetJson('processes',{host:selectedhost(), filtered:filtered()}, updateprocesslist);
+			ajaxservice.ajaxGetJson('devices/processes',{host:selectedhost(), filtered:filtered()}, updateprocesslist);
 		},
 	
 		amselectedletter = function(letter){
@@ -159,8 +159,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime']
 		init = function(hlist){
 			hosts(hlist);
 			selectedhost(hosts()[0]);
-			ajaxservice.ajaxGetJson('processes',{host:selectedhost(), filtered:filtered()}, updateprocesslist);
-			ajaxservice.ajaxGetJson('netdata',{host:selectedhost()}, rendernetdata);
+			ajaxservice.ajaxGetJson('devices/processes',{host:selectedhost(), filtered:filtered()}, updateprocesslist);
+			ajaxservice.ajaxGetJson('devices/netdata',{host:selectedhost()}, rendernetdata);
 		}
 		
 		

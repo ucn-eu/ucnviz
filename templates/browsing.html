@@ -4,10 +4,13 @@
 <div id="visualisation">
 	<div class="row">
 		<div class="large-12 columns">
+			
 			<ul class="pagination right">
-				<li class="current"><a href="#">Web browsing</a></li>
+				<li><a href="/">Overall Activity</a></li>
+				<li class="current"><a href="{{url_for('web')}}">Web browsing</a></li>
 				<li><a href="{{url_for('devices')}}">Device details</a></li>
 			</ul>
+		
 		</div>
 	</div>
 	<div class="row">

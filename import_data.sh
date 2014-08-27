@@ -1,6 +1,8 @@
 #!/bin/bash
 echo "importing urls"
 python import.py urls netdata.db data/access.log
+echo "importing homes"
+python import.py homes netdata.db data/homedata/homes.txt
 echo "importing zones"
 python import.py zones netdata.db data/zonedata/
 echo "importing processes"

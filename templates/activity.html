@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block body %}
+<!--header and nav -->
+<div id="activity">
+	<div class="row">
+		<div class="large-12 columns">
+			<ul class="pagination right">		
+				<li class="current"><a href="#">Overall Activity</a></li>
+				<li><a href="{{url_for('web')}}">Web browsing</a></li>
+				<li><a href="{{url_for('devices')}}">Device details</a></li>
+			</ul>
+		</div>
+	</div>
+	<h1> Overall activity graphs...</h1>
+</div>
+<script data-main="{{url_for('static', filename='js/activity.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
+{% endblock %}

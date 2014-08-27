@@ -312,11 +312,24 @@ class NetDB( object ):
 			self.connect()
 		self.conn.execute("INSERT INTO ZONES(host, name, enter, exit) VALUES(?,?,?,?)", (zone['host'], zone['name'], zone['enter'], zone['exit']))
 		self.conn.commit()
+	
+	def add_host_to_house(self, host):
+		if self.connected is not True:
+			self.connect()
+		self.conn.execute("INSERT INTO HOUSE(name, host) VALUES(?,?)", (host['house'], host['host']))
+		self.conn.commit()
+		
 			
 	def createTables(self):
 		if self.connected is not True:
 			self.connect()
 		
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS HOUSE
+			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name CHAR(128),
+			host CHAR(16),
+			UNIQUE(host) ON CONFLICT REPLACE);''')
+			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS URLS
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
 			ts INTEGER,
