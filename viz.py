@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import json
 from database import NetDB
+import time
 
 app = Flask(__name__)
 
@@ -14,7 +15,7 @@ def devices():
 	
 @app.route("/")
 def root():
-	return render_template('activity.html')
+	return render_template('overview.html')
 
 
 #fetch time binned activity data from fromts to tots for all devices in home
@@ -22,12 +23,13 @@ def root():
 
 @app.route("/overview/activity")
 def overview():
-	home = request.args.get('home')
+	home = request.args.get('home') or "lodges"
 	bin 	= request.args.get('bin') or None
 	fromts = request.args.get('fromts') or None
  	tots   = request.args.get('tots') or None
  	netDB.connect()
- 	hosts = netDB.fetch_hosts_for_home(home)	
+ 	#hosts = netDB.fetch_hosts_for_home(home)	
+ 	
  	activitybins = []
  	
  	if fromts is not None:
@@ -39,18 +41,36 @@ def overview():
  	#if time range is not provided, set it to the last 24 hours of recorded data
  	if tots is None or fromts is None:
  		tots 	= netDB.fetch_latest_ts_for_home(home)
- 		fromts 	= tots - 24*60*60
- 	
+ 		fromts 	= tots - 2 * 24*60*60
+ 		
  	if bin is not None:
  		bin = int(bin)
  	else:
- 		#set bin to half an hour
- 		bin = 60 * 30
+ 		#set bin to hourly
+ 		bin = 60 * 60
  	
-	for host in hosts:
-		activitybins.append(netDB.fetch_timebins_for_host(bin,host,fromts,tots))
+ 	#might be quicker to do a single sql select on home?  each call to fetch_timebins_for_host  takes approx 0.15s!
 	
-	return jsonify(activity=activitybins)
+	start = time.time() 
+	values = netDB.fetchtimebins_for_home(bin,home,fromts, tots)
+	end = time.time() 
+	print end-start
+	
+	return jsonify(values)
+	
+# 	start = time.time() 
+# 	
+# 	for host in hosts:
+# 		
+# 		values = netDB.fetch_timebins_for_host(bin,host,fromts,tots)
+# 		
+# 		if len(values) > 0:
+# 			activitybins.append({'key':host, 'values':values})
+# 	
+# 	end = time.time() 
+# 	print end-start
+# 	
+# 	return jsonify(activity=activitybins)
 		
 #return all devices that have associated phone data (i.e running processes data)
 @app.route("/devices/hosts")
@@ -144,7 +164,7 @@ def summary():
 @app.route("/web/bootstrap")
 def hosts():
 	netDB.connect()
-	hosts = netDB.fetch_hosts("10.8.0")
+	hosts = netDB.fetch_hosts("192.168.8")
 	tags  = netDB.fetch_tags()
 	return jsonify(hosts=hosts, tags=tags)
 	

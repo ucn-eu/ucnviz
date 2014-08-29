@@ -31,26 +31,67 @@ class NetDB( object ):
 		range = [{"from":row[0], "to":row[1]} for row in result]
 		return range
 	
+	
+	def fetchtimebins_for_home(self, binsize,home,fromts=None, tots=None):
+		whereclause = ""
+	
+		if fromts is not None and tots is not None:
+			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
+		
+		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s" % (home,whereclause)
+		result = self.conn.execute(minmaxsql)
+		row = result.fetchone()
+		mints = row[0]
+		maxts = row[1]
+		
+		sql = "SELECT u.ts, u.domain,  u.host from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s ORDER BY u.host, u.ts ASC" % (home,whereclause)
+		
+		result = self.conn.execute(sql)
+		
+		hosts = {}
+		ts = mints
+		keys = []
+		
+		while ts < maxts+binsize:
+			keys.append(self.binlabel(binsize, ts))
+			ts = ts + binsize
+		
+		for row in result:
+			
+			host = row[2]
+			ts   = row[0]
+			idx = keys.index(self.binlabel(binsize, ts))
+			
+			if host not in hosts:
+				hosts[host] = [1]*len(keys)
+				hosts[host][idx] = hosts[host][idx] + 1
+			else:
+				hosts[host][idx] = hosts[host][idx] + 1
+				
+		return {"keys":keys, "hosts":hosts}
+		
+			
 	def fetch_timebins_for_host(self, binsize, host, fromts=None, tots=None):
 		whereclause = ""
 		if fromts is not None and tots is not None:
 			whereclause = "AND (ts >= %d AND ts < %d)" % (fromts, tots)
 			
 		sql = "SELECT ts, domain from URLS where host = '%s' %s ORDER BY ts ASC" % (host,whereclause)
+		
+		
 		result = self.conn.execute(sql)
 		urls = [{"ts":row[0], "domain":row[1]} for row in result]
-		#get the start of day time of the smallest ts
 		
 		if len(urls) <= 0:
 			return []
 			
-		startts = time.mktime(datetime.strptime(datetime.fromtimestamp(urls[0]['ts']).strftime('%Y-%m-%d'), '%Y-%m-%d').timetuple())
+		#startts = time.mktime(datetime.strptime(datetime.fromtimestamp(urls[0]['ts']).strftime('%Y-%m-%d'), '%Y-%m-%d').timetuple())
 
 		bins = {}
 		binhistory = {}
 		
 		for url in urls:
-			label = self.binlabel(binsize=binsize, startts=startts, ts=url['ts'])
+			label = self.binlabel(binsize, url['ts'])
 		
 			if label in bins:
 				bin = bins[label]
@@ -61,8 +102,7 @@ class NetDB( object ):
 				bin = 1	
 				
 			bins[label] = bin  
-		print "returning: "
-		print sorted(bins.iteritems(), key=operator.itemgetter(0))
+		
 		return sorted(bins.iteritems(), key=operator.itemgetter(0))
 		
 	def seen(self, binhistory, domain, label):
@@ -76,10 +116,8 @@ class NetDB( object ):
 
 		return False
 			
-	def binlabel(self,binsize, startts, ts): 
-		bintime = startts + (((ts-startts) / int(binsize)) * binsize)
-		
-		#set date date grouping based on bin size
+	def binlabel(self,binsize, ts): 
+		#set date date grouping based on bin size (daily/hourly/every minute/every second)
 		dformat = '%Y/%m/%d %H:%M:%S'
 		
 		if binsize >= 60*60*24:
@@ -89,7 +127,10 @@ class NetDB( object ):
 		elif binsize >= 60: 
 			dformat = '%Y/%m/%d %H:%M'
 		
-		return datetime.fromtimestamp(bintime).strftime(dformat)
+		return datetime.fromtimestamp(ts).strftime(dformat)
+		#s = datetime.fromtimestamp(ts).strftime(dformat)
+		
+		#return time.mktime(datetime.strptime(s,dformat).timetuple())
 	
 	def fetch_device_hosts(self):
 		result = self.conn.execute("SELECT DISTINCT(host) FROM PROCESSES")
@@ -271,6 +312,18 @@ class NetDB( object ):
 		result = self.conn.execute(sql)
 		netdata = [{"ts":row[0], "wifiup":row[1], "wifidown":row[2], "cellup":row[3], "celldown":row[4]} for row in result]
 		return netdata
+	
+	def fetch_hosts_for_home(self, home):
+		#use ? instead!
+		sql = "SELECT host FROM HOUSE WHERE name =  '%s'" % (home)
+		result = self.conn.execute(sql)
+		hosts = [row[0] for row in result]
+		return hosts
+		
+	def fetch_latest_ts_for_home(self, home):
+		sql = "SELECT max(u.ts) FROM URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s'" % (home)  
+		result = self.conn.execute(sql)
+		return result.fetchone()[0]
 		
 	def insert_tag_for_host(self, host,domain,tag):
 		

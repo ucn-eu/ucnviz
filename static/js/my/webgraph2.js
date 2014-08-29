@@ -364,6 +364,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			for (i = 0; i < summary.length; i++){
 				ts = new Date(summary[i][0]).getTime();
+				 //summary[i][0]*1000;//
 				mints = Math.min(mints, ts);
 				maxts = Math.max(maxts, ts);
 				d1.push([ts, summary[i][1]]);
@@ -373,10 +374,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			m2 = moment.unix(maxts/1000);
 			
 		
-			//if (depth() == 0)
-			//	subtitle(m1.format('MMM Do YYYY') + " to " + m2.format('MMM Do YYYY'));
-			//else
-				subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
+			subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
 				
 			var data = [{ data: d1, label: "site requests", color: "#2CA089" }];
 			
@@ -502,6 +500,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			end 	= 0;
     		data 	= [];
     		readings = [];
+    
     		
     		for (i = 0; i < tags().length; i++){
     			readings[i] = [];
@@ -584,6 +583,12 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 				readings[labels.indexOf(traffic[i].domain)].push([traffic[i].ts*1000, labels.indexOf(traffic[i].domain)-0.5, 1000]);
 			}
+			
+			m1 = moment.unix(start);
+			m2 = moment.unix(end); 
+			
+			timerange =  m1.format('MMM Do h:mm:ss a') + " to " + m2.format('h:mm:ss a');	
+			subtitle(timerange);
 			
 			Flotr._.each(readings, function(d){
 				

@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
 <!--header and nav -->
-<div id="activity">
+<div id="overview">
 	<div class="row">
 		<div class="large-12 columns">
 			<ul class="pagination right">		
@@ -11,7 +11,14 @@
 			</ul>
 		</div>
 	</div>
-	<h1> Overall activity graphs...</h1>
+	<div class="row">
+		<div class="large-12 columns">
+			<div id="overview"></div>
+		   <!-- style="width:100%;">
+				<svg style='height:500px'/>
+			</div>-->
+		</div>
+	</div>
 </div>
 <script data-main="{{url_for('static', filename='js/activity.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
 {% endblock %}

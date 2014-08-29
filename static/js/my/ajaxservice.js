@@ -26,7 +26,6 @@ define(['jquery'], function($){
                     //contentType: 'application/x-www-form-urlencoded',
                     type: "GET",
                     data: jsonIn,
-                    timeout: 4000,
                     dataType: 'json',
                     
                     success: function(result){
