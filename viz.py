@@ -41,7 +41,7 @@ def overview():
  	#if time range is not provided, set it to the last 24 hours of recorded data
  	if tots is None or fromts is None:
  		tots 	= netDB.fetch_latest_ts_for_home(home)
- 		fromts 	= tots - 2 * 24*60*60
+ 		fromts 	= tots - 1.5 * 24*60*60
  		
  	if bin is not None:
  		bin = int(bin)

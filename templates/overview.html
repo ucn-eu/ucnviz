@@ -1,6 +1,18 @@
 {% extends "layout.html" %}
 {% block body %}
 <!--header and nav -->
+<style>
+
+path {
+    stroke: none;
+    opacity: 0.8;
+}
+
+.area{
+	clip-path: url(#clip);
+}
+
+</style>
 <div id="overview">
 	<div class="row">
 		<div class="large-12 columns">
@@ -13,10 +25,8 @@
 	</div>
 	<div class="row">
 		<div class="large-12 columns">
-			<div id="overview"></div>
-		   <!-- style="width:100%;">
-				<svg style='height:500px'/>
-			</div>-->
+			<div id="context"></div>
+			<div id="zoom"><div>
 		</div>
 	</div>
 </div>
