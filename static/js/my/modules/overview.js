@@ -1,4 +1,4 @@
-define(['jquery','ajaxservice', 'knockout','d3','nvd3'], function($,ajaxservice,ko,d3,nv){
+define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 	
 	var 
 	
@@ -12,11 +12,11 @@ define(['jquery','ajaxservice', 'knockout','d3','nvd3'], function($,ajaxservice,
 		
 		filters   = [],
 		
-		margin    = {top:20, right:20, bottom:30,left:50},
+		margin    = {top:20, right:100, bottom:50,left:50},
 		
-		width 	  = 960 - margin.left - margin.right,
+		width 	  = 870 - margin.left - margin.right,
 		
-		height    = 400 - margin.top - margin.bottom,
+		height    = 300 - margin.top - margin.bottom,
 		height2   = 150 - margin.top - margin.bottom,
 	
 		x  = d3.time.scale().range([0,width]),
@@ -58,10 +58,13 @@ define(['jquery','ajaxservice', 'knockout','d3','nvd3'], function($,ajaxservice,
 				.attr("width", width + margin.left + margin.right)
 				.attr("height", height + margin.top + margin.bottom)
 				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),		
+		
+		zoom = d3.select("#zoom").append("svg")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height2 + margin.top + margin.bottom)
+				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
-		
-		
-				
 		
 		init = function(data){
 			hosts = Object.keys(data.hosts);
@@ -174,11 +177,7 @@ define(['jquery','ajaxservice', 'knockout','d3','nvd3'], function($,ajaxservice,
 		
 		renderzoomer = function(data){
 			
-			var zoom = d3.select("#zoom").append("svg")
-				.attr("width", width + margin.left + margin.right)
-				.attr("height", height2 + margin.top + margin.bottom)
-				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			
 				
 			var zbrowser = zoom.selectAll(".zbrowser")
 					.data(browsers)
@@ -318,47 +317,7 @@ define(['jquery','ajaxservice', 'knockout','d3','nvd3'], function($,ajaxservice,
 				.duration(1000)
 				.call(yAxis);
 			
-				
-			
-		
-		},
-		
-		nvd3graph = function(){
-			
-			nv.addGraph(function() {
-				
-				//have to pad with 0s!!
-				
-				var chart = nv.models.stackedAreaChart()
-							  .margin({right: 100})
-							  .x(function(d) { return d[0] *1000})   //We can modify the data accessor functions...
-							  .y(function(d) { return d[1]  })   //...in case your data is formatted differently.
-							  .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
-							  .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
-							  .transitionDuration(500)
-							  .showControls(false)       //Allow user to choose 'Stacked', 'Stream', 'Expanded' mode.
-							  .clipEdge(true);
-
-				//Format x-axis labels with custom function.
-				chart.xAxis
-					.tickFormat(function(d) { 
-					  return d3.time.format('%x')(new Date(d)) 
-				});
-
-				chart.yAxis
-					.tickFormat(d3.format(',.0f'));
-
-				//add the chart to the dom and provide with data!
-				
-				d3.select('#chart svg')
-				  .datum(data)
-				  .call(chart);
-
-				nv.utils.windowResize(chart.update);
-
-				return chart;
-			});			
-		}	
+		}
 		
 	return {
 		init: init
