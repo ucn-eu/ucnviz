@@ -115,7 +115,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 			xrange = brush.empty() ? x2.domain() : brush.extent();
 			from = xrange[0].getTime(); 
 			to   = xrange[1].getTime(); 
-			timerange({from:parseInt(from/1000), to:parseInt(to/1000)});
+			if (filters.length == 1){
+				timerange({host:filters[0], from:parseInt(from/1000), to:parseInt(to/1000)});
+			}
+			
 		},
 		
 		brush = d3.svg.brush()

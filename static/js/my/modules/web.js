@@ -54,6 +54,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		}),
 		
 		_str = ko.observable().subscribeTo("range").subscribe(function(timerange) {
+			selectedhost(timerange.host);
 			fromts = timerange.from;
 			tots = timerange.to;
 			depth(0);
