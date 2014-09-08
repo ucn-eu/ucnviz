@@ -1,4 +1,4 @@
-define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
+define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxservice,ko,d3){
 	
 	var 
 	
@@ -8,16 +8,20 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 		
 		browsers,
 		
+		selectedhost = ko.observable().publishOn("host"),
+		
+		timerange	 = ko.observable().publishOn("range"),
+		
 		data 	  = [],
 		
 		filters   = [],
 		
-		margin    = {top:20, right:100, bottom:50,left:50},
+		margin    = {top:20, right:90, bottom:40,left:50},
 		
-		width 	  = 870 - margin.left - margin.right,
+		width 	  = 1200 - margin.left - margin.right,
 		
 		height    = 300 - margin.top - margin.bottom,
-		height2   = 150 - margin.top - margin.bottom,
+		height2   = 180 - margin.top - margin.bottom,
 	
 		x  = d3.time.scale().range([0,width]),
 		x2 = d3.time.scale().range([0, width]),
@@ -66,6 +70,13 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
 		
+		key = d3.select("#activitykey").append("svg")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height",80)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+				.attr("class", "activitykey"),
+				
 		init = function(data){
 			hosts = Object.keys(data.hosts);
 			color.domain(hosts);
@@ -100,9 +111,17 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 			
 		},
 		
+		brushend = function(){
+			xrange = brush.empty() ? x2.domain() : brush.extent();
+			from = xrange[0].getTime(); 
+			to   = xrange[1].getTime(); 
+			timerange({from:parseInt(from/1000), to:parseInt(to/1000)});
+		},
+		
 		brush = d3.svg.brush()
     			.x(x2)
-    			.on("brush", brushed),
+    			.on("brush", brushed)
+    			.on("brushend", brushend),
     			
 		
 		renderactivity = function(d){
@@ -111,7 +130,16 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 				.append("rect")
 				.attr("width", width)
 				.attr("height", height);
-				
+			
+			svg.append("g")
+				.attr("class", "topg")
+				.attr("width", width)
+				.attr("height", height)
+				.append("rect")
+				.attr("class", "cback")
+				.attr("width", width)
+				.attr("height", height);
+					
 			data = d;
 			
 			cdata = [];
@@ -138,7 +166,9 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 			x2.domain(x.domain());
   			y2.domain(y.domain());
 			
-			browser = svg.selectAll("browser")
+			mychart = svg.selectAll("g.topg");
+			
+			browser = mychart.selectAll("browser")
 					.data(browsers)
 					.enter().append("g")
 					.attr("class", "browser")
@@ -152,34 +182,73 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 				.style("stroke-opacity", 1.0)
 				.on("click", areaclicked);
 			
-			browser.append("circle")
-				  .attr("transform", function(d,i) {return "translate(" + (width-100) + "," + (20*i) + ")"; })
-				  .attr("r", 8)
-				  .style("fill", function(d){return staticcolor[d.name]})	
-				  
-			browser.append("text")
-				  .attr("transform", function(d,i) {return "translate(" + (width-70) + "," + (20*i) + ")"; })
-				  .attr("dy", ".35em")
-				  .text(function(d) { return d.name; });
-
 			 svg.append("g")
 				  .attr("class", "x axis")
 				  .attr("transform", "translate(0," + height + ")")
 				  .call(xAxis);
 
-			  svg.append("g")
+			 svg.append("g")
 				  .attr("class", "y axis")
 				  .call(yAxis);
-				  
-			   renderzoomer(browsers);	
+			  
+			renderzoomer(browsers);	
+			renderkey();
+		
 		},
 		
 		
+		updatekey = function(){
+				
+			var circles = key.selectAll("circle")
+				.data(Object.keys(data.hosts))
+					
+			circles
+				.style("fill-opacity", function(d){console.log("in here!");return filters.indexOf(d) == -1 ? 0.2 : 1.0});
+		}
+		
+		renderkey = function(){
+		
+			var padding = 100;
+			
+			var keys = key.selectAll("g")
+				.data(Object.keys(data.hosts))
+			
+			//add new	
+				
+			keys.enter()
+				.append("circle")
+				.attr("transform", function(d,i) {return "translate(" + (padding*i) + "," + 10 + ")"; })
+				.attr("r", 8)
+				.style("fill", function(d){return staticcolor[d]})	
+				.style("fill-opacity", function(d){return filters.indexOf(d) == -1 ? 0.2 : 1.0})	
+				.style("stroke", function(d){return staticcolor[d]})	
+				.style("stroke-opacity", 1.0)
+				.on("click", keyclicked);
+				  
+			keys.enter()
+				.append("text")
+				.attr("class", "key")
+				.attr("transform", function(d,i) {return "translate(" + ((padding*i) + 10) + "," + 10 + ")"; })
+				.attr("dy", ".35em")
+				.text(function(d) { return d; })
+				.on("click", keyclicked);
+		},
+		
 		renderzoomer = function(data){
 			
-			
+			zoom.append("g")
+				.attr("class", "ztopg")
+				.attr("width", width)
+				.attr("height", height2)
+				.append("rect")
+				.attr("class", "cback")
+				.attr("width", width)
+				.attr("height", height2);
 				
-			var zbrowser = zoom.selectAll(".zbrowser")
+			
+			var mychart = zoom.selectAll("g.ztopg")
+				
+			var zbrowser = mychart.selectAll(".zbrowser")
 					.data(browsers)
 					.enter().append("g")
 					.attr("class", "zbrowser");
@@ -187,7 +256,10 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 			zbrowser.append("path")
 				.attr("class", "area")
 				.attr("d", function(d) {return area2(d.values);})
-				.style("fill", function(d){return staticcolor[d.name]})	
+				.style("fill", function(d){return staticcolor[d.name]})
+				.style("fill-opacity", 0.2)	
+				.style("stroke", function(d){return staticcolor[d.name]})	
+				.style("stroke-opacity", 1.0)
 				.on("click", areaclicked);
 				
 	
@@ -195,6 +267,10 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 				  .attr("class", "x axis")
 				  .attr("transform", "translate(0," + height2 + ")")
 				  .call(xAxis2);
+			
+			zoom.append("g")
+				  .attr("class", "y axis")
+				  .call(yAxis2);
 			
 			zoom.append("g")
 				.attr("class", "x brush")
@@ -205,22 +281,35 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 			 
 		},
 
-
-		areaclicked = function(d){
-			
-			
-			if (filters.indexOf(d.name) == -1){
-				filters.push(d.name);
-			}else{
-				filters = []
-			}
-			
-			redraw(data);
+		keyclicked = function(d){
+			updatefilters(d);
 		},
 		
+		areaclicked = function(d){
+			updatefilters(d.name);
+		},
+
+		updatefilters = function(host){
+		
+			var idx = filters.indexOf(host);
+			
+			if (idx == -1){
+				filters.push(host);
+			}else{
+				filters.splice(idx,1);
+			}
+			
+			if (filters.length == 1){
+				selectedhost(filters[0]);
+			}
+			
+			redraw();
+			updatekey();
+		},
+		
+		
+		
 		redraw = function(){
-			
-			
 			
 			if (filters.length == 0){
 				color.domain(Object.keys(data.hosts));
@@ -245,7 +334,7 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 			//-------- update the key ------------
 			
 			
-			var key = svg.selectAll(".browser")	
+			/*var key = svg.selectAll(".browser")	
 						.data(filtered)
 								
 			key.select("text")
@@ -255,7 +344,7 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 			key.select("circle")
 				  	.attr("transform", function(d,i) {return "translate(" + (width-100) + "," + (20*i) + ")"; })
 				  	.attr("r", 8)
-				  	.style("fill", function(d){return staticcolor[d.name]})	
+				  	.style("fill", function(d){return staticcolor[d.name]})	*/
 					
 			
 			   
@@ -296,14 +385,14 @@ define(['jquery','ajaxservice', 'knockout','d3'], function($,ajaxservice,ko,d3){
 							  .style("stroke-opacity", 1.0)
 							  .on("click", areaclicked)
 								
-							d3.select(this).append("circle")
+							/*d3.select(this).append("circle")
 			   				  .attr("transform", function(d) {return "translate(" + (width-100) + "," + (20*idx) + ")"; })
 			   				  .attr("r", 8)
 			   				  .style("fill", function(d){return staticcolor[d.name]});
 			   				  
 			   				 d3.select(this).append("text")
 			   				  .attr("transform", function(d) {return "translate(" + (width-70) + "," + (20*idx) + ")"; })
-			   				 .text(function(d) { return d.name});
+			   				 .text(function(d) { return d.name});*/
 						});
 						
 		

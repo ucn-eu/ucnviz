@@ -39,6 +39,11 @@ path {
 	shape-rendering: crispEdges;
 }
 
+.axis text{
+	font-family: sans-serif;
+	font-size: 11px;
+}
+
 .brush .extent {
 	stroke: #fff;
 	fill-opacity: .125;
@@ -61,17 +66,17 @@ path {
 
 .render {
 	height: 400px;
-	width: 800px;
+	width: 1060px;
 }
 
 .activityrender {
 	/*width: 650px;*/
 	height: 400px;
-	width: 800px;
+	width: 766px;
 }
 
 .aligner{
-	padding-left:5px; 
+	padding-left:48px; 
 	padding-right:5px;
 }
 .key{
@@ -85,7 +90,7 @@ path {
 
 .rendernetdata{
 	height: 280px;
-	width: 800px;
+	width: 1060px;
 }
 
 #zoomkey{
@@ -103,4 +108,31 @@ p{
 }
 
 
+.cback{
+	fill:#ffffff;
+/*	stroke: #666666;*/
+}
 
+#overall, #web, #tags{
+	border: 2px solid #666666;
+	margin-top: 10px;
+}
+
+text.key{
+	fill:white;
+}
+
+.title{
+	background:#3b3b3b;
+	color:white;
+	height:30px;
+	padding-left: 10px;
+	font-size:140%;
+}
+
+.controlbar{
+	background:#3b3b3b;
+	color:white;
+	height:60px;
+	padding-left: 10px;
+}

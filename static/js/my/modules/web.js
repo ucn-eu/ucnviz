@@ -53,6 +53,15 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			ajaxservice.ajaxGetJson('web/summary',parameters[0], renderroot);
 		}),
 		
+		_str = ko.observable().subscribeTo("range").subscribe(function(timerange) {
+			fromts = timerange.from;
+			tots = timerange.to;
+			depth(0);
+			parameters[depth()] = {host: selectedhost(), bin:calculatebin(tots-fromts), fromts:fromts, tots:tots};
+			console.log(parameters);
+			ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
+		}),
+		
 		toggleoverlay = function(){
 			overlay(!overlay());
 			if (depth() <= 2){
@@ -288,7 +297,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			var plot = $.plot(placeholder, data, {
 				
 				bars: { show: true, barWidth:bin*1000, /*barwidths[depth()],*/ align:'center', fill: 0.4 },
-				xaxis: { ticks: 48, tickFormatter:function(v,xaxis){return "";}},/*mode:"time"}*/
+				xaxis: { mode:"time"},
 				yaxis: { }, /*tickFormatter:function(v,xaxis){return "";}},*/
 				
 				grid: { markings: markings, clickable:true },

@@ -244,4 +244,4 @@ if __name__ == "__main__":
 		background = [x.strip() for x in f.readlines()]
 		
 	netDB = NetDB(name="netdata.db")
-	app.run(debug=True)
+	app.run(debug=True, host='0.0.0.0')
