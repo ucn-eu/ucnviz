@@ -63,7 +63,7 @@ class NetDB( object ):
 			idx = keys.index(self.binlabel(binsize, ts))
 			
 			if host not in hosts:
-				hosts[host] = [1]*len(keys)
+				hosts[host] = [0]*len(keys)
 				hosts[host][idx] = hosts[host][idx] + 1
 			else:
 				hosts[host][idx] = hosts[host][idx] + 1
