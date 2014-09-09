@@ -70,9 +70,8 @@ path {
 }
 
 .activityrender {
-	/*width: 650px;*/
 	height: 400px;
-	width: 766px;
+	width: 100%;
 }
 
 .aligner{
@@ -117,6 +116,9 @@ p{
 	border: 2px solid #666666;
 	margin-top: 10px;
 }
+#tags{
+	margin-bottom: 10px;
+}
 
 text.key{
 	fill:white;
@@ -133,6 +135,9 @@ text.key{
 .controlbar{
 	background:#3b3b3b;
 	color:white;
-	height:60px;
-	padding-left: 10px;
+	padding: 5px 5px 5px 10px;
+}
+
+.popover{
+	min-width: 250px;
 }

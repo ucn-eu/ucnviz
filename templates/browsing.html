@@ -6,6 +6,9 @@
 	clip-path: url(#clip);
 }
 </style>
+
+
+
 <div id="visualisation">
 	<div class="row">
 		<div class="col-md-12">
@@ -31,7 +34,16 @@
 	<div id="overall">
 		<div class="row">
 			<div class="col-md-12">
-				<div class="title"><strong>overall</strong> activity</div>
+				<div class="title">
+					<div class="row">
+						<div class="col-md-4">
+							<strong>overall</strong> activity
+						</div>
+						<div class="col-md-8">
+							<div data-bind="text:subtitle"></div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="row">
@@ -59,7 +71,16 @@
 	<div id="web">
 		<div class="row">
 			<div class="col-md-12">
-				<div class="title"><strong>tag</strong> activity</div>
+				<div class="title">
+					<div class="row">
+						<div class="col-md-4">
+							<strong>tag</strong> activity
+						</div>
+						<div class="col-md-8">
+							<div data-bind="text:subtitle"></div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="row">
@@ -76,99 +97,139 @@
 			</div>
 			
 		</div>
+	</div>
+	
+	<div id="tagger">
 		
-		<div class="row">
-			<div class="col-md-12">
-				<div class="controlbar"></div>
+	
+		<div  data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title" id="myModalLabel">tag activity</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<div class="col-md-5">
+								<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
+							</div>
+							<div class="col-md-5">
+								<div class="row">
+									<div class="col-md-8">
+										<select class="form-control" data-bind="options:tags, value:chosentag"></select>
+									</div>
+									<div class="col-md-4">
+										<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
+									</div>
+								</div>
+								<hr>
+								<div class="row">
+									<div class="col-md-6">
+										 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
+									</div>
+									<div class="col-md-6">
+										<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
+									</div>
+								</div>
+							</div>			
+						</div>
+						
+						
+					</div> <!-- end of modal body! -->
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
 			</div>
 		</div>
-	</div><!-- end of web -->
+					
+		<div class="row">
+			<div class="col-md-12">
+				<div class="controlbar">	
+					<div class="row">
+						<div class="col-md-10">
+						</div>
+						<div class="col-md-2">
+							<button class="pull-right btn btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div><!-- end of tagger! -->
 	
 	
 	<div id="tags">
+		
 		<div class="row">
 			<div class="col-md-12">
 				<div class="title"><strong>tagged</strong> activity</div>
 			</div>
 		</div>
-		<div class="row" data-bind="visible:shouldshowtags()"> <!-- tag creator -->
-			<div class="col-md-12">
-				<!--<hr>
-				<h3>Tags <small> annotate your browsing </small></h3>-->
-				<div class="col-md-7">
-					<select multiple style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
-				</div>
-				<div class="col-md-5">
-					<div class="row">
-						<div class="col-md-8">
-							<select data-bind="options:tags, value:chosentag"></select>
-						</div>
-						<div class="col-md-4">
-							<a href="#" data-bind="click:function(){tagurls()}" class="button tiny">TAG!</a>
-						</div>
-					</div>
-					<hr>
-					<div class="row">
-						<div class="col-md-6">
-							 <input type="text" data-bind="value: newtag" placeholder="new tag" />
-						</div>
-						<div class="col-md-6">
-							<a href="#" data-bind="click:function(){addtag()}" class="button tiny">ADD TAG</a>
-						</div>
-					</div>
-				</div>							
-			</div>
-		</div>
-		<div class="row" data-bind="visible:showtag">
-			<hr>
-			<div class="col-md-10">
-				<h3 data-bind="text: 'domains for ' + tagtoview()"></h3>
-				<table>
-					<thead>
-						<tr>
-							<th>domain</th>
-							<th></th>
-						</tr>
-					</thead>
-
-					<tbody data-bind="foreach:domainsfortag">
-						<tr>
-							<td data-bind="text:$data"></td>
-							<td> <a href="#" data-bind="click:function(){removetag($data)}">remove</a></td>
-						</tr>
-					</tbody>
-				</table>
-			</div>	
-			<div class="col-md-2">
-				<a href="#" data-bind="click:function(){showtag(false)}"class="button tiny radius success">hide</a>
-			</div>
-		</div>	<!-- end of tag creator -->	
 		
-		<div class="row"><!-- tag graph -->
-			<!--<hr>
-			<h3>Tagged activity <small> updated as you tag your urls </small></h3>-->
-			<div style="padding:30px">
-				<div class="col-md-2 key">
-					<div data-bind="foreach:reversedtags">
-						<p data-bind="style:{height:$parent.tagheight()}"><a href="#", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}"></a></p>
-					</div>
+		<div class="row" style="padding: 10px 10px 20px 10px;"><!-- tag graph -->
+			
+			<div class="col-md-2 key">
+				
+				<div data-bind="foreach:reversedtags">
+					<p data-bind="style:{height:$parent.tagheight()}"><a href="#tags", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}, popover: {template: 'popoverBindingTemplate', title: $data}"></a></p>
 				</div>
-				<div class="col-md-10">
-					<div class="aligner">
-						<div id="activitygraph" class="activityrender"></div>
-					</div>
-				</div>	
+			</div>
+			<div class="col-md-10">
+				<div id="activitygraph" class="activityrender"></div>
 			</div>	
+				
 		</div>	<!-- end of tag graph -->
 		
 		<div class="row">
 			<div class="col-md-12">
-				<div class="controlbar"></div>
+				<div class="controlbar">
+					<div class="row">
+						<div class="col-md-3 col-md-offset-9">
+							<div class="row">
+					 			<div class="col-md-8">
+					 				<input type="text" class="pull-right form-control" data-bind="value: newtag" placeholder="create new tag" />
+								</div>
+								<div class="col-md-4">
+									<a href="#" data-bind="click:function(){addtag()}" class="pull-right btn btn-sm btn-primary">ADD TAG</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 		
 	</div> <!-- end of tags -->
 </div>	<!-- end of viz -->
 
+<script type="text/html" id="popoverBindingTemplate">
+	<button class="close pull-right" type="button" data-dismiss="popover">x</button>
+	<div class="row">
+	
+		<div class="col-md-12">
+			
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<th>domain</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody data-bind="foreach:$root.domainsfortag">
+					<tr>
+						<td data-bind="text:$data"></td>
+						<td> <a href="#" data-bind="click:function(){$root.removetag($parent,$data)}">remove</a> </td>
+					</tr>
+				</tbody>
+			</table>
+			<!-- MUST ADD OPTION TO DELETE ENTIRE TAG -->
+			<!--<a href="#" data-bind="click:function(){$root.removetag($parent)}">delete this tag!</a>-->
+		</div>
+	
+	</div>	
+</script>
+				
 <script data-main="{{url_for('static', filename='js/modules.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
 {% endblock %}

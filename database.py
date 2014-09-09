@@ -203,8 +203,11 @@ class NetDB( object ):
 			qstring =url['path'].split(searchsplits[url['domain']])
 			if len(qstring) > 1:
 				term = qstring[1].split("&")[0]
-			 	queries.append(urllib.unquote(term).decode('utf-8')) 
-		
+				try:
+			 		queries.append(urllib.unquote(term).decode('utf-8')) 
+				except Exception, e:
+					print "couldn't encode %s" % term
+					
 		return queries
 
 	def fetch_urls_for_host(self, host, fromts=None, tots=None):
@@ -336,6 +339,7 @@ class NetDB( object ):
 	
 	def remove_tag_for_host(self,host,tag):
 		sql = "DELETE FROM TAGS WHERE host='%s' AND domain = '%s'" % (host,tag)
+		print sql
 		self.conn.execute(sql)
 		self.conn.commit()
 	

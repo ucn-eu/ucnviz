@@ -243,7 +243,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		renderroot = function(data){
-		
+			
 			cache[depth()] = data;
 		
 			bin = parameters[depth()].bin;
@@ -270,10 +270,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				d1.push([ts, summary[i][1]]);
 			}
 		
-			m1 = moment.unix(mints/1000);
-			m2 = moment.unix(maxts/1000);
 			
-		
+			m1 = moment.unix(parameters[depth()].fromts? parameters[depth()].fromts : mints/1000);
+			m2 = moment.unix(parameters[depth()].tots? parameters[depth()].tots: maxts/1000);
 			subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
 				
 			var data = [{ data: d1, label: "site requests", color: "#2CA089" }];

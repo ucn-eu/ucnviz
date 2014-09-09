@@ -3,9 +3,10 @@ require.config({
         paths:{
           "knockout" : "../knockout/knockout-3.1.0",
           "knockoutpb": "../knockout/knockout-postbox",
+          "knockout-bootstrap": "../knockout/knockout-bootstrap.min",
           "jquery" : "../jquery/jquery-2.1.0.min",
 	  	  "modernizr" : "../modernizr/modernizr.min",
-	  	  "foundation" : "../foundation/foundation.min",
+	  	  "bootstrap":'../../bootstrap/js/bootstrap.min',
 	  	  "d3":"../d3/d3.min",
 	  	  "async": '../require/lib/async',
 	  	  'moment': '../moment/moment.min',
@@ -19,7 +20,7 @@ require.config({
         },
         
         shim: {
-        	"foundation" : ["jquery"],
+        	"bootstrap" : ['jquery'],
         	"gmapsDone"  : ["jquery"],
         	"gmaps"      : ["jquery"],
         	"flot"		 : ["jquery"],
@@ -30,19 +31,22 @@ require.config({
 })
 
 //'async!https://maps.google.com/maps/api/js?v=3&libraries=drawing&sensor=false'
-require(['modules/overview','modules/hosts', 'modules/web', 'modules/tags', 'knockout', 'ajaxservice'], function(overview,hosts, web, tags, ko, ajaxservice) {
+require(['modules/overview','modules/hosts', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function(overview,hosts,web, tagger, tags, ko, ajaxservice) {
   
   	ajaxservice.ajaxGetJson('/overview/activity', {home:'lodges'}, function(data){
 		overview.init(data);
+		ko.applyBindings(overview, $("#overall")[0]);
 	});
 	
     ajaxservice.ajaxGetJson('web/bootstrap', {}, function(data){
 		hosts.init(data.hosts);
 		tags.init(data.tags);
+		tagger.init(data.tags);
 		web.init();
 		
 		ko.applyBindings(hosts, $("#hosts")[0]);
 		ko.applyBindings(web, $("#web")[0]);
+		ko.applyBindings(tagger, $("#tagger")[0]);
 		ko.applyBindings(tags, $("#tags")[0]);
 	});
 });

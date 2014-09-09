@@ -1,19 +1,19 @@
-define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime', 'flotselection', 'flotsymbol'], function($,ajaxservice,ko,moment){
+define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'knockout-bootstrap'], function($,ajaxservice,ko,moment){
 	
 	var
-		
-		tagtoview = ko.observable(),
-		
-		showtag   = ko.observable(false),
 		
 		domainsfortag = ko.observableArray([]),
 		
 		hosts	= ko.observableArray([]),
 		
-		tags	 = ko.observableArray([]),
+		tags	= ko.observableArray([]),
+		
+		newtag  = ko.observable("").syncWith("newtag", true),
 		
 		fromts,
+		
 		tots,
+		
 		bin,
 		
 		reversedtags = ko.computed(function(){
@@ -27,36 +27,20 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		tagheight = ko.computed(function(){
 			return ((tags().length+1)*20)/tags().length + "px"
 		}),
-		
-		chosentag = ko.observable(""),
-		
-		urlsfortagging = ko.observableArray([]),
-		
-		chosenurlstotag	= ko.observableArray([]),
-		
-		newtag			= ko.observable(""),
-			
+				
 		tagadded = function(){	
-			newtag("")
+			newtag("");
 			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);
 		},
 		
-		addtag 	= function(){
+		addtag = function(){
 			ajaxservice.ajaxGetJson('tag/add', {tag:newtag()}, tagadded);
 		},
-		
-		shouldshowtags = ko.computed(function(){
-			return false;//urlsfortagging().length > 0;
-		}),
-	
-		selectedhost = ko.observable(),
-		
 		
 		selectedhost = ko.observable(),
 		
 		_shs = ko.observable().subscribeTo("host").subscribe(function(ahost) {
     		selectedhost(ahost);
-    		urlsfortagging([]);
 			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
 		}),
 			
@@ -64,18 +48,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			return selectedhost() == ahost;
 		},
 				
-		tagparameters = [],
-		
-		placeholder = $("#squidgraph"),
-		
-		
-		colorchart	= ["#FFE3E3", "#F2F5A9", "#f5ffea", "#ddffff", "#A9BCF5"],
-		
-		colorlookup = {},
-		
-		 
-		colorindex = 0,
-		
+		tagparameters = [],	
 		
 		_shs = ko.observable().subscribeTo("webselect").subscribe(function(data) {
 			fromts = data.fromts/1000;
@@ -83,67 +56,46 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			bin = data.bin;
 			
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
-			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 			
-			//and update activity too!
+			// update activity too!
 			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);
 		
 		}),
 
 		init = function(taglist){
 			tags(taglist);			
-		}
-		
-		/*
-		 * send the tagged data to server
-		 */
-		tagurls = function(){
-			domains = [];
-			
-			for (i = 0; i < chosenurlstotag().length; i++)
-				domains.push(chosenurlstotag()[i].domain);
-			
-			ajaxservice.ajaxGetJson('tag/tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, urlstagged);
-		},
-		
-		urlstagged = function(data){
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
-			ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
-			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
-		},
-		
-		updatetagdata = function(data){
-			urlsfortagging(data.urls);
-		},
-		
-		rendertagselectionitem = function(item){
-			tag = "";
-			if (item.tag)
-				tag = "| " + item.tag;
-				 
-			return item.domain + ' | ' + item.requests + tag;
-		},
-		
-		removetag = function(tag){
-			
-			ajaxservice.ajaxGetJson('tag/remove',{host: selectedhost(), tag:tag}, tagremoved);
-		},
-		
-		tagremoved = function(data){
-			//reload dependent data
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
-			ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
-			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
-		},
-		
-		getdomainsfortag	 = function(tag){
-			tagtoview(tag);
-			showtag(true);
-			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
 		},
 		
 		updatedomainsfortag = function(data){
 			domainsfortag(data.urls);
+		},
+		
+		getdomainsfortag	 = function(tag){
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
+		},
+		
+		
+		removetag = function(tag, domain){	
+			ajaxservice.ajaxGetJson('tag/remove',{host: selectedhost(), tag:domain}, curry(tagremoved, tag));
+		},
+		
+		
+		curry = function(fn){
+			var args = Array.prototype.slice.call(arguments, 1);
+			return function(){
+				return fn.apply(this, args.concat(Array.prototype.slice.call(arguments, 0)));
+			};
+		},
+		
+		
+		tagremoved = function(tag, data){
+			
+			//reload dependent data
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
+			//ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
+			
+			//need to pass in tag, NOT data, which is the domain that was deleted!
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
 		},
 		
 		renderactivity = function(data){
@@ -208,24 +160,12 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 	
 	return{
 		init:init,
-	
-		urlsfortagging:urlsfortagging,
-		chosenurlstotag:chosenurlstotag,
-		shouldshowtags:shouldshowtags,
-		tagurls:tagurls,
-		tags: tags,
 		tagheight: tagheight,
 		reversedtags:reversedtags,
-		chosentag: chosentag,
-		newtag: newtag,
-		addtag: addtag,
 		getdomainsfortag: getdomainsfortag,
 		domainsfortag:domainsfortag,
-		tagtoview: tagtoview,
-		showtag:showtag,
+		newtag:newtag,
+		addtag:addtag,
 		removetag: removetag,
-		
-		rendertagselectionitem:rendertagselectionitem,
-		
 	}
 });

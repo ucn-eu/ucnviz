@@ -1,4 +1,4 @@
-define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxservice,ko,d3){
+define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], function($,ajaxservice,ko,d3,moment){
 	
 	var 
 	
@@ -8,6 +8,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 		
 		browsers,
 		
+		fromto = ko.observableArray([]),
+				
 		selectedhost = ko.observable().publishOn("host"),
 		
 		timerange	 = ko.observable().publishOn("range"),
@@ -92,16 +94,39 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 			xrange = brush.empty() ? x2.domain() : brush.extent();
 			from = xrange[0].getTime(); 
 			to   = xrange[1].getTime(); 
-		
-			max = d3.max(browsers.map(function(hosts){
-				return d3.max(hosts.values.filter(function(value){
+			
+			var filtered;
+			
+			//recalculate stack values
+			if (filters.length > 0){
+				filtered = stack(Object.keys(data.hosts).filter(function(value){
+					return filters.indexOf(value) != -1
+				}).map(function(name){
+						return {
+							name:name,
+							values: data.hosts[name].map(function(d, i){
+								return {date:cdata[i], y:+d};
+							})
+						};
+				}));	
+			}else{
+				filtered = browsers;	
+			}
+			
+			//check whether host is in the filters array too!
+			var max = d3.max(filtered.map(function(host){		
+				return d3.max(host.values.filter(function(value){
 					return value.date.getTime() >= from && value.date.getTime() <= to;
 				}), function(d){return d.y0+d.y});
 			}));
-			if (max)
+			
+			if (max){
 				y.domain([0, max]);
+			}
+			
 			x.domain(xrange);
-	
+			fromto(x.domain());
+			
 			svg.selectAll(".area")
 				.attr("d", function(d) {return area(d.values);})
 				.style("fill", function(d){return staticcolor[d.name]})	
@@ -114,12 +139,20 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 		brushend = function(){
 			xrange = brush.empty() ? x2.domain() : brush.extent();
 			from = xrange[0].getTime(); 
-			to   = xrange[1].getTime(); 
+			to   = xrange[1].getTime();
+			fromto(xrange);
 			if (filters.length == 1){
 				timerange({host:filters[0], from:parseInt(from/1000), to:parseInt(to/1000)});
 			}
-			
 		},
+		
+		subtitle = ko.computed(function(){
+			if (fromto().length > 1){
+				m1 = moment.unix((fromto()[0].getTime())/1000);
+				m2 = moment.unix((fromto()[1].getTime())/1000);
+				return (m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));	
+			}
+		}),
 		
 		brush = d3.svg.brush()
     			.x(x2)
@@ -161,7 +194,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 			}));
 			
 			x.domain(d3.extent(cdata, function(d){return d}));
-			
+			fromto(x.domain());
+			console.log(fromto());
 			y.domain([0, d3.max(browsers, function(c){
 				  return d3.max(c.values, function(d) {return d.y0 +d.y});
 			})]);
@@ -206,7 +240,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 				.data(Object.keys(data.hosts))
 					
 			circles
-				.style("fill-opacity", function(d){console.log("in here!");return filters.indexOf(d) == -1 ? 0.2 : 1.0});
+				.style("fill-opacity", function(d){return filters.indexOf(d) == -1 ? 0.2 : 1.0});
 		}
 		
 		renderkey = function(){
@@ -306,13 +340,18 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 				selectedhost(filters[0]);
 			}
 			
+				
 			redraw();
-			updatekey();
+			updatekey();			
 		},
 		
 		
 		
 		redraw = function(){
+			
+			xrange = brush.empty() ? x2.domain() : brush.extent();
+			from = xrange[0].getTime(); 
+			to   = xrange[1].getTime(); 
 			
 			if (filters.length == 0){
 				color.domain(Object.keys(data.hosts));
@@ -320,7 +359,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 				color.domain(filters);
 			}
 			
-			filtered = stack(color.domain().map(function(name){
+			//regenerate the stack values based on the hosts that are currently selected.
+			var filtered = stack(color.domain().map(function(name){
 				return {
 					name:name,
 					values: data.hosts[name].map(function(d, i){
@@ -329,33 +369,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 				};
 			}));
 			
-			y.domain([0, d3.max(filtered, function(c){
-				  return d3.max(c.values, function(d) {return d.y0 +d.y});
-			})]);
-					
-					
-			//-------- update the key ------------
+			//set the y values from 0 to recalculated max y (based on calculating each stack height)
+			y.domain([0,d3.max(filtered.map(function(host){		
+				return d3.max(host.values.filter(function(value){
+					return value.date.getTime() >= from && value.date.getTime() <= to;
+				}), function(d){return d.y0+d.y});
+			}))]);
 			
-			
-			/*var key = svg.selectAll(".browser")	
-						.data(filtered)
-								
-			key.select("text")
-						.attr("transform", function(d,i) {return "translate(" + (width-70) + "," + (20*i) + ")"; })
-				  		.text(function(d) { return d.name});
-			
-			key.select("circle")
-				  	.attr("transform", function(d,i) {return "translate(" + (width-100) + "," + (20*i) + ")"; })
-				  	.attr("r", 8)
-				  	.style("fill", function(d){return staticcolor[d.name]})	*/
-					
-			
-			   
-			//deal with removals!
-			
-			//key.exit().call(function(d){console.log('removing'); console.log(d)});
-			//key.exit().remove();
-			   
 			//------------ update paths! ------------
 			
 			var activity = svg.selectAll(".area")	
@@ -412,7 +432,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'knockoutpb'], function($,ajaxs
 		}
 		
 	return {
-		init: init
+		init: init,
+		subtitle: subtitle
 	}
 	
 });
