@@ -4,6 +4,10 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		
 		tagtoview = ko.observable(),
 		
+		domainstagged = ko.observable().publishOn("domainstagged"),
+		
+		tagcreated	  = ko.observable().publishOn("tagcreated"),
+		
 		domainsfortag = ko.observableArray([]),
 		
 		tags	 = ko.observableArray([]),
@@ -11,18 +15,6 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		fromts,
 		tots,
 		bin,
-		
-		reversedtags = ko.computed(function(){
-			reversed = [];
-			for (i = tags().length-1; i >=0; i--){ 
-				reversed.push(tags()[i]);
-			}
-			return reversed;
-		}),
-		
-		tagheight = ko.computed(function(){
-			return ((tags().length+1)*20)/tags().length + "px"
-		}),
 		
 		chosentag = ko.observable(""),
 		
@@ -34,9 +26,15 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 			
 		showtagger 		= ko.observable(false),
 		
-		tagadded = function(){	
-			newtag("");
-			//ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);
+		tagadded = function(data){
+			console.log(data);	
+			if (data.success){
+				//let the activity chart know..
+				tags.push(newtag());
+				tagcreated({"tag":newtag(), ts:(new Date()).getTime()});
+				//update our list of tags!
+				newtag("");
+			}
 		},
 		
 		addtag 	= function(){
@@ -67,14 +65,20 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		tagparameters = [],		
 	
 		_shs = ko.observable().subscribeTo("webselect").subscribe(function(data) {
-			fromts = data.fromts/1000;
-			tots = data.tots/1000;
+			
+			fromts = data.fromts;// parseInt(data.fromts/1000);
+			tots = data.tots;//parseInt(data.tots/1000);
+			
+			console.log(fromts);
+			console.log(tots);
+			
 			bin = data.bin;
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
 		}),
 
 		init = function(taglist){
+			console.log("taglist is " + taglist);
 			tags(taglist);			
 		},
 		
@@ -87,13 +91,20 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 			for (i = 0; i < chosenurlstotag().length; i++)
 				domains.push(chosenurlstotag()[i].domain);
 			
-			ajaxservice.ajaxGetJson('tag/tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, urlstagged);
+			ajaxservice.ajaxGetJson('tag/tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, curry(urlstagged,chosentag()));
 		},
 		
-		urlstagged = function(data){
-			//ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
-			ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
-			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tagtoview()}, updatedomainsfortag);
+		curry = function(fn){
+			var args = Array.prototype.slice.call(arguments, 1);
+			return function(){
+				return fn.apply(this, args.concat(Array.prototype.slice.call(arguments, 0)));
+			};
+		},
+		
+		//fire off an event to the tags module, which will refresh the activity chart.
+		urlstagged = function(tag, data){
+			domainstagged({tag:tag, ts:new Date().getTime()});
+			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost()}, updatetagdata);
 		},
 		
 		updatetagdata = function(data){
@@ -117,8 +128,8 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		
 		tagurls:tagurls,
 		tags: tags,
-		tagheight: tagheight,
-		reversedtags:reversedtags,
+
+	
 		chosentag: chosentag,
 		newtag: newtag,
 		addtag: addtag,

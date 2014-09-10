@@ -6,6 +6,7 @@ import operator
 import urllib
 from datetime import datetime
 import time
+import math
 
 log = logging.getLogger( "console_log" )
 
@@ -53,21 +54,22 @@ class NetDB( object ):
 		keys = []
 		
 		while ts < maxts+binsize:
-			keys.append(self.binlabel(binsize, ts))
+			keys.append(self.binlabel2(binsize, ts))
 			ts = ts + binsize
 		
 		for row in result:
 			
 			host = row[2]
 			ts   = row[0]
-			idx = keys.index(self.binlabel(binsize, ts))
+			idx = keys.index(self.binlabel2(binsize, ts))
 			
 			if host not in hosts:
 				hosts[host] = [0]*len(keys)
 				hosts[host][idx] = hosts[host][idx] + 1
 			else:
 				hosts[host][idx] = hosts[host][idx] + 1
-				
+		
+		print 	{"keys":keys, "hosts":hosts}	
 		return {"keys":keys, "hosts":hosts}
 		
 			
@@ -78,10 +80,12 @@ class NetDB( object ):
 			
 		sql = "SELECT ts, domain from URLS where host = '%s' %s ORDER BY ts ASC" % (host,whereclause)
 		
+		print sql
 		
 		result = self.conn.execute(sql)
 		urls = [{"ts":row[0], "domain":row[1]} for row in result]
 		
+		print urls
 		if len(urls) <= 0:
 			return []
 			
@@ -91,17 +95,19 @@ class NetDB( object ):
 		binhistory = {}
 		
 		for url in urls:
-			label = self.binlabel(binsize, url['ts'])
+			label = self.binlabel2(binsize, url['ts'])
 		
 			if label in bins:
 				bin = bins[label]
-				if self.seen(binhistory, url['domain'], label) is False:
-					bin = bin + 1
+				#if self.seen(binhistory, url['domain'], label) is False:
+				bin = bin + 1
 			else:
-				self.seen(binhistory, url['domain'], label)
+				#self.seen(binhistory, url['domain'], label)
 				bin = 1	
 				
 			bins[label] = bin  
+		print "binned"
+		print  sorted(bins.iteritems(), key=operator.itemgetter(0))
 		
 		return sorted(bins.iteritems(), key=operator.itemgetter(0))
 		
@@ -115,7 +121,11 @@ class NetDB( object ):
 			binhistory[label] = [domain]
 
 		return False
-			
+	
+	
+	def binlabel2(self, binsize, ts):
+		return int(math.floor(ts/binsize)*binsize)
+				
 	def binlabel(self,binsize, ts): 
 		#set date date grouping based on bin size (daily/hourly/every minute/every second)
 		dformat = '%Y/%m/%d %H:%M:%S'
@@ -303,9 +313,7 @@ class NetDB( object ):
 			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
 		
 		sql = "SELECT ts FROM URLS WHERE host = '%s' AND domain = '%s' %s ORDER BY ts DESC" % (host,domain,timerange)
-		
-
-		
+	
 		result = self.conn.execute(sql)
 		requests = [row[0] for row in result]
 		return requests
@@ -327,16 +335,26 @@ class NetDB( object ):
 		sql = "SELECT max(u.ts) FROM URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s'" % (home)  
 		result = self.conn.execute(sql)
 		return result.fetchone()[0]
-		
+	
+	def fetch_latest_ts_for_host(self, host):
+		sql = "SELECT max(u.ts) FROM URLS u WHERE u.host = '%s'" % (host)  
+		print sql
+		result = self.conn.execute(sql)
+		return result.fetchone()[0]
+			
 	def insert_tag_for_host(self, host,domain,tag):
 		
 		self.conn.execute("INSERT INTO TAGS(host,domain,tag) VALUES (?,?,?)", (host,domain,tag))
 		self.conn.commit()
 	
 	def insert_tag(self,tag):
-		self.conn.execute("INSERT INTO TAG(tag) VALUES('%s')" % tag)
-		self.conn.commit()
-	
+		try:
+			self.conn.execute("INSERT INTO TAG(tag) VALUES('%s')" % tag)
+			self.conn.commit()
+			return True
+		except Exception, e:
+			return False
+			
 	def remove_tag_for_host(self,host,tag):
 		sql = "DELETE FROM TAGS WHERE host='%s' AND domain = '%s'" % (host,tag)
 		print sql
@@ -396,8 +414,11 @@ class NetDB( object ):
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS ZONES
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			locationid INTEGER,
 			host CHAR(16),
 			name  CHAR(128),
+			lat REAL,
+			lng REAL,
 			enter INTEGER,
 			exit INTEGER);''')
 		

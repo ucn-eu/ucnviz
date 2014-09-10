@@ -116,7 +116,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			//check whether host is in the filters array too!
 			var max = d3.max(filtered.map(function(host){		
 				return d3.max(host.values.filter(function(value){
-					return value.date.getTime() >= from && value.date.getTime() <= to;
+					return value.date /*.getTime()*/ >= from && value.date /*.getTime()*/ <= to;
 				}), function(d){return d.y0+d.y});
 			}));
 			
@@ -137,12 +137,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		},
 		
 		brushend = function(){
-			xrange = brush.empty() ? x2.domain() : brush.extent();
-			from = xrange[0].getTime(); 
-			to   = xrange[1].getTime();
-			fromto(xrange);
 			if (filters.length == 1){
-				timerange({host:filters[0], from:parseInt(from/1000), to:parseInt(to/1000)});
+				triggerupdate(filters[0]);
 			}
 		},
 		
@@ -181,7 +177,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			cdata = [];
 			
 			data.keys.forEach(function(d){
-				cdata.push(parseDate(d));
+				cdata.push(d*1000);//parseDate(d));
 			});
 			
 			browsers = stack(Object.keys(data.hosts).map(function(name){
@@ -195,7 +191,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			
 			x.domain(d3.extent(cdata, function(d){return d}));
 			fromto(x.domain());
-			console.log(fromto());
+			
 			y.domain([0, d3.max(browsers, function(c){
 				  return d3.max(c.values, function(d) {return d.y0 +d.y});
 			})]);
@@ -338,6 +334,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			
 			if (filters.length == 1){
 				selectedhost(filters[0]);
+				triggerupdate(filters[0]);
+				
 			}
 			
 				
@@ -345,7 +343,15 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			updatekey();			
 		},
 		
-		
+		triggerupdate = function(host){
+			xrange = brush.empty() ? x2.domain() : brush.extent();
+			from = xrange[0].getTime(); 
+			to   = xrange[1].getTime();
+			fromto(xrange);
+			if (filters.length == 1){
+				timerange({host:host, from:parseInt(from/1000), to:parseInt(to/1000)});
+			}
+		},
 		
 		redraw = function(){
 			
@@ -372,7 +378,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			//set the y values from 0 to recalculated max y (based on calculating each stack height)
 			y.domain([0,d3.max(filtered.map(function(host){		
 				return d3.max(host.values.filter(function(value){
-					return value.date.getTime() >= from && value.date.getTime() <= to;
+					return value.date /*.getTime()*/ >= from && value.date /*.getTime()*/ <= to;
 				}), function(d){return d.y0+d.y});
 			}))]);
 			

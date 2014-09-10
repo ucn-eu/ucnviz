@@ -15,8 +15,8 @@ define(['jquery', 'knockout', 'knockoutpb'], function($,ko){
 		},
 		
 		init = function(hlist){
-			hosts(hlist);
-			selectedhost(hosts()[0]);
+			//hosts(hlist);
+			//selectedhost(hosts()[0]);
 		}
 	
 	return{

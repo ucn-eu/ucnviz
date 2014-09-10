@@ -111,24 +111,24 @@
 					</div>
 					<div class="modal-body">
 						<div class="row">
-							<div class="col-md-5">
+							<div class="col-md-6">
 								<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
 							</div>
-							<div class="col-md-5">
+							<div class="col-md-4">
 								<div class="row">
-									<div class="col-md-8">
+									<div class="col-md-9">
 										<select class="form-control" data-bind="options:tags, value:chosentag"></select>
 									</div>
-									<div class="col-md-4">
+									<div class="col-md-3">
 										<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
 									</div>
 								</div>
 								<hr>
 								<div class="row">
-									<div class="col-md-6">
+									<div class="col-md-9">
 										 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
 									</div>
-									<div class="col-md-6">
+									<div class="col-md-3">
 										<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
 									</div>
 								</div>
@@ -148,9 +148,11 @@
 			<div class="col-md-12">
 				<div class="controlbar">	
 					<div class="row">
-						<div class="col-md-10">
+						<div class="col-md-8">
 						</div>
-						<div class="col-md-2">
+						
+						<div class="col-md-4">
+							<button class="pull-right btn btn-primary" data-bind="click:function(){toggleoverlay();}">location</button>
 							<button class="pull-right btn btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
 						</div>
 					</div>

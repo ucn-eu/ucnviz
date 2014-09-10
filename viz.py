@@ -138,12 +138,20 @@ def summary():
 	bin 	= request.args.get('bin')
 	fromts 	= request.args.get('fromts') or None
  	tots   	= request.args.get('tots') or None
-  	
+ 	
+ 	
  	if fromts is not None:
  		fromts = int(fromts)
  		
  	if tots is not None:
  		tots = int(tots)
+ 		
+  	if tots is None or fromts is None:
+ 		tots 	= netDB.fetch_latest_ts_for_host(host)
+ 		print tots
+ 		fromts 	= tots - 1.5 * 24*60*60
+ 	
+ 	
  	
  	# return data binned by day if no range supplied, else hourly 
  	# (would be better to default to calc based on requested range...)
@@ -151,7 +159,7 @@ def summary():
  	if bin is not None:	
  		bin = int(bin)
  	else:
- 		bin = 24*60*60	
+ 		bin = 60*60	
  	
 	netDB.connect()
 	#fetch a day by day summary of browsing
@@ -211,8 +219,8 @@ def tagurls():
 def addtag():
 	tag	 = request.args.get('tag')
 	netDB.connect()
-	netDB.insert_tag(tag)
-	return jsonify(success=True)
+	result = netDB.insert_tag(tag)
+	return jsonify(success=result)
 
 @app.route("/tag/remove")
 def removetag():
@@ -244,4 +252,5 @@ if __name__ == "__main__":
 		background = [x.strip() for x in f.readlines()]
 		
 	netDB = NetDB(name="netdata.db")
+	
 	app.run(debug=True, host='0.0.0.0')

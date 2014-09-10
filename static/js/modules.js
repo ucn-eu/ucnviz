@@ -39,12 +39,12 @@ require(['modules/overview','modules/hosts', 'modules/web', 'modules/tagger', 'm
 	});
 	
     ajaxservice.ajaxGetJson('web/bootstrap', {}, function(data){
-		hosts.init(data.hosts);
+		//hosts.init(data.hosts);
 		tags.init(data.tags);
 		tagger.init(data.tags);
 		web.init();
 		
-		ko.applyBindings(hosts, $("#hosts")[0]);
+		//ko.applyBindings(hosts, $("#hosts")[0]);
 		ko.applyBindings(web, $("#web")[0]);
 		ko.applyBindings(tagger, $("#tagger")[0]);
 		ko.applyBindings(tags, $("#tags")[0]);

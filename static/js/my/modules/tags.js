@@ -50,9 +50,19 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				
 		tagparameters = [],	
 		
+		_domainstagged = ko.observable().subscribeTo("domainstagged").subscribe(function(data) {
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:data.tag}, updatedomainsfortag);	
+		}),
+		
+		_tagcreated =  ko.observable().subscribeTo("tagcreated").subscribe(function(data) {
+			tagadded();
+		}),
+		
 		_shs = ko.observable().subscribeTo("webselect").subscribe(function(data) {
-			fromts = data.fromts/1000;
-			tots = data.tots/1000;
+			
+			fromts = data.fromts;//parseInt(data.fromts/1000);
+			tots = data.tots;//parseInt(data.tots/1000);
 			bin = data.bin;
 			
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
@@ -74,10 +84,10 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
 		},
 		
-		
 		removetag = function(tag, domain){	
 			ajaxservice.ajaxGetJson('tag/remove',{host: selectedhost(), tag:domain}, curry(tagremoved, tag));
 		},
+		
 		
 		
 		curry = function(fn){
