@@ -2,6 +2,57 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 	
 	var
 		
+		timerange	  = ko.observable().syncWith("range"),
+		
+		/* set up the listeners -- listen to other modules on events of interest */
+		
+		
+		/*  listen to a tag being added to a new domain */
+		_domainstagged = ko.observable().subscribeTo("domainstagged").subscribe(function(data) {
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:data.tag}, updatedomainsfortag);	
+		}),
+		
+		/* listen to a new tag being created */
+		_tagcreated =  ko.observable().subscribeTo("tagcreated").subscribe(function(data) {
+			tagadded();
+		}),
+		
+		/* listen to a change in the overview chart */
+		
+		_rangeWatcher = ko.postbox.subscribe("range", function(data) {
+			if (!data)
+				return;
+			selectedhost(data.host);
+			fromts = data.fromts;//parseInt(data.fromts/1000);
+			tots = data.tots;//parseInt(data.tots/1000);
+			
+			bin = calculatebin(tots-fromts);	
+			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
+			
+			// update activity too!
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);
+			
+		}),
+		
+		
+		calculatebin = function(difference){
+		
+			
+			if (difference < 60 * 60){ // if range < 1 hour, minute by minute bins
+				b = 1;
+			}
+			else if(difference <= (2 * 24 * 60 * 60)){ //if range is > 1hr and less than 2 days, show hourly bins
+				b = 60; //60 * 60;
+			}else if (difference < (24*60*60*7)){ //if range is > 2 days and <= 1 week
+				b = 60 * 60; //60 * 60 * 24;
+			}else{
+				b = 60 * 60 * 24;//60 * 60 * 24 * 30;
+			} 
+			
+			return b;
+		},
+		
 		domainsfortag = ko.observableArray([]),
 		
 		hosts	= ko.observableArray([]),
@@ -39,39 +90,12 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		selectedhost = ko.observable(),
 		
-		_shs = ko.observable().subscribeTo("host").subscribe(function(ahost) {
-    		selectedhost(ahost);
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
-		}),
-			
 		amselectedhost = function(ahost){
 			return selectedhost() == ahost;
 		},
 				
 		tagparameters = [],	
-		
-		_domainstagged = ko.observable().subscribeTo("domainstagged").subscribe(function(data) {
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
-			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:data.tag}, updatedomainsfortag);	
-		}),
-		
-		_tagcreated =  ko.observable().subscribeTo("tagcreated").subscribe(function(data) {
-			tagadded();
-		}),
-		
-		_shs = ko.observable().subscribeTo("webselect").subscribe(function(data) {
-			
-			fromts = data.fromts;//parseInt(data.fromts/1000);
-			tots = data.tots;//parseInt(data.tots/1000);
-			bin = data.bin;
-			
-			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
-			
-			// update activity too!
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);
-		
-		}),
-
+	
 		init = function(taglist){
 			tags(taglist);			
 		},
@@ -109,7 +133,9 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		renderactivity = function(data){
-		
+			console.log("rendering activity for ");
+			console.log(data);
+			
 			container = document.getElementById("activitygraph");
 			timeline  = { show : true, barWidth : .8 };
 			 
@@ -128,9 +154,10 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
     		
     	
 			for(i = 0; i < activity.length; i++){
-				start = Math.min(start, activity[i].ts);
-				end = Math.max(end, activity[i].ts);
-				readings[tags().indexOf(activity[i].tag)].push([activity[i].ts*1000, tags().indexOf(activity[i].tag)-0.5, 100000]);
+				start = Math.min(start, activity[i].fromts);
+				end = Math.max(end, activity[i].tots);
+				timespan = Math.max(1000, (activity[i].tots - activity[i].fromts) * 1000);
+				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan ]);
 			}
 			
 			Flotr._.each(readings, function(d){

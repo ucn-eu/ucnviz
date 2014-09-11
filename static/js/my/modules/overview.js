@@ -10,9 +10,14 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		fromto = ko.observableArray([]),
 				
-		selectedhost = ko.observable().publishOn("host"),
+		selectedhost  = ko.observable().publishOn("host"),
 		
-		timerange	 = ko.observable().publishOn("range"),
+		timerange	  = ko.observable().syncWith("range"),
+		
+		_rangeWatcher = ko.postbox.subscribe("range", function(data) {
+			//check against x2.domain()
+			//zoom.select(".brush").call(brush.extent([new Date(newValue.fromts*1000), new Date(newValue.tots*1000)]));
+		}),
 		
 		data 	  = [],
 		
@@ -80,7 +85,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("class", "activitykey"),
 				
 		init = function(data){
+		
 			hosts = Object.keys(data.hosts);
+		
 			color.domain(hosts);
 		
 			for (i = 0; i < hosts.length; i++){
@@ -343,13 +350,21 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			updatekey();			
 		},
 		
+		/*
+		 * Notify other modules if the host has changed OR the selected range has changed.
+		 */
+		 
 		triggerupdate = function(host){
+		
+			console.log("triggering a timerange update!!");
+		
 			xrange = brush.empty() ? x2.domain() : brush.extent();
 			from = xrange[0].getTime(); 
 			to   = xrange[1].getTime();
 			fromto(xrange);
+		
 			if (filters.length == 1){
-				timerange({host:host, from:parseInt(from/1000), to:parseInt(to/1000)});
+				timerange({host:host, fromts:parseInt(from/1000), tots:parseInt(to/1000)});
 			}
 		},
 		

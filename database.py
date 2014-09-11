@@ -69,7 +69,7 @@ class NetDB( object ):
 			else:
 				hosts[host][idx] = hosts[host][idx] + 1
 		
-		print 	{"keys":keys, "hosts":hosts}	
+		
 		return {"keys":keys, "hosts":hosts}
 		
 			
@@ -80,12 +80,12 @@ class NetDB( object ):
 			
 		sql = "SELECT ts, domain from URLS where host = '%s' %s ORDER BY ts ASC" % (host,whereclause)
 		
-		print sql
+		
 		
 		result = self.conn.execute(sql)
 		urls = [{"ts":row[0], "domain":row[1]} for row in result]
 		
-		print urls
+
 		if len(urls) <= 0:
 			return []
 			
@@ -106,8 +106,6 @@ class NetDB( object ):
 				bin = 1	
 				
 			bins[label] = bin  
-		print "binned"
-		print  sorted(bins.iteritems(), key=operator.itemgetter(0))
 		
 		return sorted(bins.iteritems(), key=operator.itemgetter(0))
 		
@@ -289,15 +287,47 @@ class NetDB( object ):
 	
 	def fetch_tags_for_host(self, host, fromts=None, tots=None):
 		
+		delta = 10000
+		
 		timerange=""
 		
 		if fromts and tots:
 			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
 			
-		sql = "SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain" % (host, timerange)
+		sql = "SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange)
 		result = self.conn.execute(sql)
-		activity = [{"tag":row[0], "ts":row[1]} for row in result]
-		return activity
+		
+		currenttag = None
+		reading = None
+		readings = []
+		#activity = []
+		
+		for row in result:
+			#activity.append({"tag":row[0], "ts":row[1]})
+			if currenttag != row[0]:
+				#print row[0]
+				if reading is not None:
+					readings.append(reading)
+				reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 	
+				currenttag = row[0]
+			else:
+				if (reading["tots"] + delta) >= row[1]:
+					reading["tots"] = row[1]
+				else:
+					readings.append(reading)
+					reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 
+		
+		if reading:
+			readings.append(reading)
+		
+		#activity = [{"tag":row[0], "ts":row[1]} for row in result]
+		#print "activity..."
+		#print activity
+		
+		#print "readings.."
+		#print readings
+		
+		return readings
 	
 	def fetch_tags(self):
 		sql = "SELECT tag FROM TAG"
@@ -338,7 +368,6 @@ class NetDB( object ):
 	
 	def fetch_latest_ts_for_host(self, host):
 		sql = "SELECT max(u.ts) FROM URLS u WHERE u.host = '%s'" % (host)  
-		print sql
 		result = self.conn.execute(sql)
 		return result.fetchone()[0]
 			
@@ -357,7 +386,6 @@ class NetDB( object ):
 			
 	def remove_tag_for_host(self,host,tag):
 		sql = "DELETE FROM TAGS WHERE host='%s' AND domain = '%s'" % (host,tag)
-		print sql
 		self.conn.execute(sql)
 		self.conn.commit()
 	

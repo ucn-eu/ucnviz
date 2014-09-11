@@ -2,6 +2,19 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 	
 	var
 	
+		timerange	  = ko.observable().syncWith("range"),
+		
+		
+		/* set up listeners-- listen on host / range change from overview */
+		_rangeWatcher = ko.postbox.subscribe("range", function(data) {
+			selectedhost(data.host);
+			fromts = data.fromts;
+			tots = data.tots;
+			parameters[depth()] = {host: selectedhost(), bin:calculatebin(tots-fromts), fromts:fromts, tots:tots};
+			ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
+		}),
+		
+		
 		ZOOMVALUE = 50,
 		
 		cache  	  = [],
@@ -46,15 +59,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		selectedhost = ko.observable(),
 	
-		_str = ko.observable().subscribeTo("range").subscribe(function(timerange) {
-			selectedhost(timerange.host);
-			fromts = timerange.from;
-			tots = timerange.to;
-			depth(0);
-			parameters[depth()] = {host: selectedhost(), bin:calculatebin(tots-fromts), fromts:fromts, tots:tots};
-			
-			ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
-		}),
+		
 		
 		toggleoverlay = function(){
 			overlay(!overlay());
@@ -99,7 +104,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		clickcallback = function(){
 			depth(depth() - 1);
-			ajaxservice.ajaxGetJson('web/summary', parameters[depth()], renderroot);
+			//ajaxservice.ajaxGetJson('web/summary', parameters[depth()], renderroot);
 		},
 		
 		
@@ -123,7 +128,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			placeholder.bind("plotselected", function(event,ranges){
 				
-				bin	 = parameters[depth()].bin;
+				bin	 = calculatebin(parameters[depth()].tots - parameters[depth()].fromts);
 				
 				data = cache[depth()].summary;
 					
@@ -133,7 +138,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				end	  = parseInt(Math.floor(tots/bin)*bin);
 				total	= 0;
 				
-				ko.postbox.publish("webselect", {fromts:fromts, tots:tots, bin:bin});
+			
+				
 				
 				for (i = start; i <= end; i += bin){
 					for (j = 0; j < data.length; j++){
@@ -152,7 +158,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				
 				if (total > ZOOMVALUE){
 					depth(depth()+1);
-					ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
+					timerange({fromts:fromts, tots:tots, host:selectedhost()});
 				}else{
 					depth(depth()+1);
 					ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
@@ -183,22 +189,21 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 							break;
 						}
 					}
-		
-					ko.postbox.publish("webselect", {fromts:fromts, tots:tots, bin:bin});
 					
 					bin = calculatebin(tots-fromts);
 					
-					parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
-				
+					parameters[depth()+1] = {host: selectedhost(), fromts:fromts, tots:tots};
+					
+					
 					if (total > ZOOMVALUE){
 						depth(depth()+1);
-						ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
-						
+						timerange({fromts:fromts, tots:tots, host:selectedhost()});	
 					}else{
 						depth(depth()+1);
 						ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 					}
 				}else{
+
 					zoomout();
 				}
 			});
@@ -209,10 +214,12 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		}),
 		
 		zoomout = function(){
+			
 			if (depth() > 0){
 				depth(depth()-1);
 			}
-			ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
+			timerange(parameters[depth()]);
+			
 		},
 		
 		curry = function(fn){
@@ -286,7 +293,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			bin    = parameters[depth()].bin;
 			fromts = parseInt(range.x1/1000);
 			tots   = parseInt(range.x2/1000);
-			ko.postbox.publish("webselect", {fromts:fromts, tots:tots, bin:bin});
+			timerange({fromts:fromts, tots:tots, host:selectedhost()});
 		},
 		
 		renderzoom = function(from,netdata){
@@ -320,8 +327,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			m1 = moment.unix(start);
 			m2 = moment.unix(end); 
-			timerange =  m1.format('MMM Do h:mm:ss a') + " to " + m2.format('h:mm:ss a');	
-			subtitle(timerange);
+			t_timerange =  m1.format('MMM Do h:mm:ss a') + " to " + m2.format('h:mm:ss a');	
+			subtitle(t_timerange);
 			
 			Flotr._.each(readings, function(d){
 				

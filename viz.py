@@ -148,7 +148,6 @@ def summary():
  		
   	if tots is None or fromts is None:
  		tots 	= netDB.fetch_latest_ts_for_host(host)
- 		print tots
  		fromts 	= tots - 1.5 * 24*60*60
  	
  	

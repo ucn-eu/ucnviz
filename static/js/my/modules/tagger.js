@@ -8,13 +8,24 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		
 		tagcreated	  = ko.observable().publishOn("tagcreated"),
 		
+		_shs = ko.postbox.subscribe("range", function(data) {
+				if (!data)
+					return;
+				
+				selectedhost(data.host);
+    			urlsfortagging([]);
+    			fromts = data.fromts;
+    			tots = data.tots;
+    			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);	
+		}),
+		
+		
 		domainsfortag = ko.observableArray([]),
 		
 		tags	 = ko.observableArray([]),
 		
 		fromts,
 		tots,
-		bin,
 		
 		chosentag = ko.observable(""),
 		
@@ -51,32 +62,11 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		},
 	
 		selectedhost = ko.observable(),
-		
-		_shs = ko.observable().subscribeTo("host").subscribe(function(ahost) {
-    		selectedhost(ahost);
-    		urlsfortagging([]);
-			//ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
-		}),
 			
 		amselectedhost = function(ahost){
 			return selectedhost() == ahost;
 		},
-				
-		tagparameters = [],		
-	
-		_shs = ko.observable().subscribeTo("webselect").subscribe(function(data) {
 			
-			fromts = data.fromts;// parseInt(data.fromts/1000);
-			tots = data.tots;//parseInt(data.tots/1000);
-			
-			console.log(fromts);
-			console.log(tots);
-			
-			bin = data.bin;
-			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
-			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(),fromts:fromts, tots:tots}, updatetagdata);
-		}),
-
 		init = function(taglist){
 			console.log("taglist is " + taglist);
 			tags(taglist);			
@@ -101,10 +91,12 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 			};
 		},
 		
-		//fire off an event to the tags module, which will refresh the activity chart.
+		
 		urlstagged = function(tag, data){
+			//fire off an event to the tags module, which will refresh the activity chart.
 			domainstagged({tag:tag, ts:new Date().getTime()});
-			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost()}, updatetagdata);
+			//update the current tag data!
+			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);
 		},
 		
 		updatetagdata = function(data){
