@@ -8,13 +8,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		browsers,
 		
-		fromto = ko.observableArray([]),
+		fromto = ko.observableArray([]).publishOn("fromto"),
 				
 		selectedhost  = ko.observable().publishOn("host"),
 		
 		timerange	  = ko.observable().syncWith("range"),
 		
-		_rangeWatcher = ko.postbox.subscribe("range", function(data) {
+		_rangeListener = ko.postbox.subscribe("range", function(data) {
 			//check against x2.domain()
 			//zoom.select(".brush").call(brush.extent([new Date(newValue.fromts*1000), new Date(newValue.tots*1000)]));
 		}),
@@ -25,10 +25,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		margin    = {top:20, right:90, bottom:40,left:50},
 		
-		width 	  = 1200 - margin.left - margin.right,
+		width 	  = 960 - margin.left - margin.right,
 		
-		height    = 300 - margin.top - margin.bottom,
-		height2   = 180 - margin.top - margin.bottom,
+		height    = 250 - margin.top - margin.bottom,
+		height2   = 140 - margin.top - margin.bottom,
 	
 		x  = d3.time.scale().range([0,width]),
 		x2 = d3.time.scale().range([0, width]),
@@ -79,7 +79,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		key = d3.select("#activitykey").append("svg")
 				.attr("width", width + margin.left + margin.right)
-				.attr("height",80)
+				.attr("height",50)
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 				.attr("class", "activitykey"),
@@ -257,7 +257,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				
 			keys.enter()
 				.append("circle")
-				.attr("transform", function(d,i) {return "translate(" + (padding*i) + "," + 10 + ")"; })
+				.attr("transform", function(d,i) {return "translate(" + (padding*i) + "," + 0 + ")"; })
 				.attr("r", 8)
 				.style("fill", function(d){return staticcolor[d]})	
 				.style("fill-opacity", function(d){return filters.indexOf(d) == -1 ? 0.2 : 1.0})	
@@ -268,7 +268,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			keys.enter()
 				.append("text")
 				.attr("class", "key")
-				.attr("transform", function(d,i) {return "translate(" + ((padding*i) + 10) + "," + 10 + ")"; })
+				.attr("transform", function(d,i) {return "translate(" + ((padding*i) + 10) + "," + 0 + ")"; })
 				.attr("dy", ".35em")
 				.text(function(d) { return d; })
 				.on("click", keyclicked);

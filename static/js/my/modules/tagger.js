@@ -8,7 +8,7 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		
 		tagcreated	  = ko.observable().publishOn("tagcreated"),
 		
-		_shs = ko.postbox.subscribe("range", function(data) {
+		_rangeListener = ko.postbox.subscribe("range", function(data) {
 				if (!data)
 					return;
 				
@@ -38,7 +38,6 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		showtagger 		= ko.observable(false),
 		
 		tagadded = function(data){
-			console.log(data);	
 			if (data.success){
 				//let the activity chart know..
 				tags.push(newtag());

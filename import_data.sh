@@ -1,8 +1,8 @@
 #!/bin/bash
 echo "importing urls"
-python import.py urls netdata.db /Users/tlodge/Desktop/access.log
+python import.py urls netdata.db /Users/tlodge/Desktop/access_small.log
 echo "importing homes"
-python import.py homes netdata.db static/data/homedata/homes.txt
+python import.py homes netdata.db static/data/homedata/newhomes.txt
 echo "importing zones"
 python import.py zones netdata.db static/data/zonedata/
 echo "importing processes"

@@ -54,14 +54,14 @@ class NetDB( object ):
 		keys = []
 		
 		while ts < maxts+binsize:
-			keys.append(self.binlabel2(binsize, ts))
+			keys.append(self.binlabel(binsize, ts))
 			ts = ts + binsize
 		
 		for row in result:
 			
 			host = row[2]
 			ts   = row[0]
-			idx = keys.index(self.binlabel2(binsize, ts))
+			idx = keys.index(self.binlabel(binsize, ts))
 			
 			if host not in hosts:
 				hosts[host] = [0]*len(keys)
@@ -88,14 +88,12 @@ class NetDB( object ):
 
 		if len(urls) <= 0:
 			return []
-			
-		#startts = time.mktime(datetime.strptime(datetime.fromtimestamp(urls[0]['ts']).strftime('%Y-%m-%d'), '%Y-%m-%d').timetuple())
-
+	
 		bins = {}
 		binhistory = {}
 		
 		for url in urls:
-			label = self.binlabel2(binsize, url['ts'])
+			label = self.binlabel(binsize, url['ts'])
 		
 			if label in bins:
 				bin = bins[label]
@@ -120,26 +118,9 @@ class NetDB( object ):
 
 		return False
 	
-	
-	def binlabel2(self, binsize, ts):
+	def binlabel(self, binsize, ts):
 		return int(math.floor(ts/binsize)*binsize)
-				
-	def binlabel(self,binsize, ts): 
-		#set date date grouping based on bin size (daily/hourly/every minute/every second)
-		dformat = '%Y/%m/%d %H:%M:%S'
-		
-		if binsize >= 60*60*24:
-			dformat = '%Y/%m/%d'
-		elif binsize >= 60*60:
-			dformat = '%Y/%m/%d %H:00'
-		elif binsize >= 60: 
-			dformat = '%Y/%m/%d %H:%M'
-		
-		return datetime.fromtimestamp(ts).strftime(dformat)
-		#s = datetime.fromtimestamp(ts).strftime(dformat)
-		
-		#return time.mktime(datetime.strptime(s,dformat).timetuple())
-	
+					
 	def fetch_device_hosts(self):
 		result = self.conn.execute("SELECT DISTINCT(host) FROM PROCESSES")
 		hosts = [row[0] for row in result]
@@ -407,7 +388,7 @@ class NetDB( object ):
 		if self.connected is not True:
 			self.connect()
 
-		self.conn.execute("INSERT INTO URLS(ts, host, domain, path) VALUES(?,?,?,?)", (url['ts'], url['host'], url['domain'], url['path']))
+		self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
 		self.conn.commit()
 	
 	def insert_zone(self,zone):
@@ -437,6 +418,7 @@ class NetDB( object ):
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
 			ts INTEGER,
 			host CHAR(16),
+			tld CHAR(255),
 			domain CHAR(255),
 			path TEXT);''')
 		

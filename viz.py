@@ -41,7 +41,7 @@ def overview():
  	#if time range is not provided, set it to the last 24 hours of recorded data
  	if tots is None or fromts is None:
  		tots 	= netDB.fetch_latest_ts_for_home(home)
- 		fromts 	= tots - 1.5 * 24*60*60
+ 		fromts 	= tots - 4 * 24*60*60
  		
  	if bin is not None:
  		bin = int(bin)
@@ -57,20 +57,6 @@ def overview():
 	print end-start
 	
 	return jsonify(values)
-	
-# 	start = time.time() 
-# 	
-# 	for host in hosts:
-# 		
-# 		values = netDB.fetch_timebins_for_host(bin,host,fromts,tots)
-# 		
-# 		if len(values) > 0:
-# 			activitybins.append({'key':host, 'values':values})
-# 	
-# 	end = time.time() 
-# 	print end-start
-# 	
-# 	return jsonify(activity=activitybins)
 		
 #return all devices that have associated phone data (i.e running processes data)
 @app.route("/devices/hosts")

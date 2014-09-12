@@ -7,62 +7,45 @@
 }
 </style>
 
+<nav class="navbar navbar-default navbar-fixed-top navbar-inverse" role="navigation">
+  <div class="container">
+  	<div id="activitykey" style="padding: 5px; width:100%; height: 50px;"></div>
+  </div>
+</nav>
 
+<div id="control">
+	<nav class="navbar navbar-default navbar-fixed-bottom navbar-inverse" role="navigation">
+  		<div class="container">
+  			<div class="row">
+				<div class="col-md-12">
+  					<div class="timerange" data-bind="text:timetext"></div>
+  				</div>
+  			</div>
+  		</div>
+	</nav>
+</div>
 
 <div id="visualisation">
-	<div class="row">
-		<div class="col-md-12">
-			<ul class="nav nav-pills">
-				<li><a href="/">Overall Activity</a></li>
-				<li class="active"><a href="{{url_for('web')}}">Web browsing</a></li>
-				<li><a href="{{url_for('devices')}}">Device details</a></li>
-			</ul>
-		
-		</div>
-	</div>
-	
-	<div id="hosts">
-		<div class="row">
-			<div class="col-md-12">
-			<!--	<dl class="sub-nav right" data-bind="foreach:hosts">
-					<dd data-bind="click:function(){$parent.selectnewhost($data)}, css:{active:$parent.amselectedhost($data)}"><a href="#" data-bind="text:$data"></a></dd>
-				</dl>-->
-			</div>
-		</div>
-	</div> <!-- end of hosts -->
-	
 	<div id="overall">
 		<div class="row">
-			<div class="col-md-12">
+			<div class="col-md-2" style="min-height:400px; background:#080808">
 				<div class="title">
-					<div class="row">
-						<div class="col-md-4">
-							<strong>overall</strong> activity
-						</div>
-						<div class="col-md-8">
-							<div data-bind="text:subtitle"></div>
-						</div>
-					</div>
+					<strong>overall</strong> activity
 				</div>
 			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-12">
-				<div id="context"></div>
-			</div>
-		</div>
-		<div class="row">		
-			<div class="col-md-12">
-				<!--<div id="zoomcontainer" style="background:#666666; padding: 10px;">-->
+			<div class="col-md-10">
+				<div class="row">
+					<div class="col-md-12">
+						<div id="context"></div>
+					</div>
+				</div>
+				<div class="row">		
+					<div class="col-md-12">
+						<!--<div id="zoomcontainer" style="background:#666666; padding: 10px;">-->
 				
-				<div id="zoom"></div>
-				<!--</div>-->
-			</div>
-		</div>
-		<div class="row">		
-			<div class="col-md-12">
-				<div id="activitykey" style="background:#3b3b3b; padding: 10px; width:100%; height: 80px;">
-					
+						<div id="zoom"></div>
+						<!--</div>-->
+					</div>
 				</div>
 			</div>
 		</div>
@@ -70,38 +53,58 @@
 	
 	<div id="web">
 		<div class="row">
-			<div class="col-md-12">
+			<div class="col-md-2" style="min-height:250px; background:#080808">
 				<div class="title">
-					<div class="row">
-						<div class="col-md-4">
-							<strong>tag</strong> activity
+					<strong>tag</strong> your activity
+					
+					
+					<!-- PUT TAG ACTIVITY BUTTONS HERE -->
+				</div>
+			</div>
+			<div class="col-md-10">
+				<div class="row">
+					<div class="col-md-12">
+						<!--<div data-bind="if:showkey()" class="col-md-4 key">
+							<div id="zoomkey"></div>
+						</div>-->
+						<!--<div data-bind="attr:{class:squidclass}">-->
+						<div style="padding:30px">
+							<div id="squidgraph" class="render"></div><!-- data-bind="style:squidgraphstyle"></div>-->
 						</div>
+						<!--</div>-->
+					</div>
+				</div>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+			</div>
+		</div>
+	</div>
+	
+	<div id="tagger">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="controlbar">	
+					<div class="row">
 						<div class="col-md-8">
-							<div data-bind="text:subtitle"></div>
+						</div>
+						
+						<div class="col-md-4">
+							<button class="pull-right btn btn-primary" data-bind="click:function(){toggleoverlay();}">location</button>
+							<button class="pull-right btn btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="row">
-
-			<div class="col-md-12">
-				<!--<div data-bind="if:showkey()" class="col-md-4 key">
-					<div id="zoomkey"></div>
-				</div>-->
-				<!--<div data-bind="attr:{class:squidclass}">-->
-				<div style="padding:30px">
-					<div id="squidgraph" class="render"></div><!-- data-bind="style:squidgraphstyle"></div>-->
-				</div>
-				<!--</div>-->
-			</div>
-			
-		</div>
-	</div>
-	
-	<div id="tagger">
-		
-	
 		<div  data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
@@ -143,30 +146,22 @@
 				</div>
 			</div>
 		</div>
-					
-		<div class="row">
-			<div class="col-md-12">
-				<div class="controlbar">	
-					<div class="row">
-						<div class="col-md-8">
-						</div>
-						
-						<div class="col-md-4">
-							<button class="pull-right btn btn-primary" data-bind="click:function(){toggleoverlay();}">location</button>
-							<button class="pull-right btn btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
 	</div><!-- end of tagger! -->
 	
 	
 	<div id="tags">
-		
 		<div class="row">
 			<div class="col-md-12">
-				<div class="title"><strong>tagged</strong> activity</div>
+				<div class="title">
+					<div class="row">
+						<div class="col-md-4">
+							<strong>tagged</strong> activity
+						</div>
+						<div class="col-md-8">
+							<div data-bind="text:subtitle"></div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 		
@@ -175,7 +170,7 @@
 			<div class="col-md-2 key">
 				
 				<div data-bind="foreach:reversedtags">
-					<p data-bind="style:{height:$parent.tagheight()}"><a href="#tags", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}, popover: {template: 'popoverBindingTemplate', title: $data}"></a></p>
+					<p  class="keyline" data-bind="style:{height:$parent.tagheight()}"><a href="#tags", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}, popover: {template: 'popoverBindingTemplate', title: $data}"></a></p>
 				</div>
 			</div>
 			<div class="col-md-10">

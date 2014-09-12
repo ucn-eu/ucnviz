@@ -31,7 +31,7 @@ require.config({
 })
 
 //'async!https://maps.google.com/maps/api/js?v=3&libraries=drawing&sensor=false'
-require(['modules/overview','modules/hosts', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function(overview,hosts,web, tagger, tags, ko, ajaxservice) {
+require(['modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'modules/control', 'knockout', 'ajaxservice'], function(overview,web, tagger, tags, control, ko, ajaxservice) {
   
   	ajaxservice.ajaxGetJson('/overview/activity', {home:'lodges'}, function(data){
 		overview.init(data);
@@ -48,5 +48,6 @@ require(['modules/overview','modules/hosts', 'modules/web', 'modules/tagger', 'm
 		ko.applyBindings(web, $("#web")[0]);
 		ko.applyBindings(tagger, $("#tagger")[0]);
 		ko.applyBindings(tags, $("#tags")[0]);
+		ko.applyBindings(control, $("#control")[0]);
 	});
 });

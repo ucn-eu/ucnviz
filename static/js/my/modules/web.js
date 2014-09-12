@@ -6,7 +6,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		
 		/* set up listeners-- listen on host / range change from overview */
-		_rangeWatcher = ko.postbox.subscribe("range", function(data) {
+		_rangeListener = ko.postbox.subscribe("range", function(data) {
 			selectedhost(data.host);
 			fromts = data.fromts;
 			tots = data.tots;
@@ -260,6 +260,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			m2 = moment.unix(parameters[depth()].tots? parameters[depth()].tots: maxts/1000);
 			subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
 				
+			
 			var data = [{ data: d1, label: "site requests", color: "#2CA089" }];
 			
 			var markings = [];
@@ -341,6 +342,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			options = {
 				  xaxis : {
 					mode : 'time',
+					labelsAngle: 90,
 					min: start * 1000,
 					max: end * 1000,
 					noTicks: 48,

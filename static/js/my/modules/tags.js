@@ -2,36 +2,38 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 	
 	var
 		
+		fromts,tots,bin,
+		
 		timerange	  = ko.observable().syncWith("range"),
+		newtag 		  = ko.observable("").syncWith("newtag", true),
+		
 		
 		/* set up the listeners -- listen to other modules on events of interest */
-		
-		
+			
 		/*  listen to a tag being added to a new domain */
-		_domainstagged = ko.observable().subscribeTo("domainstagged").subscribe(function(data) {
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
+		_domainstagged = ko.postbox.subscribe("domainstagged", function(data) {
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts: fromts, tots:tots}, renderactivity);
 			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:data.tag}, updatedomainsfortag);	
 		}),
 		
 		/* listen to a new tag being created */
-		_tagcreated =  ko.observable().subscribeTo("tagcreated").subscribe(function(data) {
+		_tagListener = ko.postbox.subscribe("tagcreated", function(data) {
 			tagadded();
 		}),
 		
 		/* listen to a change in the overview chart */
-		
-		_rangeWatcher = ko.postbox.subscribe("range", function(data) {
+		_rangeListener = ko.postbox.subscribe("range", function(data) {
 			if (!data)
 				return;
 			selectedhost(data.host);
-			fromts = data.fromts;//parseInt(data.fromts/1000);
-			tots = data.tots;//parseInt(data.tots/1000);
+			fromts = data.fromts;
+			tots = data.tots;
 			
 			bin = calculatebin(tots-fromts);	
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 			
 			// update activity too!
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);	
 			
 		}),
 		
@@ -59,13 +61,8 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		tags	= ko.observableArray([]),
 		
-		newtag  = ko.observable("").syncWith("newtag", true),
-		
-		fromts,
-		
-		tots,
-		
-		bin,
+		subtitle = ko.observable(""),
+	
 		
 		reversedtags = ko.computed(function(){
 			reversed = [];
@@ -132,10 +129,11 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
 		},
 		
+	
+		
+		
 		renderactivity = function(data){
-			console.log("rendering activity for ");
-			console.log(data);
-			
+		
 			container = document.getElementById("activitygraph");
 			timeline  = { show : true, barWidth : .8 };
 			 
@@ -159,6 +157,21 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				timespan = Math.max(1000, (activity[i].tots - activity[i].fromts) * 1000);
 				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan ]);
 			}
+				
+			var tickFormatter = function(x){
+				m1 = moment.unix(x/1000);
+				
+				if ((tots-fromts) > 24*60*60){
+					return m1.format('MMM Do h:mm');
+				}
+				return m1.format('h:mm:ss a');
+			},
+			
+			m1 = moment.unix(fromts);
+			m2 = moment.unix(tots);
+			subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
+		
+			
 			
 			Flotr._.each(readings, function(d){
 				
@@ -171,11 +184,12 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			options = {
 				  xaxis : {
 					mode : 'time',
+					labelsAngle : 90,
 					min: start * 1000,
 					max: end * 1000,
 					noTicks:48,
-					showLabels : false,
-					margin: true
+					showLabels : true,
+				 	tickFormatter: tickFormatter,
 				  },
 				  yaxis : {
 					min: -1,
@@ -187,16 +201,18 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				  },
 				  selection : {
 					mode : 'x'
-				  }
+				  },
+				  HtmlText : false,
 			};
 			
-			$(container).height((tags().length+1) * 20);
+			$(container).height( ((tags().length+1) * 20) + 70 );
 			Flotr.draw(container, data, options);
 		
 		}	
 	
 	return{
 		init:init,
+		subtitle:subtitle,
 		tagheight: tagheight,
 		reversedtags:reversedtags,
 		getdomainsfortag: getdomainsfortag,
