@@ -2,6 +2,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 	
 	var
 	
+		colourfactory,
+		
 		timerange	  = ko.observable().syncWith("range"),
 		
 		
@@ -37,9 +39,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		squidclass = ko.computed(function(){
 			if (ctype() == "zoom"){
-				return "columns small-8";
+				return "col-md-10";
 			}else{
-				return "columns small-12";
+				return "col-md-12";
 			}
 		}),
 		
@@ -47,19 +49,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			return ctype() == "zoom";
 		});
 		
-		squidgraphstyle = ko.computed(function(){
-			if (ctype() == "browsing"){
-				return "width: 650px;";
-			}else{
-				return "width: 550px;";
-			}
-		}),
-		
 		selected = false,
 		
 		selectedhost = ko.observable(),
 	
-		
 		
 		toggleoverlay = function(){
 			overlay(!overlay());
@@ -103,7 +96,10 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		clickcallback = function(){
+			console.log("would zoom out here!");
 			depth(depth() - 1);
+			timerange(parameters[depth()]);
+			//timerange({fromts:fromts, tots:tots, host:selectedhost()});
 			//ajaxservice.ajaxGetJson('web/summary', parameters[depth()], renderroot);
 		},
 		
@@ -124,9 +120,14 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			return s;
 		},
 		
-		init = function(){
+		init = function(cf){
+			
+			colourfactory = cf;
 			
 			placeholder.bind("plotselected", function(event,ranges){
+				selected = true;
+				
+				/* need to punt this logic into the rangeselected function */
 				
 				bin	 = calculatebin(parameters[depth()].tots - parameters[depth()].fromts);
 				
@@ -138,9 +139,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				end	  = parseInt(Math.floor(tots/bin)*bin);
 				total	= 0;
 				
-			
-				
-				
 				for (i = start; i <= end; i += bin){
 					for (j = 0; j < data.length; j++){
 						if (data[j][0] == i){
@@ -150,18 +148,16 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					}
 				}
 				
-				selected = true;
+				
 				var difference = tots - fromts;				
 				bin = calculatebin(difference);
 				parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
 			
+				timerange({fromts:fromts, tots:tots, host:selectedhost()});
+				depth(depth()+1);
 				
-				if (total > ZOOMVALUE){
-					depth(depth()+1);
-					timerange({fromts:fromts, tots:tots, host:selectedhost()});
-				}else{
-					depth(depth()+1);
-					ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
+				if (total <= ZOOMVALUE){
+					ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));	
 				}
 					
 				setTimeout(function(){selected=false},100);
@@ -230,12 +226,13 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		renderroot = function(data){
+			ctype("browsing");
 			cache[depth()] = data;
 		
 			bin = parameters[depth()].bin;
 			
 			placeholder.height(200);
-			ctype("browsing");
+			
 			
 			var 
     			d1 = [],
@@ -261,7 +258,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
 				
 			
-			var data = [{ data: d1, label: "site requests", color: "#2CA089" }];
+			var data = [{ data: d1, label: "site requests", color: colourfactory.colourfor(selectedhost())}];
 			
 			var markings = [];
 			
@@ -298,7 +295,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		renderzoom = function(from,netdata){
-			
+		
 			ctype("zoom");
 			container = document.getElementById("squidgraph");
 			traffic = netdata.traffic;			
@@ -314,18 +311,19 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
     		readings = [];
     		
 			for(i = 0; i < traffic.length; i++){
-				start = Math.min(start, traffic[i].ts);
-				end = Math.max(end, traffic[i].ts);
+				start = Math.min(start, traffic[i].fromts);
+				end = Math.max(end, traffic[i].tots);
 				idx = labels.indexOf(traffic[i].domain);
 				
 				if (idx == -1){
 					labels.push(traffic[i].domain);
 					readings.push([]);
 				}
-		
-				readings[labels.indexOf(traffic[i].domain)].push([traffic[i].ts*1000, labels.indexOf(traffic[i].domain)-0.5, 1000]);
+				var timespan = Math.max(1000, (traffic[i].tots - traffic[i].fromts) * 1000);
+				readings[labels.indexOf(traffic[i].domain)].push([traffic[i].fromts*1000, labels.indexOf(traffic[i].domain)-0.5, timespan]);
 			}
 			
+		
 			m1 = moment.unix(start);
 			m2 = moment.unix(end); 
 			t_timerange =  m1.format('MMM Do h:mm:ss a') + " to " + m2.format('h:mm:ss a');	
@@ -342,9 +340,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			options = {
 				  xaxis : {
 					mode : 'time',
-					labelsAngle: 90,
 					min: start * 1000,
-					max: end * 1000,
+					max: (end * 1000) + 1000,
 					noTicks: 48,
 					showLabels : false
 				  },
@@ -368,7 +365,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			$('#zoomkey p').remove();
 			
 			_.each(labels.reverse(),function(val,k) {
-      			$(key).append('<p style="height:' + ((labels.length+1)*20)/labels.length + 'px;">'+val+'</p>');
+				val = val.substring(0, Math.min(val.length, 20));
+      			$(key).append('<p class="keyline" style="height:' + ((labels.length+1)*20)/labels.length + 'px;">'+val+'</p>');
     		});
     		
 			//incase already attached..
@@ -394,7 +392,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		zoomoutvisible:zoomoutvisible,	
 		depth:depth,
 		squidclass: squidclass,
-		squidgraphstyle: squidgraphstyle,
 		showkey:showkey,
 	}
 });

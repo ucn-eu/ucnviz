@@ -73,13 +73,15 @@ class NetDB( object ):
 		return {"keys":keys, "hosts":hosts}
 		
 			
-	def fetch_timebins_for_host(self, binsize, host, fromts=None, tots=None):
+	def fetch_timebins_for_host(self, binsize, host, fromts=None, tots=None, filters=None):
 		whereclause = ""
 		if fromts is not None and tots is not None:
 			whereclause = "AND (ts >= %d AND ts < %d)" % (fromts, tots)
-			
-		sql = "SELECT ts, domain from URLS where host = '%s' %s ORDER BY ts ASC" % (host,whereclause)
 		
+		if filters is not None:
+			whereclause = "%s %s " % (whereclause, "AND tld NOT IN (%s)" % ",".join("'{0}'".format(w) for w in filters))
+				
+		sql = "SELECT ts, domain from URLS where host = '%s' %s ORDER BY ts ASC" % (host,whereclause)
 		
 		
 		result = self.conn.execute(sql)
@@ -180,53 +182,44 @@ class NetDB( object ):
 		if fromts and tots:
 			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
 			
-		sql = "SELECT ts,domain,path FROM URLS WHERE host = '%s' AND path <> '' AND domain IN (%s) %s ORDER BY ts DESC" % (host, ",".join("'{0}'".format(w) for w in domains), timerange)
+		sql = "SELECT ts,domain,path FROM URLS WHERE host = '%s' AND path <> '' AND domain IN (%s) %s ORDER BY ts ASC" % (host, ",".join("'{0}'".format(w) for w in domains), timerange)
 		
 		result = self.conn.execute(sql)	
 		
 		urls = [{"ts":row[0], "domain":row[1], "path":row[2]} for row in result]
 		
+		
 		queries = []
-	
+		lastquery = ""
+		
 		for url in urls:
 			qstring =url['path'].split(searchsplits[url['domain']])
 			if len(qstring) > 1:
 				term = qstring[1].split("&")[0]
 				try:
-			 		queries.append(urllib.unquote(term).decode('utf-8')) 
+					term = urllib.unquote(term).decode('utf-8')
+					term = term.replace("+", " ")
+					term = term.replace("%20", " ")
+					if lastquery not in term:
+			 			queries.append(lastquery)
+			 		lastquery = term 
 				except Exception, e:
 					print "couldn't encode %s" % term
+		
+		return list(set(queries))
+		
+		# queries = []
+# 		
+# 		for url in urls:
+# 			qstring =url['path'].split(searchsplits[url['domain']])
+# 			if len(qstring) > 1:
+# 				term = qstring[1].split("&")[0]
+# 				try:
+# 			 		queries.append(urllib.unquote(term).decode('utf-8')) 
+# 				except Exception, e:
+# 					print "couldn't encode %s" % term
 					
 		return queries
-
-	def fetch_urls_for_host(self, host, fromts=None, tots=None):
-		
-		timerange = ""
-		
-		if fromts and tots:
-			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
-		
-		sql = "SELECT ts,host,domain FROM URLS WHERE host = '%s' %s ORDER BY ts DESC" % (host,timerange)
-		
-		result = self.conn.execute(sql)
-		urls = [{"ts":row[0], "domain":row[2]} for row in result]
-
-		return urls
-	
-	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
-		timerange = ""
-		
-		if fromts and tots:
-			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
-		
-		sql = "SELECT DISTINCT(domain), count(domain) AS requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC LIMIT %d" % (host, timerange, limit)
-		
-	
-		result = self.conn.execute(sql)
-		urls = [{"domain":row[0], "requests":row[1]} for row in result]
-		
-		return urls
-	
 	
 	def fetch_urls_for_tag(self, host, tag):
 		sql = "SELECT domain FROM tags WHERE tag = '%s' AND host = '%s'" % (tag, host)
@@ -236,16 +229,17 @@ class NetDB( object ):
 		return urls
 		
 		
-	def fetch_urls_for_tagging(self, host, fromts=None, tots=None):
-		timerange = ""
+	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
+		whereclause = ""
 		
 		if fromts and tots:
-			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
+			whereclause = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
 		
-		sql = "SELECT DISTINCT(u.domain), COUNT(u.domain) as requests, t.tag FROM URLS u LEFT JOIN TAGS t ON u.domain = t.domain AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.domain ORDER BY requests DESC" % (host, timerange)
+		if filters is not None:
+			whereclause = "%s %s " % (whereclause, "AND u.tld NOT IN (%s)" % ",".join("'{0}'".format(w) for w in filters))
+				
+		sql = "SELECT DISTINCT(u.domain), COUNT(u.domain) as requests, t.tag FROM URLS u LEFT JOIN TAGS t ON u.domain = t.domain AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.domain ORDER BY requests DESC" % (host, whereclause)
 		
-		
-		#sql = "SELECT DISTINCT(domain), COUNT(domain) as requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC" % (host,timerange)
 		
 		result = self.conn.execute(sql)
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
@@ -266,6 +260,57 @@ class NetDB( object ):
 
 		return zones		
 	
+	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
+		timerange = ""
+		
+		if fromts and tots:
+			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
+		
+		sql = "SELECT DISTINCT(domain), count(domain) AS requests FROM URLS WHERE host = '%s' %s GROUP BY domain ORDER BY requests DESC LIMIT %d" % (host, timerange, limit)
+		
+	
+		result = self.conn.execute(sql)
+		urls = [{"domain":row[0], "requests":row[1]} for row in result]
+		
+		return urls
+	
+	def fetch_urls_for_host(self, host, fromts=None, tots=None, filters=None):
+		delta = 10000
+		whereclause = ""
+		
+		if fromts and tots:
+			whereclause = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
+		
+		if filters is not None:
+			whereclause = "%s %s " % (whereclause, "AND tld NOT IN (%s)" % ",".join("'{0}'".format(w) for w in filters))
+		
+		
+		sql = "SELECT ts,host,domain, tld FROM URLS WHERE host = '%s' %s ORDER BY host, ts ASC" % (host,whereclause)
+		
+		result = self.conn.execute(sql)
+		
+		currenthost = None
+		url = None
+		urls = []
+		
+		for row in result:
+			if currenthost != row[2]:
+				if url is not None:
+					urls.append(url)
+				url = {"domain":row[2], "fromts":row[0], "tots":row[0]} 	
+				currenthost = row[2]
+			else:
+				if (url["tots"] + delta) >= row[0]:
+					url["tots"] = row[0]
+				else:
+					urls.append(url)
+					url = {"domain":row[2], "fromts":row[0], "tots":row[0]} 
+		
+		if url:
+			urls.append(url)
+		
+		return urls
+	
 	def fetch_tags_for_host(self, host, fromts=None, tots=None):
 		
 		delta = 10000
@@ -284,9 +329,7 @@ class NetDB( object ):
 		#activity = []
 		
 		for row in result:
-			#activity.append({"tag":row[0], "ts":row[1]})
 			if currenttag != row[0]:
-				#print row[0]
 				if reading is not None:
 					readings.append(reading)
 				reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 	
@@ -300,13 +343,6 @@ class NetDB( object ):
 		
 		if reading:
 			readings.append(reading)
-		
-		#activity = [{"tag":row[0], "ts":row[1]} for row in result]
-		#print "activity..."
-		#print activity
-		
-		#print "readings.."
-		#print readings
 		
 		return readings
 	

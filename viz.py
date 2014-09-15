@@ -51,11 +51,8 @@ def overview():
  	
  	#might be quicker to do a single sql select on home?  each call to fetch_timebins_for_host  takes approx 0.15s!
 	
-	start = time.time() 
 	values = netDB.fetchtimebins_for_home(bin,home,fromts, tots)
-	end = time.time() 
-	print end-start
-	
+
 	return jsonify(values)
 		
 #return all devices that have associated phone data (i.e running processes data)
@@ -104,20 +101,17 @@ def browsing():
  	fromts = request.args.get('fromts')
  	tots   = request.args.get('tots')
  	netDB.connect()
-	traffic = netDB.fetch_urls_for_host(host=host, fromts=fromts, tots=tots)
+	traffic = netDB.fetch_urls_for_host(host=host, fromts=fromts, tots=tots, filters=blocked)
 	return jsonify(traffic=traffic)
+	
+@app.route("/web/queries")
+def queries():
+	host 	= request.args.get('host')
+	fromts 	= request.args.get('fromts') or None
+	tots   	= request.args.get('tots') or None
+	queries = netDB.fetch_queries_for_host(host,fromts, tots)
+	return jsonify(queries=queries)
 
-def filter(traffic):
-	filtered = []
-	
-	for domain in traffic:
-		if any(domain['domain'] in s for s in blocked):
-			print "blocked %s" % domain['domain']
-		else:
-			filtered.append(domain)
-	
-	return filtered
-	
 @app.route("/web/summary")
 def summary():
 	host 	= request.args.get('host')
@@ -148,11 +142,12 @@ def summary():
  	
 	netDB.connect()
 	#fetch a day by day summary of browsing
-	summary = netDB.fetch_timebins_for_host(bin,host,fromts, tots)
+	summary = netDB.fetch_timebins_for_host(bin,host,fromts, tots, filters=blocked)
 	zones	= netDB.fetch_zones_for_host(host,fromts, tots)
-	top		= netDB.fetch_top_urls_for_host(host, 20, fromts, tots)
-	queries = netDB.fetch_queries_for_host(host,fromts, tots)
-	return jsonify(summary=summary, zones=zones, top=top, queries=queries)
+	#top		= netDB.fetch_top_urls_for_host(host, 20, fromts, tots)
+	#queries = netDB.fetch_queries_for_host(host,fromts, tots)
+	return jsonify(summary=summary, zones=zones)
+	#, top=top, queries=queries)
 
 @app.route("/web/bootstrap")
 def hosts():
@@ -178,7 +173,7 @@ def urlsfortagging():
 	fromts 	= request.args.get('fromts') or None
  	tots	= request.args.get('tots') or None
  	netDB.connect()
-	urls = netDB.fetch_urls_for_tagging(host, fromts, tots)
+	urls = netDB.fetch_urls_for_tagging(host, fromts, tots, filters=blocked)
 	return jsonify(urls=urls)
 
 @app.route("/tag/urlsfortag")

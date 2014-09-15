@@ -1,6 +1,7 @@
 define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'knockout-bootstrap'], function($,ajaxservice,ko,moment){
 	
 	var
+		colourfactory,
 		
 		fromts,tots,bin,
 		
@@ -93,8 +94,9 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				
 		tagparameters = [],	
 	
-		init = function(taglist){
-			tags(taglist);			
+		init = function(taglist, cf){
+			tags(taglist);
+			colourfactory = cf;			
 		},
 		
 		updatedomainsfortag = function(data){
@@ -206,6 +208,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			};
 			
 			$(container).height( ((tags().length+1) * 20) + 70 );
+			$(".tagchartbar").height(((tags().length+1) * 20) + 70 );
 			Flotr.draw(container, data, options);
 		
 		}	

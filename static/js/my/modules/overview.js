@@ -6,6 +6,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		browser,
 		
+	
+		
 		browsers,
 		
 		fromto = ko.observableArray([]).publishOn("fromto"),
@@ -36,9 +38,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		y  = d3.scale.linear().range([height,0]),
 		y2 = d3.scale.linear().range([height2,0]),
 		
-		color = d3.scale.category20(),
-		staticcolor = {},
-		
+		color,
+				
 		xAxis = d3.svg.axis().scale(x).orient("bottom"),
 		xAxis2 = d3.svg.axis().scale(x2).orient("bottom"),
 		 
@@ -84,15 +85,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 				.attr("class", "activitykey"),
 				
-		init = function(data){
+		init = function(data, cf){
 		
 			hosts = Object.keys(data.hosts);
-		
-			color.domain(hosts);
-		
-			for (i = 0; i < hosts.length; i++){
-				staticcolor[hosts[i]] = color(hosts[i]);
-			}
+			color = cf.colourfor;
 			renderactivity(data);			
 		},
 		
@@ -136,7 +132,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			
 			svg.selectAll(".area")
 				.attr("d", function(d) {return area(d.values);})
-				.style("fill", function(d){return staticcolor[d.name]})	
+				.style("fill", function(d){return color(d.name)})	
 			
 			svg.select(".x.axis").call(xAxis);
 			svg.select(".y.axis").call(yAxis);
@@ -205,6 +201,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			
 			x2.domain(x.domain());
   			y2.domain(y.domain());
+			yAxis2.tickValues(y2.domain());
 			
 			mychart = svg.selectAll("g.topg");
 			
@@ -216,9 +213,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			browser.append("path")
 				.attr("class", "area")
 				.attr("d", function(d) {return area(d.values);})
-				.style("fill", function(d){return staticcolor[d.name]})
+				.style("fill", function(d){return color(d.name)})
 				.style("fill-opacity", 0.2)	
-				.style("stroke", function(d){return staticcolor[d.name]})	
+				.style("stroke", function(d){return color(d.name)})	
 				.style("stroke-opacity", 1.0)
 				.on("click", areaclicked);
 			
@@ -259,9 +256,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.append("circle")
 				.attr("transform", function(d,i) {return "translate(" + (padding*i) + "," + 0 + ")"; })
 				.attr("r", 8)
-				.style("fill", function(d){return staticcolor[d]})	
+				.style("fill", function(d){return color(d)})	
 				.style("fill-opacity", function(d){return filters.indexOf(d) == -1 ? 0.2 : 1.0})	
-				.style("stroke", function(d){return staticcolor[d]})	
+				.style("stroke", function(d){return color(d)})	
 				.style("stroke-opacity", 1.0)
 				.on("click", keyclicked);
 				  
@@ -296,9 +293,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			zbrowser.append("path")
 				.attr("class", "area")
 				.attr("d", function(d) {return area2(d.values);})
-				.style("fill", function(d){return staticcolor[d.name]})
+				.style("fill", function(d){return color(d.name)})
 				.style("fill-opacity", 0.2)	
-				.style("stroke", function(d){return staticcolor[d.name]})	
+				.style("stroke", function(d){return color(d.name)})	
 				.style("stroke-opacity", 1.0)
 				.on("click", areaclicked);
 				
@@ -374,14 +371,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			from = xrange[0].getTime(); 
 			to   = xrange[1].getTime(); 
 			
+			selected = [];
 			if (filters.length == 0){
-				color.domain(Object.keys(data.hosts));
+				selected = Object.keys(data.hosts);
+				//color.domain(Object.keys(data.hosts));
 			}else{
-				color.domain(filters);
+				selected = filters;
+				//color.domain(filters);
 			}
 			
 			//regenerate the stack values based on the hosts that are currently selected.
-			var filtered = stack(color.domain().map(function(name){
+			var filtered = stack(selected.map(function(name){
 				return {
 					name:name,
 					values: data.hosts[name].map(function(d, i){
@@ -393,9 +393,15 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			//set the y values from 0 to recalculated max y (based on calculating each stack height)
 			y.domain([0,d3.max(filtered.map(function(host){		
 				return d3.max(host.values.filter(function(value){
-					return value.date /*.getTime()*/ >= from && value.date /*.getTime()*/ <= to;
+					return value.date >= from && value.date <= to;
 				}), function(d){return d.y0+d.y});
 			}))]);
+			
+			y2.domain([0,d3.max(filtered.map(function(host){		
+				return d3.max(host.values, function(d){return d.y0+d.y});
+			}))]);
+			
+			yAxis2.tickValues(y2.domain());
 			
 			//------------ update paths! ------------
 			
@@ -408,12 +414,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 					.transition()
 					.duration(1000)
 					.attr("d", function(d) {return area(d.values);})
-					.style("fill", function(d){return staticcolor[d.name]})	
+					.style("fill", function(d){return color(d.name)})	
 					.style("fill-opacity", 0.2)	
-					.style("stroke", function(d){return staticcolor[d.name]})	
+					.style("stroke", function(d){return color(d.name)})	
 					.style("stroke-opacity", 1.0)						
-				
-			//handle new data!
+			
 			//handle new data!
 			activity
 						.enter()
@@ -423,9 +428,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 							d3.select(this).append("path")
 							  .attr("class", "area")
 							  .attr("d", function(d) {return area(d.values);})
-							  .style("fill", function(d){return staticcolor[d.name]})
+							  .style("fill", function(d){return color(d.name)})
 							  .style("fill-opacity", 0.2)	
-							  .style("stroke", function(d){return staticcolor[d.name]})	
+							  .style("stroke", function(d){return color(d.name)})	
 							  .style("stroke-opacity", 1.0)
 							  .on("click", areaclicked)
 								
@@ -441,14 +446,54 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 						
 		
 			activity.exit().each(function(){d3.select(this.parentNode).remove();});
+			
+			
+			
+			/* update zoom graph too! */
+			var azoom = zoom.selectAll(".area")	
+					.data(filtered)
+			
+			
+			//update current elements
+			azoom
+					.transition()
+					.duration(1000)
+					.attr("d", function(d) {return area2(d.values);})
+					.style("fill", function(d){return color(d.name)})	
+					.style("fill-opacity", 0.2)	
+					.style("stroke", function(d){return color(d.name)})	
+					.style("stroke-opacity", 1.0)						
+			
+			//handle new data!
+			azoom
+						.enter()
+						.append("g")
+						.attr("class", "browser")
+						.each(function(d,idx){
+							d3.select(this).append("path")
+							  .attr("class", "area")
+							  .attr("d", function(d) {return area2(d.values);})
+							  .style("fill", function(d){return color(d.name)})
+							  .style("fill-opacity", 0.2)	
+							  .style("stroke", function(d){return color(d.name)})	
+							  .style("stroke-opacity", 1.0)
+						});
+						
+		
+			azoom.exit().each(function(){d3.select(this.parentNode).remove();});
 				 
 					 
 			//adjust y-axis!
 			var yaxis = svg.select(".y.axis")
-			 
+			var y2axis = zoom.select(".y.axis")
+			
 			yaxis.transition()
 				.duration(1000)
 				.call(yAxis);
+				
+			y2axis.transition()
+				.duration(1000)
+				.call(yAxis2);
 			
 		}
 		

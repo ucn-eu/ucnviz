@@ -26,14 +26,19 @@
 </div>
 
 <div id="visualisation">
-	<div id="overall">
-		<div class="row">
-			<div class="col-md-2" style="min-height:400px; background:#080808">
-				<div class="title">
-					<strong>overall</strong> activity
+	
+	<div class="row" style="border-bottom: 1px solid #30363c">
+		<div class="col-md-2" style="min-height:451px; background:#30363c">
+			<div class="row" style="background:#ff0000;">
+				<div class="col-md-12">
+					<div class="title">
+						<strong>overall</strong> activity
+					</div>
 				</div>
 			</div>
-			<div class="col-md-10">
+		</div>
+		<div class="col-md-10">
+			<div id="overall"> 
 				<div class="row">
 					<div class="col-md-12">
 						<div id="context"></div>
@@ -41,145 +46,133 @@
 				</div>
 				<div class="row">		
 					<div class="col-md-12">
-						<!--<div id="zoomcontainer" style="background:#666666; padding: 10px;">-->
-				
 						<div id="zoom"></div>
-						<!--</div>-->
 					</div>
 				</div>
 			</div>
-		</div>
-	</div>
-	
-	<div id="web">
-		<div class="row">
-			<div class="col-md-2" style="min-height:250px; background:#080808">
-				<div class="title">
-					<strong>tag</strong> your activity
-					
-					
-					<!-- PUT TAG ACTIVITY BUTTONS HERE -->
-				</div>
-			</div>
-			<div class="col-md-10">
+			<div id="queries">
 				<div class="row">
 					<div class="col-md-12">
-						<!--<div data-bind="if:showkey()" class="col-md-4 key">
-							<div id="zoomkey"></div>
-						</div>-->
-						<!--<div data-bind="attr:{class:squidclass}">-->
-						<div style="padding:30px">
-							<div id="squidgraph" class="render"></div><!-- data-bind="style:squidgraphstyle"></div>-->
+						<div class="querybox" data-bind="foreach:queries">
+							<span data-bind="text:$data"></span>
 						</div>
-						<!--</div>-->
 					</div>
 				</div>
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-			</div>
+			</div>		
 		</div>
 	</div>
 	
-	<div id="tagger">
-		<div class="row">
-			<div class="col-md-12">
-				<div class="controlbar">	
-					<div class="row">
-						<div class="col-md-8">
-						</div>
-						
-						<div class="col-md-4">
-							<button class="pull-right btn btn-primary" data-bind="click:function(){toggleoverlay();}">location</button>
-							<button class="pull-right btn btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div  data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-						<h4 class="modal-title" id="myModalLabel">tag activity</h4>
-					</div>
-					<div class="modal-body">
-						<div class="row">
-							<div class="col-md-6">
-								<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
-							</div>
-							<div class="col-md-4">
-								<div class="row">
-									<div class="col-md-9">
-										<select class="form-control" data-bind="options:tags, value:chosentag"></select>
-									</div>
-									<div class="col-md-3">
-										<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
-									</div>
-								</div>
-								<hr>
-								<div class="row">
-									<div class="col-md-9">
-										 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
-									</div>
-									<div class="col-md-3">
-										<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
-									</div>
-								</div>
-							</div>			
-						</div>
-						
-						
-					</div> <!-- end of modal body! -->
-					<div class="modal-footer">
-						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div><!-- end of tagger! -->
 	
+	<div class="row">
+		<div id="tagger" class="col-md-2" style="background:#080808">
+		
+			<div  data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+							<h4 class="modal-title" id="myModalLabel">tag activity</h4>
+						</div>
+						<div class="modal-body">
+							<div class="row">
+								<div class="col-md-7">
+									<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
+								</div>
+								<div class="col-md-3">
+									<div class="row">
+										<div class="col-md-9">
+											<select class="form-control" data-bind="options:tags, value:chosentag"></select>
+										</div>
+										<div class="col-md-3">
+											<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
+										</div>
+									</div>
+									<hr>
+									<div class="row">
+										<div class="col-md-9">
+											 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
+										</div>
+										<div class="col-md-3">
+											<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
+										</div>
+									</div>
+								</div>			
+							</div>
+						
+						
+						</div> <!-- end of modal body! -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		
+		
+			<div class="row" style="background:#ff0000;">
+				<div class="col-md-12">
+					<div class="title">
+						<strong>tag</strong> activity
+					</div>
+				</div>
+			</div>
+				
+			<div class="row" style="min-height:180px">
+				<div class="col-md-12">
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12" style="text-align:center; padding-bottom: 10px">
+					<button class="btn btn-sm btn-primary" data-bind="click:function(){toggleoverlay();}">overlay location</button>
+					<button class="btn btn-sm btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
+				</div>
+			</div>
+		
+		</div> <!-- end of tagger -->
+		
+		
+		<div id="web" class="col-md-10">
+			<div class="row" style="min-height: 250px; padding: 20px; border-bottom: 1px solid #30363c">
+				
+				<div data-bind="if:showkey()" class="col-md-2">
+					<div id="zoomkey"></div> 
+					
+				</div>
+				<div data-bind="attr:{class:squidclass}">
+					<div id="squidgraph" class="render" style="width:100%"></div>
+				</div>
+			</div>
+		</div>
+	</div>
 	
 	<div id="tags">
 		<div class="row">
-			<div class="col-md-12">
-				<div class="title">
-					<div class="row">
-						<div class="col-md-4">
-							<strong>tagged</strong> activity
-						</div>
-						<div class="col-md-8">
-							<div data-bind="text:subtitle"></div>
-						</div>
+			<div class="col-md-2 tagchartbar" style="background:#080808;">
+				<div class="row" style="background:#ff0000;">
+					<div class="col-md-12">
+						<div class="title"><strong>tagged</strong> activity</div>
 					</div>
 				</div>
 			</div>
-		</div>
-		
-		<div class="row" style="padding: 10px 10px 20px 10px;"><!-- tag graph -->
-			
-			<div class="col-md-2 key">
-				
-				<div data-bind="foreach:reversedtags">
-					<p  class="keyline" data-bind="style:{height:$parent.tagheight()}"><a href="#tags", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}, popover: {template: 'popoverBindingTemplate', title: $data}"></a></p>
-				</div>
-			</div>
 			<div class="col-md-10">
-				<div id="activitygraph" class="activityrender"></div>
-			</div>	
+				<div class="row" style="padding: 10px 10px 20px 10px;"><!-- tag graph -->			
+					<div class="col-md-2 key">
 				
-		</div>	<!-- end of tag graph -->
+						<div data-bind="foreach:reversedtags">
+							<p  class="keyline" data-bind="style:{height:$parent.tagheight()}"><a href="#tags", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}, popover: {template: 'popoverBindingTemplate', title: $data}"></a></p>
+						</div>
+					</div>
+					<div class="col-md-10">
+						<div id="activitygraph" class="activityrender"></div>
+					</div>	
+				</div>	<!-- end of tag graph -->
+			</div> <!-- end of 10 cols -->
+		</div> <!-- end of row -->
+	</div> <!-- end of tags -->
 		
-		<div class="row">
+
+		
+	<!--	<div class="row">
 			<div class="col-md-12">
 				<div class="controlbar">
 					<div class="row">
@@ -198,7 +191,7 @@
 			</div>
 		</div>
 		
-	</div> <!-- end of tags -->
+	</div>  -->
 </div>	<!-- end of viz -->
 
 <script type="text/html" id="popoverBindingTemplate">

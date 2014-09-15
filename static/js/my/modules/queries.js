@@ -1,22 +1,25 @@
-define(['jquery','ajaxservice', 'knockout'], function($,ajaxservice,ko){
+define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservice,ko){
 	
 	var
 	
 		//respond to new host selected (ko.postbox)
 		
-		queries = ko.observableArray([]),
+		_rangeListener = ko.postbox.subscribe("range", function(data) {
+			if (!data)
+				return;
+			ajaxservice.ajaxGetJson('web/queries',{host:data.host, fromts: data.fromts, tots:data.tots}, updatequeries);
+		}),
 		
-		queryselected = function(query){
-		
+		updatequeries = function(data){
+			if (data && data.queries){
+				queries(data.queries);
+			}
 		},
 		
-		init = function(){
-			//retrieve queries for selected host and update queries array!
-		}
+		queries = ko.observableArray([])
+	
 				
 	return{
-		init:init,
 		queries:queries,
-		queryselected:queryselected
 	}
 });
