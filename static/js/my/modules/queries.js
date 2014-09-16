@@ -7,6 +7,7 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
 			if (!data)
 				return;
+			queries([]);
 			ajaxservice.ajaxGetJson('web/queries',{host:data.host, fromts: data.fromts, tots:data.tots}, updatequeries);
 		}),
 		
@@ -16,7 +17,7 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 			}
 		},
 		
-		queries = ko.observableArray([])
+		queries = ko.observableArray([]).publishOn("queries")
 	
 				
 	return{

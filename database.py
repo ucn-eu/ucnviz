@@ -201,13 +201,13 @@ class NetDB( object ):
 					term = term.replace("+", " ")
 					term = term.replace("%20", " ")
 					if lastquery not in term:
-			 			queries.append(lastquery)
+			 			queries.append({'query':lastquery, 'ts':url['ts']})
 			 		lastquery = term 
 				except Exception, e:
 					print "couldn't encode %s" % term
 		
-		return list(set(queries))
-		
+		#return list(set(queries))
+		return queries
 		# queries = []
 # 		
 # 		for url in urls:

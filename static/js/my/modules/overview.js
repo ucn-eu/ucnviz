@@ -16,9 +16,16 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		timerange	  = ko.observable().syncWith("range"),
 		
-		_rangeListener = ko.postbox.subscribe("range", function(data) {
+		_rangeListener = ko.postbox.subscribe("range", function(range) {
 			//check against x2.domain()
 			//zoom.select(".brush").call(brush.extent([new Date(newValue.fromts*1000), new Date(newValue.tots*1000)]));
+		}),
+		
+		_queryListener = ko.postbox.subscribe("queries", function(queries) {
+			if (queries){
+				console.log("overlaying queres!");
+				overlayqueries(queries);
+			}
 		}),
 		
 		data 	  = [],
@@ -230,6 +237,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			  
 			renderzoomer(browsers);	
 			renderkey();
+			
+			svg.append("g")
+				.attr("class", "queries");
 		
 		},
 		
@@ -353,8 +363,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		 
 		triggerupdate = function(host){
 		
-			console.log("triggering a timerange update!!");
-		
 			xrange = brush.empty() ? x2.domain() : brush.extent();
 			from = xrange[0].getTime(); 
 			to   = xrange[1].getTime();
@@ -364,6 +372,40 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				timerange({host:host, fromts:parseInt(from/1000), tots:parseInt(to/1000)});
 			}
 		},
+		
+		
+		overlayqueries = function(queries){
+			
+			/* first must build the lines, then must ovelay! */
+			
+			
+			l = svg.selectAll(".queries")
+						
+						
+			lines = l.selectAll("line").data(queries, function(d,i){return i});
+						
+			lines
+				.transition()
+				.duration(1000)		
+			 	.attr("y1", 0)
+				.attr("x1", function(d){return x(d.ts*1000)})
+				.attr("y2", height)
+				.attr("x2", function(d){return x(d.ts*1000)});
+		
+			lines
+				.enter()
+				 .append("line")
+				 .attr("class", "divide")
+				 .attr("y1", 0)
+				 .attr("x1", function(d){return x(d.ts*1000)})
+				 .attr("y2", height)
+				 .attr("x2", function(d){return x(d.ts*1000)})
+				 .style("stroke", function(d){return "#000000"});	
+			
+			lines.exit()
+				.remove();	
+		},
+		
 		
 		redraw = function(){
 			
