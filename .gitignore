@@ -1,5 +1,5 @@
 static/data/
 config.py
-netdata.db
+*.db
 *.pyc
 venv
