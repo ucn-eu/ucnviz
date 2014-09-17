@@ -7,6 +7,9 @@ from datetime import datetime
 import time
 import math
 from tld import get_tld
+from os import listdir
+from os.path import isfile, isdir, join
+import json
 
 def reconnect(fn):
 	""" decorator to reconnect to the database if needed """
@@ -440,6 +443,31 @@ class NetDB( object ):
 	def insert_process(self, process):
 		self.conn.execute("INSERT INTO PROCESSES(ts,host,name,starttime) VALUES(?,?,?,?)", (process['ts'],process['host'], process['name'], process['starttime']))
 		self.conn.commit()
+	
+	@reconnect	
+	def bulk_insert_processes(self, datafile):
+		datafiles = [f for f in listdir(datafile) if isdir(join(datafile,f))]
+		devicefiles = []
+	
+		for device in datafiles:
+			devicedir = join(datafile,device)
+			devicefiles = [f for f in listdir(devicedir) if isfile(join(devicedir,f))]
+			for dev in devicefiles:
+				json_data=open(join(devicedir, dev))
+				dobj = datetime.strptime(dev.split(".")[0], '%d-%m-%y_%H:%M:%S')
+				ts = time.mktime(dobj.timetuple())
+				data = json.load(json_data)
+			
+				if isinstance(data, list) is False:
+					data = [data]
+				
+				for item in data:
+					for process in item['processes']:
+						self.conn.execute("INSERT INTO PROCESSES(ts,host,name,starttime) VALUES(?,?,?,?)", (ts, device, process['name'], process['starttime']))
+		
+		self.conn.commit()
+	
+	
 						
 	@reconnect	
 	def insert_url(self, url):
@@ -447,7 +475,7 @@ class NetDB( object ):
 		self.conn.commit()
 	
 	@reconnect
-	def bulk_insert(self, content):
+	def bulk_insert_urls(self, content):
 		
 		for line in content:
 		

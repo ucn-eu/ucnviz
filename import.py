@@ -53,62 +53,26 @@ def insert_iphone_data(datafile):
 				netdb.insert_network_data({'ts':ts, 'host':device, 'wifiup':netdata['wifiup'], 'wifidown':netdata['wifidown'], 'cellup':netdata['cellup'], 'celldown':netdata['celldown']})	
 	
 def insert_iphone_processes(datafile):
-	datafiles = [f for f in listdir(datafile) if isdir(join(datafile,f))]
-	devicefiles = []
-
-	for device in datafiles:
-		devicedir = join(datafile,device)
-		devicefiles = [f for f in listdir(devicedir) if isfile(join(devicedir,f))]
-		for dev in devicefiles:
-			json_data=open(join(devicedir, dev))
-			dobj = datetime.strptime(dev.split(".")[0], '%d-%m-%y_%H:%M:%S')
-			ts = time.mktime(dobj.timetuple())
-			data = json.load(json_data)
-			
-			if isinstance(data, list) is False:
-				data = [data]
-				
-			for item in data:
-				for process in item['processes']:
-					netdb.insert_process({'ts':ts, 'host':device, 'name':process['name'], 'starttime':process['starttime']})
-
-
+	
+	netdb.bulk_insert_processes(datafile)
+	
 def insert_zones(datafile):
 	datafiles = [f for f in listdir(datafile) if isfile(join(datafile,f))]
 	
 	for f in datafiles:
+		
 		json_data=open(join(datafile,f))
 		myjson = json.load(json_data)
-
+	
  		for reading in myjson:
  			netdb.insert_zone(reading)
 
-#this is slow -- look at using transactions instead.
 
-#stackoverflow.com/questions/5942402/python-csv-to-sqllite/7137270#7137270	
 def insert_urls(datafile):
 	with open(datafile) as f:
 		content = f.readlines()
+	netdb.bulk_insert_urls(content)
 	
-	netdb.bulk_insert(content)
-		
-	# for line in content:
-# 		items = line.split()
-# 		if ("http" in items[6]  and "//" in items[6]):
-# 			parts  = items[6].split("//")[1].split("/")
-# 			domain = parts[0]
-# 			res = get_tld(items[6], as_object=True, fail_silently=True)
-# 			
-# 			if res is not None:	
-# 				tld = "%s.%s" % (res.domain, res.suffix)
-# 			else:
-# 				tld = parts[0]
-# 			path = ""
-# 			if len(parts) > 0:
-# 				path = "".join(parts[1:])
-# 				
-# 			url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
-# 			netdb.insert_url(url)			
 
 def insert_homes(datafile):
 	with open(datafile) as f:
