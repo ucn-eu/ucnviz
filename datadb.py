@@ -8,8 +8,15 @@ from datetime import datetime
 import time
 import math
 
-log = logging.getLogger( "console_log" )
 
+def reconnect(fn):
+	""" decorator to reconnect to the database if needed """
+	def wrapped(self, *args, **kwargs):
+		if self.connected is not True:
+			self.connect()
+		return fn(self, *args, **kwargs)
+	return wrapped
+	
 class NetDB( object ):
 	''' classdocs '''
 
@@ -17,22 +24,24 @@ class NetDB( object ):
 		self.name = name
 		self.connected = False
 	#///////////////////////////////////////
-
+	
+			
 	def connect( self ):
 		#log.debug( "connecting to sqllite database %s" % self.name )
 		if self.connected is False:
-			self.conn = sqlite3.connect("%s" % self.name)
+			self.conn = sqlite3.connect("%s" % self.name, check_same_thread = False)
 			self.connected = True
 		
 	def date_from_ts(self, tstamp):
 		return datetime.fromtimestamp(int(tstamp)).strftime('%Y-%m-%d %H:%M:%S')
 
+	@reconnect
 	def fetch_range_for_host(self, host):
 		result = self.conn.execute("SELECT min(ts), max(ts) FROM URLS WHERE host = '%s'" % host)
 		range = [{"from":row[0], "to":row[1]} for row in result]
 		return range
 	
-	
+	@reconnect
 	def fetchtimebins_for_home(self, binsize,home,fromts=None, tots=None):
 		whereclause = ""
 	
@@ -72,7 +81,7 @@ class NetDB( object ):
 		
 		return {"keys":keys, "hosts":hosts}
 		
-			
+	@reconnect		
 	def fetch_timebins_for_host(self, binsize, host, fromts=None, tots=None, filters=None):
 		whereclause = ""
 		if fromts is not None and tots is not None:
@@ -108,7 +117,8 @@ class NetDB( object ):
 			bins[label] = bin  
 		
 		return sorted(bins.iteritems(), key=operator.itemgetter(0))
-		
+	
+	@reconnect	
 	def seen(self, binhistory, domain, label):
 		if (label in binhistory):
 			if (domain in binhistory[label]):
@@ -119,21 +129,24 @@ class NetDB( object ):
 			binhistory[label] = [domain]
 
 		return False
-	
+	@reconnect
 	def binlabel(self, binsize, ts):
 		return int(math.floor(ts/binsize)*binsize)
-					
+	
+	@reconnect				
 	def fetch_device_hosts(self):
 		result = self.conn.execute("SELECT DISTINCT(host) FROM PROCESSES")
 		hosts = [row[0] for row in result]
 		return hosts
 	
+	@reconnect
 	def fetch_device_processes(self, host):
 		result = self.conn.execute("SELECT DISTINCT(name) FROM PROCESSES WHERE host = '%s'" % host)
 		hosts = [row[0] for row in result]
 		hosts.sort()
 		return hosts
-		
+	
+	@reconnect	
 	def fetch_min_max_processes(self, host):
 		sql = "select min(starttime) as min, max(starttime) as max FROM processes WHERE host = '%s'" %  host
 		result = self.conn.execute(sql)
@@ -141,23 +154,27 @@ class NetDB( object ):
 		return minmax
 		#return {min:minmax[0], max:minmax[1]}
 	
+	@reconnect
 	def fetch_details_for_process(self, host, processname):
 		sql = "SELECT ts,starttime FROM PROCESSES WHERE host = '%s' AND name = '%s' ORDER BY ts ASC" % (host, processname)
 		result = self.conn.execute(sql)
 		hosts = [{"ts":row[0], "duration":row[0]-row[1]} for row in result]
 		return hosts
 	
+	@reconnect
 	def fetch_device_max_process_ts(self, host):
 		sql = "SELECT MAX(starttime) FROM PROCESSES WHERE host = '%s'" % host 
 		result = self.conn.execute(sql)
 		return result.fetchone()[0]
-			
+	
+	@reconnect
 	def fetch_hosts(self,filter):
 		sql = "SELECT DISTINCT(host) FROM URLS WHERE host LIKE '%%%s%%'" % filter
 		result = self.conn.execute(sql)
 		hosts = [row[0] for row in result]
 		return hosts
 	
+	@reconnect	
 	def fetch_queries_for_host(self,host,fromts=None, tots=None):
 	
 		searchsplits = {'google.com':'q=',
@@ -191,6 +208,8 @@ class NetDB( object ):
 		
 		queries = []
 		lastquery = ""
+		lastts = 0 
+		appended = False
 		
 		for url in urls:
 			qstring =url['path'].split(searchsplits[url['domain']])
@@ -202,25 +221,21 @@ class NetDB( object ):
 					term = term.replace("%20", " ")
 					if lastquery not in term:
 			 			queries.append({'query':lastquery, 'ts':url['ts']})
+			 			appended = True
+			 		else:
+			 			appended = False
+			 			
 			 		lastquery = term 
+			 		lastts = url['ts']
 				except Exception, e:
 					print "couldn't encode %s" % term
 		
-		#return list(set(queries))
-		return queries
-		# queries = []
-# 		
-# 		for url in urls:
-# 			qstring =url['path'].split(searchsplits[url['domain']])
-# 			if len(qstring) > 1:
-# 				term = qstring[1].split("&")[0]
-# 				try:
-# 			 		queries.append(urllib.unquote(term).decode('utf-8')) 
-# 				except Exception, e:
-# 					print "couldn't encode %s" % term
-					
+		if lastquery and not appended:
+			queries.append({'query':lastquery, 'ts':lastts})
+			
 		return queries
 	
+	@reconnect
 	def fetch_urls_for_tag(self, host, tag):
 		sql = "SELECT domain FROM tags WHERE tag = '%s' AND host = '%s'" % (tag, host)
 		
@@ -228,7 +243,7 @@ class NetDB( object ):
 		urls = [row[0] for row in result]
 		return urls
 		
-		
+	@reconnect	
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
 		whereclause = ""
 		
@@ -245,7 +260,7 @@ class NetDB( object ):
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
 		
 		return urls
-	
+	@reconnect
 	def fetch_zones_for_host(self, host, fromts=None, tots=None):
 		
 		timerange = ""
@@ -259,7 +274,7 @@ class NetDB( object ):
 		zones = [{"name":row[0], "enter":row[1], "exit":row[2]} for row in result]
 
 		return zones		
-	
+	@reconnect
 	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
 		timerange = ""
 		
@@ -274,6 +289,7 @@ class NetDB( object ):
 		
 		return urls
 	
+	@reconnect
 	def fetch_urls_for_host(self, host, fromts=None, tots=None, filters=None):
 		delta = 10000
 		whereclause = ""
@@ -311,6 +327,7 @@ class NetDB( object ):
 		
 		return urls
 	
+	@reconnect
 	def fetch_tags_for_host(self, host, fromts=None, tots=None):
 		
 		delta = 10000
@@ -346,13 +363,15 @@ class NetDB( object ):
 		
 		return readings
 	
+	@reconnect
 	def fetch_tags(self):
 		sql = "SELECT tag FROM TAG"
 		result = self.conn.execute(sql)
 		tags = [row[0] for row in result]
 		tags.sort()
 		return tags
-		
+	
+	@reconnect	
 	def fetch_domain_requests_for_host(self, host,domain,fromts, tots):
 		timerange = ""
 		
@@ -365,34 +384,40 @@ class NetDB( object ):
 		requests = [row[0] for row in result]
 		return requests
 	
+	@reconnect
 	def fetch_netdata_for_host(self, host):
 		sql = "SELECT ts,wifiup,wifidown,cellup,celldown from NETDATA WHERE host = '%s' ORDER BY ts DESC" % (host)
 		result = self.conn.execute(sql)
 		netdata = [{"ts":row[0], "wifiup":row[1], "wifidown":row[2], "cellup":row[3], "celldown":row[4]} for row in result]
 		return netdata
 	
+	@reconnect
 	def fetch_hosts_for_home(self, home):
 		#use ? instead!
 		sql = "SELECT host FROM HOUSE WHERE name =  '%s'" % (home)
 		result = self.conn.execute(sql)
 		hosts = [row[0] for row in result]
 		return hosts
-		
+	
+	@reconnect	
 	def fetch_latest_ts_for_home(self, home):
 		sql = "SELECT max(u.ts) FROM URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s'" % (home)  
 		result = self.conn.execute(sql)
 		return result.fetchone()[0]
 	
+	@reconnect
 	def fetch_latest_ts_for_host(self, host):
 		sql = "SELECT max(u.ts) FROM URLS u WHERE u.host = '%s'" % (host)  
 		result = self.conn.execute(sql)
 		return result.fetchone()[0]
-			
+	
+	@reconnect		
 	def insert_tag_for_host(self, host,domain,tag):
 		
 		self.conn.execute("INSERT INTO TAGS(host,domain,tag) VALUES (?,?,?)", (host,domain,tag))
 		self.conn.commit()
 	
+	@reconnect
 	def insert_tag(self,tag):
 		try:
 			self.conn.execute("INSERT INTO TAG(tag) VALUES('%s')" % tag)
@@ -400,49 +425,40 @@ class NetDB( object ):
 			return True
 		except Exception, e:
 			return False
-			
+	
+	@reconnect		
 	def remove_tag_for_host(self,host,tag):
 		sql = "DELETE FROM TAGS WHERE host='%s' AND domain = '%s'" % (host,tag)
 		self.conn.execute(sql)
 		self.conn.commit()
 	
+	@reconnect
 	def insert_network_data(self, netdata):
-		if self.connected is not True:
-			self.connect()
 		self.conn.execute("INSERT INTO NETDATA(ts, host, wifiup, wifidown,cellup,celldown) VALUES(?,?,?,?,?,?)", (netdata['ts'],netdata['host'], netdata['wifiup'], netdata['wifidown'],netdata['cellup'], netdata['celldown']))
 		self.conn.commit()
 		
-		
+	@reconnect	
 	def insert_process(self, process):
-		if self.connected is not True:
-			self.connect()
-		
 		self.conn.execute("INSERT INTO PROCESSES(ts,host,name,starttime) VALUES(?,?,?,?)", (process['ts'],process['host'], process['name'], process['starttime']))
 		self.conn.commit()
 						
+	@reconnect	
 	def insert_url(self, url):
-		if self.connected is not True:
-			self.connect()
-
 		self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
 		self.conn.commit()
 	
+	@reconnect	
 	def insert_zone(self,zone):
-		if self.connected is not True:
-			self.connect()
 		self.conn.execute("INSERT INTO ZONES(host, name, enter, exit) VALUES(?,?,?,?)", (zone['host'], zone['name'], zone['enter'], zone['exit']))
 		self.conn.commit()
 	
+	@reconnect	
 	def add_host_to_house(self, host):
-		if self.connected is not True:
-			self.connect()
 		self.conn.execute("INSERT INTO HOUSE(name, host) VALUES(?,?)", (host['house'], host['host']))
 		self.conn.commit()
 		
-			
+	@reconnect			
 	def createTables(self):
-		if self.connected is not True:
-			self.connect()
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS HOUSE
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -494,6 +510,6 @@ class NetDB( object ):
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS TAG
 			(tag CHAR(128) PRIMARY KEY);''')
 			
-		log.debug("created tables successfully!")
+		
 		
 	
