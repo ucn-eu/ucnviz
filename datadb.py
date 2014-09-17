@@ -1,5 +1,4 @@
 import sqlite3
-import MySQLdb
 import logging
 import re
 import operator
@@ -7,7 +6,7 @@ import urllib
 from datetime import datetime
 import time
 import math
-
+from tld import get_tld
 
 def reconnect(fn):
 	""" decorator to reconnect to the database if needed """
@@ -447,6 +446,33 @@ class NetDB( object ):
 		self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
 		self.conn.commit()
 	
+	@reconnect
+	def bulk_insert(self, content):
+		
+		for line in content:
+		
+			items = line.split()
+		
+			if ("http" in items[6]  and "//" in items[6]):
+				parts  = items[6].split("//")[1].split("/")
+				domain = parts[0]
+				res = get_tld(items[6], as_object=True, fail_silently=True)
+			
+				if res is not None:	
+					tld = "%s.%s" % (res.domain, res.suffix)
+				else:
+					tld = parts[0]
+				path = ""
+				if len(parts) > 0:
+					path = "".join(parts[1:])
+				
+				url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
+			
+				self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
+		
+		#commit now..	
+		self.conn.commit()
+
 	@reconnect	
 	def insert_zone(self,zone):
 		self.conn.execute("INSERT INTO ZONES(host, name, enter, exit) VALUES(?,?,?,?)", (zone['host'], zone['name'], zone['enter'], zone['exit']))

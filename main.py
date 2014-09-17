@@ -40,11 +40,16 @@ if __name__ == "__main__":
 	
 	with open("backgroundapps.txt") as f:
 		background = [x.strip() for x in f.readlines()]
+        
+	authdb =  AuthDB(name="auth.db")
+	authdb.createTables()
+
+	datadb = NetDB(name="netdata.db")
+	datadb.createTables()	
 	
-	app.config["datadb"]     = NetDB(name="netdata.db")
-	app.config["authdb"]     = AuthDB(name="auth.db")
+	app.config["datadb"]     = datadb 
+	app.config["authdb"]     = authdb 
 	app.config["blocked"]    = blocked	
 	app.config["background"] = background
 		
-
-	app.run(debug=True, host='0.0.0.0')
+	app.run(debug=True, host='0.0.0.0', port=8000)

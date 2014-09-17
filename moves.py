@@ -25,7 +25,7 @@ def authcallback():
 	code = request.args.get('code')
 	#now swap the code for a token?
 	c = '&client_id=' +  current_app.config["CLIENT_ID"]
-	r = '&redirect_uri=' + current_appapp.config["REDIRECT_URL"]
+	r = '&redirect_uri=' + current_app.config["REDIRECT_URL"]
 	s = '&client_secret=' +  current_app.config["CLIENT_SECRET"]
 	j = requests.post(current_app.config["OAUTH_URL"] + '/access_token?grant_type=authorization_code&code=' + code + c + s + r)
 	current_app.config["logger"].debug("swapped code for token for host %s" % host)

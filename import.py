@@ -1,4 +1,4 @@
-from database import NetDB
+from datadb import NetDB
 from os import listdir
 from os.path import isfile, isdir, join
 import logging
@@ -82,28 +82,33 @@ def insert_zones(datafile):
 
  		for reading in myjson:
  			netdb.insert_zone(reading)
-		
+
+#this is slow -- look at using transactions instead.
+
+#stackoverflow.com/questions/5942402/python-csv-to-sqllite/7137270#7137270	
 def insert_urls(datafile):
 	with open(datafile) as f:
 		content = f.readlines()
 	
-	for line in content:
-		items = line.split()
-		if ("http" in items[6]  and "//" in items[6]):
-			parts  = items[6].split("//")[1].split("/")
-			domain = parts[0]
-			res = get_tld(items[6], as_object=True, fail_silently=True)
-			
-			if res is not None:	
-				tld = "%s.%s" % (res.domain, res.suffix)
-			else:
-				tld = parts[0]
-			path = ""
-			if len(parts) > 0:
-				path = "".join(parts[1:])
-				
-			url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
-			netdb.insert_url(url)			
+	netdb.bulk_insert(content)
+		
+	# for line in content:
+# 		items = line.split()
+# 		if ("http" in items[6]  and "//" in items[6]):
+# 			parts  = items[6].split("//")[1].split("/")
+# 			domain = parts[0]
+# 			res = get_tld(items[6], as_object=True, fail_silently=True)
+# 			
+# 			if res is not None:	
+# 				tld = "%s.%s" % (res.domain, res.suffix)
+# 			else:
+# 				tld = parts[0]
+# 			path = ""
+# 			if len(parts) > 0:
+# 				path = "".join(parts[1:])
+# 				
+# 			url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
+# 			netdb.insert_url(url)			
 
 def insert_homes(datafile):
 	with open(datafile) as f:
