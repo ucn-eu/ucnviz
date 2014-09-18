@@ -59,9 +59,6 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		toggleoverlay = function(){
 			overlay(!overlay());
 			renderroot(cache[depth()]);
-			/*if (depth() <= 2){
-				ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
-			}*/
 		},
 		
 		amselectedhost = function(ahost){

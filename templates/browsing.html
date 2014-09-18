@@ -118,7 +118,7 @@
 				</div>
 			</div>
 				
-			<div class="row" style="min-height:180px">
+			<div class="row" style="min-height:212px">
 				<div class="col-md-12">
 				</div>
 			</div>
@@ -133,16 +133,25 @@
 		
 		
 		<div id="web" class="col-md-10">
-			<div class="row" style="min-height: 250px; padding: 20px; border-bottom: 1px solid #30363c">
+			<div class="row" style="min-height: 282px; padding: 20px; border-bottom: 1px solid #30363c">
 				
 				<div data-bind="if:showkey()" class="col-md-2">
 					<div id="zoomkey"></div> 
-					
 				</div>
 				<div data-bind="attr:{class:squidclass}">
 					<div id="squidgraph" class="render" style="width:100%"></div>
 				</div>
+				<div data-bind="visible:overlay">
+					<ul class="list-inline" style="margin-left: 45px" data-bind="foreach:zonekey">
+						<li class="location">
+							<div class="locationkeyitem" data-bind="style:{background:zcolor}"></div>
+							<div class="locationkeytxt" data-bind="text:name"></div> 
+						</li>
+					</ul>
+				</div>
+			
 			</div>
+			
 		</div>
 	</div>
 	

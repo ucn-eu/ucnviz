@@ -165,6 +165,26 @@ text.key{
 	padding-top: 5px;
 }
 
+li.location{
+	margin-top: 10px;
+	margin-left: 0px;
+	padding-left: 0px;
+	display: inline-block;
+}
+
+.locationkeytxt{
+	display: inline-block;
+	font-size: 90%;
+}
+
+.locationkeyitem{
+	border:1px solid #000;
+	border-radius: 30px;
+	height: 12px;
+	display: inline-block;
+	width: 12px;
+}
+
 
 /* columns of same height styles */
 .container-xs-height {
