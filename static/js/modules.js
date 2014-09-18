@@ -33,13 +33,12 @@ require.config({
 //'async!https://maps.google.com/maps/api/js?v=3&libraries=drawing&sensor=false'
 require(['modules/colours', 'modules/queries', 'modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'modules/control', 'knockout', 'ajaxservice'], function(cf, queries, overview,web, tagger, tags, control, ko, ajaxservice) {
   
-  	
-  	ajaxservice.ajaxGetJson('/overview/activity', {home:'lodges'}, function(data){
+  	ajaxservice.ajaxGetJson('overview/activity', {home:'lodges'}, function(data){
 		cf.init(data.hosts);
 		overview.init(data, cf);
 		ko.applyBindings(overview, $("#overall")[0]);
 		
-		ajaxservice.ajaxGetJson('web/bootstrap', {}, function(data){
+		ajaxservice.ajaxGetJson('web/bootstrap', {home:'lodges'}, function(data){
 			//hosts.init(data.hosts);
 			tags.init(data.tags, cf);
 			tagger.init(data.tags);

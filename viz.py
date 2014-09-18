@@ -35,6 +35,7 @@ def overview():
  	#if time range is not provided, set it to the last 24 hours of recorded data
  	if tots is None or fromts is None:
  		tots 	= current_app.config["datadb"].fetch_latest_ts_for_home(home)
+ 		print "tots is %d" % tots
  		fromts 	= tots - 4 * 24*60*60
  		
  	if bin is not None:
@@ -139,8 +140,9 @@ def summary():
 
 @viz_api.route("/web/bootstrap")
 def hosts():
+	home = request.args.get('home') or "lodges"
 	current_app.config["datadb"].connect()
-	hosts = current_app.config["datadb"].fetch_hosts("192.168.8")
+	hosts = current_app.config["datadb"].fetch_hosts_for_home(home)	
 	tags  = current_app.config["datadb"].fetch_tags()
 	return jsonify(hosts=hosts, tags=tags)
 	
