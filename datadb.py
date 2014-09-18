@@ -504,9 +504,22 @@ class NetDB( object ):
 
 	@reconnect	
 	def insert_zone(self,zone):
-		self.conn.execute("INSERT INTO ZONES(host, name, enter, exit) VALUES(?,?,?,?)", (zone['host'], zone['name'], zone['enter'], zone['exit']))
+		self.conn.execute("INSERT INTO ZONES(host, date,locationid, name, lat, lng, enter, exit) VALUES(?,?,?,?,?,?,?,?)", (zone['host'],zone['date'],zone['locationid'], zone['name'], zone['lat'], zone['lng'], zone['enter'], zone['exit']))
 		self.conn.commit()
 	
+	
+	@reconnect
+	def remove_zones(self, host, date):
+		self.conn.execute("DELETE FROM ZONES WHERE host = ? AND date = ?" , (host, date))
+		self.conn.commit()
+		
+	@reconnect
+	def insert_zones(self, zones):
+		for zone in zones:
+			self.conn.execute("INSERT INTO ZONES(host, date, locationid, name, lat, lng, enter, exit) VALUES(?,?,?,?,?,?,?,?)", (zone['host'],zone['date'],zone['locationid'], zone['name'], zone['lat'], zone['lng'], zone['enter'], zone['exit']))
+		self.conn.commit()
+		
+			
 	@reconnect	
 	def add_host_to_house(self, host):
 		self.conn.execute("INSERT INTO HOUSE(name, host) VALUES(?,?)", (host['house'], host['host']))
@@ -531,6 +544,7 @@ class NetDB( object ):
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS ZONES
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			date CHAR(16),
 			locationid INTEGER,
 			host CHAR(16),
 			name  CHAR(128),

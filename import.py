@@ -53,9 +53,8 @@ def insert_iphone_data(datafile):
 				netdb.insert_network_data({'ts':ts, 'host':device, 'wifiup':netdata['wifiup'], 'wifidown':netdata['wifidown'], 'cellup':netdata['cellup'], 'celldown':netdata['celldown']})	
 	
 def insert_iphone_processes(datafile):
-	
 	netdb.bulk_insert_processes(datafile)
-	
+
 def insert_zones(datafile):
 	datafiles = [f for f in listdir(datafile) if isfile(join(datafile,f))]
 	
@@ -110,7 +109,6 @@ if __name__ == '__main__' :
 	if len(sys.argv) < 3:
 		print "python import.py type dbname [datafile]"
 		exit(1)
-	
 	
 	
 	type 	= sys.argv[1]
