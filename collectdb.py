@@ -3,7 +3,7 @@ import logging
 
 log = logging.getLogger( "console_log" )
 
-class AuthDB(object):
+class CollectDB(object):
 	
 	def __init__( self, name):
 		self.name = name
@@ -47,7 +47,22 @@ class AuthDB(object):
 		result = self.conn.execute("UPDATE TOKENS SET lastUpdate='%s' WHERE host = '%s'" % (ts, host))
 		self.conn.commit()
 		return result
+	
+	def update_squid(self, ts, fpos):
+		if self.connected is not True:
+			self.connect()	
 		
+		result = self.conn.execute("INSERT OR REPLACE INTO LOGACCESS(name, ts, filepos) VALUES (?,?,?)", ('squid', ts, fpos))
+		self.conn.commit()
+		return result
+	
+	def fetch_filepos_for(self, type):
+		result = self.conn.execute("SELECT filepos FROM LOGACCESS WHERE name=(?)", ("squid",))
+		fpos = result.fetchone()
+		if fpos is not None:
+			return fpos[0]
+		return 0
+			
 	def createTables(self):
 		if self.connected is not True:
 			self.connect()
@@ -58,5 +73,11 @@ class AuthDB(object):
 			token CHAR(255),
 			lastUpdate CHAR(32),
 			UNIQUE(host) ON CONFLICT REPLACE);''')	
+			
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS LOGACCESS
+			(name PRIMARY KEY,
+			ts INTEGER,
+			filepos INTEGER);''')
+				
 		self.conn.commit()
 	

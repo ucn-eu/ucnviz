@@ -6,7 +6,7 @@ from datetime import datetime
 from datetime import date
 import dateutil.parser
 from dateutil.tz import *
-from authdb import CollectDB
+from collectdb import CollectDB
 from datadb import NetDB
 import time
 
@@ -20,7 +20,7 @@ logger = logging.getLogger( "collect_logger" )
 
 def fetchlocations():
 	logger.debug("fetching tokens")
-	tokens = authdb.fetch_tokens()
+	tokens = collectdb.fetch_tokens()
  	
  	for token in tokens:
  		
@@ -84,7 +84,7 @@ def fetchlocations():
 					
 		if latestUpdate is not None:
 			logger.debug("set latest update for host %s to %s" %  (token['host'],lastUpdate.strftime("%Y%m%dT%H%M%S%z")))
-			authdb.update_ts(token['host'], lastUpdate.strftime("%Y%m%dT%H%M%S%z"))
+			collectdb.update_ts(token['host'], lastUpdate.strftime("%Y%m%dT%H%M%S%z"))
 			
 	#print result
 	#return jsonify({"result":result})
@@ -97,6 +97,6 @@ if __name__ == "__main__":
 	logger.addHandler(hdlr)
 	logger.setLevel(logging.DEBUG)
 
-	authdb = CollectDB(name=cfg.COLLECTDB)
+	collectdb = CollectDB(name=cfg.COLLECTDB)
 	datadb = NetDB(name=cfg.DATADB)
 	fetchlocations()

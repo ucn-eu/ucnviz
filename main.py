@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 
 from datadb import NetDB
-from authdb import AuthDB
+from collectdb import CollectDB
 
 import config
 import logging
@@ -41,14 +41,14 @@ if __name__ == "__main__":
 	with open("backgroundapps.txt") as f:
 		background = [x.strip() for x in f.readlines()]
         
-	authdb =  AuthDB(name="auth.db")
-	authdb.createTables()
+	collectdb = CollectDB(name=app.config["COLLECTDB"])
+	collectdb.createTables()
 
-	datadb = NetDB(name="netdata.db")
+	datadb = NetDB(name=app.config["DATADB"])
 	datadb.createTables()	
 	
 	app.config["datadb"]     = datadb 
-	app.config["authdb"]     = authdb 
+	app.config["collectdb"]  = collectdb 
 	app.config["blocked"]    = blocked	
 	app.config["background"] = background
 		
