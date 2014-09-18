@@ -67,7 +67,6 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		},
 			
 		init = function(taglist){
-			console.log("taglist is " + taglist);
 			tags(taglist);			
 		},
 		

@@ -9,7 +9,8 @@
 
 <nav class="navbar navbar-default navbar-fixed-top navbar-inverse" role="navigation">
   <div class="container">
-  	<div id="activitykey" style="padding: 5px; width:100%; height: 50px;"></div>
+	 
+  		<div id="activitykey" style="padding: 5px; width:100%; height: 50px;"></div>
   </div>
 </nav>
 
@@ -28,7 +29,7 @@
 <div id="visualisation">
 	
 	<div class="row" style="border-bottom: 1px solid #30363c">
-		<div class="col-md-2" style="min-height:451px; background:#30363c">
+		<div class="col-md-2" style="height:491px; background:#30363c">
 			<div class="row" style="background:#ff0000;">
 				<div class="col-md-12">
 					<div class="title">
@@ -40,12 +41,12 @@
 		<div class="col-md-10">
 			<div id="overall"> 
 				<div class="row">
-					<div class="col-md-12">
+					<div class="col-md-12" style="height:280px">
 						<div id="context"></div>
 					</div>
 				</div>
 				<div class="row">		
-					<div class="col-md-12">
+					<div class="col-md-12" style="height:160px">
 						<div id="zoom"></div>
 					</div>
 				</div>
@@ -166,6 +167,24 @@
 						<div id="activitygraph" class="activityrender"></div>
 					</div>	
 				</div>	<!-- end of tag graph -->
+				<div class="row">
+					<div class="col-md-12" style="padding-left:0px">
+						<div class="controlbar">
+							<div class="row">
+								<div class="col-md-3 col-md-offset-9">
+									<div class="row">
+										<div class="col-md-8">
+											<input type="text" class="pull-right form-control" data-bind="value: newtag" placeholder="create new tag" />
+										</div>
+										<div class="col-md-4">
+											<a href="#" data-bind="click:function(){addtag()}" class="pull-right btn btn-sm btn-primary">ADD TAG</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div> <!-- end of 10 cols -->
 		</div> <!-- end of row -->
 	</div> <!-- end of tags -->

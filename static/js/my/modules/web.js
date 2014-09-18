@@ -9,6 +9,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		/* set up listeners-- listen on host / range change from overview */
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
+			if (!data)
+				return;
 			selectedhost(data.host);
 			fromts = data.fromts;
 			tots = data.tots;
@@ -152,9 +154,9 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				var difference = tots - fromts;				
 				bin = calculatebin(difference);
 				parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
-			
-				timerange({fromts:fromts, tots:tots, host:selectedhost()});
 				depth(depth()+1);
+				timerange({fromts:fromts, tots:tots, host:selectedhost()});
+				
 				
 				if (total <= ZOOMVALUE){
 					ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));	

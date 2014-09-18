@@ -13,6 +13,8 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			
 		/*  listen to a tag being added to a new domain */
 		_domainstagged = ko.postbox.subscribe("domainstagged", function(data) {
+			if (!data)
+				return;
 			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts: fromts, tots:tots}, renderactivity);
 			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:data.tag}, updatedomainsfortag);	
 		}),
@@ -74,7 +76,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		}),
 		
 		tagheight = ko.computed(function(){
-			return ((tags().length+1)*20)/tags().length + "px"
+			return ((tags().length+1)*19)/tags().length + "px"
 		}),
 				
 		tagadded = function(){	
@@ -208,7 +210,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			};
 			
 			$(container).height( ((tags().length+1) * 20) + 70 );
-			$(".tagchartbar").height(((tags().length+1) * 20) + 70 );
+			$(".tagchartbar").height(((tags().length+1) * 20) + 150 );
 			Flotr.draw(container, data, options);
 		
 		}	

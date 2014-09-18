@@ -1,15 +1,10 @@
 from datadb import NetDB
 from collectdb import CollectDB
-from os import listdir,path
-from os.path import isfile, isdir, join
+from os import path
 import logging
-import sys
-import json
 from datetime import datetime
 import time
-from tld import get_tld
 from config import TestingConfig
-import logging
 
 logger = logging.getLogger( "collect_logger" )
 

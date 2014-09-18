@@ -404,9 +404,9 @@ class NetDB( object ):
 	@reconnect	
 	def fetch_latest_ts_for_home(self, home):
 		sql = "SELECT max(u.ts) FROM URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s'" % (home)  
-		print sql
 		result = self.conn.execute(sql)
-		return result.fetchone()[0]
+		ts = result.fetchone()
+		return ts[0]
 	
 	@reconnect
 	def fetch_latest_ts_for_host(self, host):

@@ -5,7 +5,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		svg,
 		
 		browser,
-		
 	
 		
 		browsers,
@@ -34,7 +33,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		margin    = {top:20, right:90, bottom:40,left:50},
 		
-		width 	  = 960 - margin.left - margin.right,
+		width 	  = 1100 - margin.left - margin.right,
 		
 		height    = 250 - margin.top - margin.bottom,
 		height2   = 140 - margin.top - margin.bottom,
@@ -93,10 +92,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("class", "activitykey"),
 				
 		init = function(data, cf){
-		
-			hosts = Object.keys(data.hosts);
-			color = cf.colourfor;
-			renderactivity(data);			
+			
+			if (data && data.hosts && Object.keys(data.hosts).length > 0){
+				
+				hosts = Object.keys(data.hosts);
+				color = cf.colourfor;
+				renderactivity(data);			
+			}
 		},
 		
 		brushed = function(){
