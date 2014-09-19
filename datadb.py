@@ -277,12 +277,42 @@ class NetDB( object ):
 # 		if fromts and tots:
 #  			timerange = "AND (enter >= %s AND exit <= %s)" % (fromts, tots)
 		
-		sql = "SELECT name,enter,exit FROM ZONES WHERE host = '%s' %s ORDER BY enter DESC" % (host,timerange)
 		
-		result = self.conn.execute(sql)
+		result = self.conn.execute("SELECT name,enter,exit FROM ZONES WHERE host = ? ORDER BY enter DESC", (host,))
 		zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
 
 		return zones	
+	
+	#return foregrounded apps along with timerange that have been in foreground
+	
+	@reconnect
+	def fetch_apps_for_host(self, host, fromts=None, tots=None):
+		delta = 60*60*1000
+		result = self.conn.execute("SELECT name, ts FROM PROCESSES WHERE host = ? AND foreground = 1 ORDER BY name,ts ASC", (host,))
+		
+		
+		currentapp= None
+		app = None
+		apps = []
+		
+		for row in result:
+			if currentapp != row[0]:
+				if app is not None:
+					apps.append(app)
+				app = {"name":row[0], "start":row[1], "end":row[1]} 	
+				currentapp = row[0]
+			else:
+				if (app["end"] + delta) >= row[1]:
+					app["end"] = row[1]
+				else:
+					apps.append(app)
+					app = {"domain":row[0], "start":row[1], "end":row[1]} 
+		
+		if app:
+			apps.append(app)
+		
+		
+		return apps
 			
 	@reconnect
 	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
@@ -340,6 +370,7 @@ class NetDB( object ):
 	@reconnect
 	def fetch_tags_for_host(self, host, fromts=None, tots=None):
 		
+		#milliseconds
 		delta = 10000
 		
 		timerange=""

@@ -141,7 +141,9 @@ def summary():
 	#fetch a day by day summary of browsing
 	summary = current_app.config["datadb"].fetch_timebins_for_host(bin,host,fromts, tots, filters=current_app.config["blocked"])
 	zones	= current_app.config["datadb"].fetch_zones_for_host(host,fromts, tots)
-	return jsonify(summary=summary, zones=zones)
+	apps	= current_app.config["datadb"].fetch_apps_for_host(host,fromts, tots)
+	
+	return jsonify(summary=summary, zones=zones, apps=apps)
 
 @viz_api.route("/web/bootstrap")
 def hosts():

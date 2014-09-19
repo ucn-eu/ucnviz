@@ -14,7 +14,7 @@ define(['d3'], function(d3){
 	 	},
 
 		init = function(hosts){
-			colorfactory.domain(hosts);
+			//colorfactory.domain(hosts);
 		
 			for (i = 0; i < hosts.length; i++){
 				colours[hosts[i]] = colorfactory(hosts[i]);

@@ -1,4 +1,4 @@
-define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_bindings'], function($,ajaxservice,ko){
+define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap', 'custom_bindings'], function($,ajaxservice,ko,moment){
 	
 	var
 		
@@ -8,7 +8,22 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		
 		tagcreated	  = ko.observable().publishOn("tagcreated"),
 		
+		timetext = ko.observable(""),
+		
+		taggerlabel = ko.computed(function(){
+			return "tag activity <small>" + timetext() + "<small>";
+		}),
+		
+		_timeListener = ko.postbox.subscribe("fromto", function(data) {
+			if (data.length > 0){
+				m1 = moment.unix((data[0].getTime())/1000);
+				m2 = moment.unix((data[1].getTime())/1000);
+				timetext(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));	
+			}
+		}),
+		
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
+				
 				if (!data)
 					return;
 				
@@ -129,8 +144,9 @@ define(['jquery','ajaxservice', 'knockout', 'knockoutpb', 'bootstrap', 'custom_b
 		toggletagger:toggletagger,
 		showtagger: showtagger,
 		
+		timetext:timetext,
 		
 		rendertagselectionitem:rendertagselectionitem,
-		
+		taggerlabel: taggerlabel,
 	}
 });

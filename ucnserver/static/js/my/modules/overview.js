@@ -14,7 +14,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		selectedhost  = ko.observable().publishOn("host"),
 		
 		timerange	  = ko.observable().syncWith("range"),
-		
+			
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
 			//check against x2.domain()
 			//zoom.select(".brush").call(brush.extent([new Date(newValue.fromts*1000), new Date(newValue.tots*1000)]));
@@ -22,7 +22,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		_queryListener = ko.postbox.subscribe("queries", function(queries) {
 			if (queries){
-				console.log("overlaying queres!");
 				overlayqueries(queries);
 			}
 		}),
@@ -94,10 +93,12 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		init = function(data, cf){
 			
 			if (data && data.hosts && Object.keys(data.hosts).length > 0){
-				
 				hosts = Object.keys(data.hosts);
 				color = cf.colourfor;
 				renderactivity(data);			
+			}
+			if (hosts.length == 1){
+				updatefilters(hosts[0]);
 			}
 		},
 		
@@ -543,7 +544,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 	return {
 		init: init,
-		subtitle: subtitle
+		subtitle: subtitle,
 	}
 	
 });

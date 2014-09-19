@@ -8,20 +8,59 @@
 </style>
 
 <nav class="navbar navbar-default navbar-fixed-top navbar-inverse" role="navigation">
-  <div class="container">
-	 
-  		<div id="activitykey" style="padding: 5px; width:100%; height: 50px;"></div>
-  </div>
+ 	<div id="activitykey" style="padding: 5px; width:100%; height: 50px;"></div>
 </nav>
 
-<div id="control">
+<div id="tagger" class="main">
+	<div data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<h4 class="modal-title" id="myModalLabel" data-bind="html:taggerlabel"></h4>
+				</div>
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-md-7">
+							<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
+						</div>
+						<div class="col-md-3">
+							<div class="row">
+								<div class="col-md-9">
+									<select class="form-control" data-bind="options:tags, value:chosentag"></select>
+								</div>
+								<div class="col-md-3">
+									<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
+								</div>
+							</div>
+							<hr>
+							<div class="row">
+								<div class="col-md-9">
+									 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
+								</div>
+								<div class="col-md-3">
+									<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
+								</div>
+							</div>
+						</div>			
+					</div>
+				</div> <!-- end of modal body! -->
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 	<nav class="navbar navbar-default navbar-fixed-bottom navbar-inverse" role="navigation">
-  		<div class="container">
-  			<div class="row">
-				<div class="col-md-12">
-  					<div class="timerange" data-bind="text:timetext"></div>
-  				</div>
+  		<div class="row">
+			<div class="col-md-5">
+  				<div class="timerange" data-bind="text:timetext"></div>
   			</div>
+			<div class="col-md-2 col-md-offset-5">
+				<div class="tagactivitycontainer">
+					<button class="btn btn-danger pull-right" data-bind="click:function(){toggletagger();}">tag activity</button>
+				</div>
+			</div>
   		</div>
 	</nav>
 </div>
@@ -29,13 +68,21 @@
 <div id="visualisation">
 	
 	<div class="row" style="border-bottom: 1px solid #30363c">
-		<div class="col-md-2" style="height:491px; background:#30363c">
-			<div class="row" style="background:#ff0000;">
+		<div class="col-md-2" style="height:520px; background:#30363c">
+			<div class="row" style="background:#3b5998;">
 				<div class="col-md-12">
 					<div class="title">
 						<strong>overall</strong> activity
 					</div>
 				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12" style="padding:0px">
+					<div class="helptext">
+						Use the smaller chart at the bottom to zoom in on a particular range.  This will change the time range for all charts on the page.  Click on one or more hosts in the toolbar above to show aggregate activity.
+					</div>
+				</div>
+				<hr>
 			</div>
 		</div>
 		<div class="col-md-10">
@@ -53,64 +100,31 @@
 			</div>
 			<div id="queries">
 				<div class="row">
-					<div class="col-md-12">
-						<div class="querybox" data-bind="foreach:queries">
+					<div class="col-md-12 querybox">
+						<div  data-bind="foreach:queries, visible:showqueries">
 							<span data-bind="text:query"></span>
 						</div>
 					</div>
 				</div>
-			</div>		
+				<div class="row">
+					<div class="col-md-12" style="padding-left:0px">
+						<div class="controlbar">
+							<div class="row">
+								<div class="col-md-3 col-md-offset-9">
+									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">show queries</button>
+								</div>	
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div>
 		</div>
 	</div>
 	
 	
 	<div class="row">
-		<div id="tagger" class="col-md-2" style="background:#080808">
-		
-			<div  data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-				<div class="modal-dialog">
-					<div class="modal-content">
-						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-							<h4 class="modal-title" id="myModalLabel">tag activity</h4>
-						</div>
-						<div class="modal-body">
-							<div class="row">
-								<div class="col-md-7">
-									<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
-								</div>
-								<div class="col-md-3">
-									<div class="row">
-										<div class="col-md-9">
-											<select class="form-control" data-bind="options:tags, value:chosentag"></select>
-										</div>
-										<div class="col-md-3">
-											<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
-										</div>
-									</div>
-									<hr>
-									<div class="row">
-										<div class="col-md-9">
-											 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
-										</div>
-										<div class="col-md-3">
-											<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
-										</div>
-									</div>
-								</div>			
-							</div>
-						
-						
-						</div> <!-- end of modal body! -->
-						<div class="modal-footer">
-							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		
-		
-			<div class="row" style="background:#ff0000;">
+		<div class="col-md-2" style="background:#080808">
+			<div class="row" style="background:#3b5998;">
 				<div class="col-md-12">
 					<div class="title">
 						<strong>tag</strong> activity
@@ -118,14 +132,13 @@
 				</div>
 			</div>
 				
-			<div class="row" style="min-height:212px">
+			<div class="row" style="min-height:282px">
 				<div class="col-md-12">
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-md-12" style="text-align:center; padding-bottom: 10px">
-					<button class="btn btn-sm btn-primary" data-bind="click:function(){toggleoverlay();}">overlay location</button>
-					<button class="btn btn-sm btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
+					
 				</div>
 			</div>
 		
@@ -141,7 +154,8 @@
 				<div data-bind="attr:{class:squidclass}">
 					<div id="squidgraph" class="render" style="width:100%"></div>
 				</div>
-				<div data-bind="visible:overlay">
+				
+				<div data-bind="visible:overlaylocation">
 					<ul class="list-inline" style="margin-left: 45px" data-bind="foreach:zonekey">
 						<li class="location">
 							<div class="locationkeyitem" data-bind="style:{background:zcolor}"></div>
@@ -149,16 +163,35 @@
 						</li>
 					</ul>
 				</div>
-			
+				<div data-bind="visible:overlayapps">
+					<ul class="list-inline" style="margin-left: 45px" data-bind="foreach:appkey">
+						<li class="location">
+							<div class="locationkeyitem" data-bind="style:{background:zcolor}"></div>
+							<div class="locationkeytxt" data-bind="text:name"></div> 
+						</li>
+					</ul>
+				</div>
 			</div>
 			
+			<div class="row">
+				<div class="col-md-12" style="padding-left:0px">
+					<div class="controlbar">
+						<div class="row">
+							<div class="col-md-3 col-md-offset-9">
+								<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){toggleappoverlay();}">overlay apps</button>
+								<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglelocationoverlay();}">overlay location</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 	
 	<div id="tags">
 		<div class="row">
 			<div class="col-md-2 tagchartbar" style="background:#080808;">
-				<div class="row" style="background:#ff0000;">
+				<div class="row" style="background:#3b5998;">
 					<div class="col-md-12">
 						<div class="title"><strong>tagged</strong> activity</div>
 					</div>
@@ -197,29 +230,6 @@
 			</div> <!-- end of 10 cols -->
 		</div> <!-- end of row -->
 	</div> <!-- end of tags -->
-		
-
-		
-	<!--	<div class="row">
-			<div class="col-md-12">
-				<div class="controlbar">
-					<div class="row">
-						<div class="col-md-3 col-md-offset-9">
-							<div class="row">
-					 			<div class="col-md-8">
-					 				<input type="text" class="pull-right form-control" data-bind="value: newtag" placeholder="create new tag" />
-								</div>
-								<div class="col-md-4">
-									<a href="#" data-bind="click:function(){addtag()}" class="pull-right btn btn-sm btn-primary">ADD TAG</a>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-	</div>  -->
 </div>	<!-- end of viz -->
 
 <script type="text/html" id="popoverBindingTemplate">

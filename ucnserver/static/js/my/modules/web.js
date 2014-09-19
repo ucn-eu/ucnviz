@@ -31,9 +31,23 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 		subtitle = ko.observable(""),
 		
-		overlay	 = ko.observable(false),
+		overlaylocation	= ko.observable(false),
+		overlayapps	 	= ko.observable(false),
 		
 		zonekey  = ko.observableArray([]),
+		appkey	 = ko.observableArray([]),
+		
+		zonekeynames = ko.computed(function(){
+			return zonekey().map(function(value){
+				return value.name;
+			});
+		}),
+		
+		appkeynames = ko.computed(function(){
+			return appkey().map(function(value){
+				return value.name;
+			});
+		}),
 		
 		tags	 = ko.observableArray([]),
 		
@@ -56,8 +70,15 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		selectedhost = ko.observable(),
 	
 		
-		toggleoverlay = function(){
-			overlay(!overlay());
+		togglelocationoverlay = function(){
+			overlayapps(false);
+			overlaylocation(!overlaylocation());
+			renderroot(cache[depth()]);
+		},
+		
+		toggleappoverlay = function(){
+			overlaylocation(false);
+			overlayapps(!overlayapps());
 			renderroot(cache[depth()]);
 		},
 		
@@ -239,8 +260,8 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				
 			summary = data.summary;
 			zones = data.zones;
-		
-						
+			apps  = data.apps;
+					
 			mints = Number.MAX_VALUE;
 			maxts = 0;
 			
@@ -261,17 +282,22 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 			
 			var markings = [];
 			
-			if (overlay()){
+			if (overlaylocation()){
 				for (i=0; i < zones.length; i++){
-					
-					zcolor = colorlookup[zones[i]['name']];
-					
-					if (zcolor == undefined){
-						zcolor = colorchart[colorindex++ % colorchart.length];
-						colorlookup[zones[i]['name']] = zcolor
+					zcolor = colourfactory.colourfor(zones[i]['name'])
+					if (zonekeynames().indexOf(zones[i]['name']) == -1){
 						zonekey.push({"name":zones[i]['name'], "color":zcolor});
 					}
 					markings.push({color: zcolor, xaxis:{from: (zones[i].enter*1000)-((bin/2)*1000), to: (zones[i].exit*1000)-((bin/2)*1000)}});
+				}
+			}
+			else if (overlayapps()){
+				for (i=0; i < apps.length; i++){
+					zcolor = colourfactory.colourfor(apps[i]['name'])
+					if (appkeynames().indexOf(apps[i]['name']) == -1){
+						appkey.push({"name":apps[i]['name'], "color":zcolor});
+					}
+					markings.push({color: zcolor, xaxis:{from: (apps[i].start*1000)-((bin/2)*1000), to: (apps[i].end*1000)-((bin/2)*1000)}});
 				}
 			}
 			
@@ -380,10 +406,15 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		init:init,
 		subtitle:subtitle,
-		overlay:overlay,
-		toggleoverlay:toggleoverlay,
-		zonekey:zonekey,
 		
+		overlaylocation:overlaylocation,
+		overlayapps:overlayapps,
+		
+		togglelocationoverlay:togglelocationoverlay,
+		toggleappoverlay:toggleappoverlay,
+		
+		zonekey:zonekey,
+		appkey:appkey,
 		
 		amselectedhost: amselectedhost,
 		

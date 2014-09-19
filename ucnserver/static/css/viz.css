@@ -6,10 +6,11 @@
 }
 
 .querybox{
-	height: 30px;
+	height: 40px;
 	overflow-y:scroll;
 	color: #30363c;
-    font-size: 11px;	
+    font-size: 11px;
+    padding:5px;	
 }
 .container{
 	padding-left: 0px;
@@ -130,17 +131,26 @@ text.key{
 }
 
 .title{
-	
+	text-align:center;
 	color:white;
 	height:30px;
 	padding-left: 10px;
 	font-size:140%;
 }
 
+.helptext{
+	color:white;
+	font-size:14px;
+	text-align: center;
+	padding: 10px 10px 10px 20px;
+	border-bottom: 1px solid #fff;
+}
+
 .timerange{
 	color:white;
 	line-height: 50px;
 	font-size: 120%;
+	padding-left: 15px;
 }
 
 .controlbar{
@@ -153,6 +163,9 @@ text.key{
 	min-width: 250px;
 }
 
+.tagactivitycontainer{
+	padding: 6px 12px 6px 0px;
+}
 
 .keyline{
 	float: right;
@@ -186,60 +199,6 @@ li.location{
 }
 
 
-/* columns of same height styles */
-.container-xs-height {
-    display:table;
-    padding-left:0px;
-    padding-right:0px;
+.main{
+	display:none;
 }
-.row-xs-height {
-    display:table-row;
-}
-.col-xs-height {
-    display:table-cell;
-    float:none;
-}
-@media (min-width: 768px) {
-    .container-sm-height {
-        display:table;
-        padding-left:0px;
-        padding-right:0px;
-    }
-    .row-sm-height {
-        display:table-row;
-    }
-    .col-sm-height {
-        display:table-cell;
-        float:none;
-    }
-}
-@media (min-width: 992px) {
-    .container-md-height {
-        display:table;
-        padding-left:0px;
-        padding-right:0px;
-    }
-    .row-md-height {
-        display:table-row;
-    }
-    .col-md-height {
-        display:table-cell;
-        float:none;
-    }
-}
-@media (min-width: 1200px) {
-    .container-lg-height {
-        display:table;
-        padding-left:0px;
-        padding-right:0px;
-    }
-    .row-lg-height {
-        display:table-row;
-    }
-    .col-lg-height {
-        display:table-cell;
-        float:none;
-    }
-}
-
-
