@@ -14,8 +14,8 @@ def root():
 	c = '&client_id=' + current_app.config["CLIENT_ID"]
 	s = '&scope=' + 'activity location'
 	url = u + c + s
-	return '<a href="' + url + '">click me</a>'
-
+	#return '<a href="' + url + '">click me</a>'
+	return render_template('moves.html', url=url)
 #user is redirected here with the authcode
 @moves_api.route("/moves/callback")
 def authcallback():
@@ -32,4 +32,4 @@ def authcallback():
 	token = j.json()['access_token']
 	current_app.config["collectdb"].insert_token_for_host(host, token)
 	current_app.config["logger"].debug("saved token for host %s" % host)
-	return "Thanks - have saved the token!"
+	return render_template('moves_callback.html')
