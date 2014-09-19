@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block body %}
+<!--header and nav -->
+<div id="visualisation">
+	<div class="row">
+		<div class="large-12 columns">
+			<ul class="pagination right">
+				<li><a href="/">Overall Activity</a></li>
+				<li><a href="/web">Web browsing</a></li>
+				<li class="current"><a href="#">Device details</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="row">
+		<div class="large-12 columns">
+			<dl class="sub-nav right" data-bind="foreach:hosts">
+				<dd data-bind="click:function(){$parent.selectnewhost($data)}, css:{active:$parent.amselectedhost($data)}"><a href="#" data-bind="text:$data"></a></dd>
+			</dl>
+		</div>
+	</div>
+	
+  	<div class="row">	
+  		<div>
+  			
+  			<div class=row">
+  				<div class="small-12 columns">
+  					<h3> Data usage <small> Mb </small></h3>
+  					<div id="netgraph" class="rendernetdata"></div>
+  				</div>
+  			</div>
+  		
+  			<div class=row">
+  				<h3> Processes <small> running time </small></h3>
+  				<div class="small-10 columns">
+  					<dl class="sub-nav" data-bind="foreach:alphabet">
+						<dd data-bind="click:function(){$parent.selectnewletter($data)}, css:{active:$parent.amselectedletter($data)}"><a href="#" data-bind="text:$data"></a></dd>
+					</dl>
+					<hr>
+  				</div>
+  				<div class="small-2 columns">
+  					<a href="#" data-bind="css:{alert:filtered()}, click:function(){togglefiltered()}" class="button tiny">filter out system apps</a>
+  				</div>
+  			</div>
+  			<div class="row">
+				<div class="large-4 columns">
+					<ul class="button-group" data-bind="foreach:filteredprocesses">
+						<li><a href="#" class="button tiny success" data-bind="text:$data, click:function(){$parent.selectnewprocess($data)}"></a></li>
+					</ul>
+				</div>
+				<div class="large-8 columns">
+					<h3 data-bind="text:selectedprocess"></h3>
+					<div id="devicegraph" class="renderdev"></div> 
+				</div>	
+			</div>
+		</div>		
+	</div> <!-- end of row-->
+</div>	<!-- end of viz -->
+<script data-main="{{url_for('static', filename='js/devices.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
+{% endblock %}

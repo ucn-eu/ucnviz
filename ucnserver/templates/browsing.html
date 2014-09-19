@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+{% block body %}
+<!--header and nav -->
+<style>
+.area{
+	clip-path: url(#clip);
+}
+</style>
+
+<nav class="navbar navbar-default navbar-fixed-top navbar-inverse" role="navigation">
+  <div class="container">
+	 
+  		<div id="activitykey" style="padding: 5px; width:100%; height: 50px;"></div>
+  </div>
+</nav>
+
+<div id="control">
+	<nav class="navbar navbar-default navbar-fixed-bottom navbar-inverse" role="navigation">
+  		<div class="container">
+  			<div class="row">
+				<div class="col-md-12">
+  					<div class="timerange" data-bind="text:timetext"></div>
+  				</div>
+  			</div>
+  		</div>
+	</nav>
+</div>
+
+<div id="visualisation">
+	
+	<div class="row" style="border-bottom: 1px solid #30363c">
+		<div class="col-md-2" style="height:491px; background:#30363c">
+			<div class="row" style="background:#ff0000;">
+				<div class="col-md-12">
+					<div class="title">
+						<strong>overall</strong> activity
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-10">
+			<div id="overall"> 
+				<div class="row">
+					<div class="col-md-12" style="height:280px">
+						<div id="context"></div>
+					</div>
+				</div>
+				<div class="row">		
+					<div class="col-md-12" style="height:160px">
+						<div id="zoom"></div>
+					</div>
+				</div>
+			</div>
+			<div id="queries">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="querybox" data-bind="foreach:queries">
+							<span data-bind="text:query"></span>
+						</div>
+					</div>
+				</div>
+			</div>		
+		</div>
+	</div>
+	
+	
+	<div class="row">
+		<div id="tagger" class="col-md-2" style="background:#080808">
+		
+			<div  data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+							<h4 class="modal-title" id="myModalLabel">tag activity</h4>
+						</div>
+						<div class="modal-body">
+							<div class="row">
+								<div class="col-md-7">
+									<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
+								</div>
+								<div class="col-md-3">
+									<div class="row">
+										<div class="col-md-9">
+											<select class="form-control" data-bind="options:tags, value:chosentag"></select>
+										</div>
+										<div class="col-md-3">
+											<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
+										</div>
+									</div>
+									<hr>
+									<div class="row">
+										<div class="col-md-9">
+											 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
+										</div>
+										<div class="col-md-3">
+											<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
+										</div>
+									</div>
+								</div>			
+							</div>
+						
+						
+						</div> <!-- end of modal body! -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		
+		
+			<div class="row" style="background:#ff0000;">
+				<div class="col-md-12">
+					<div class="title">
+						<strong>tag</strong> activity
+					</div>
+				</div>
+			</div>
+				
+			<div class="row" style="min-height:212px">
+				<div class="col-md-12">
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12" style="text-align:center; padding-bottom: 10px">
+					<button class="btn btn-sm btn-primary" data-bind="click:function(){toggleoverlay();}">overlay location</button>
+					<button class="btn btn-sm btn-primary" data-bind="click:function(){toggletagger();}">tag!</button>
+				</div>
+			</div>
+		
+		</div> <!-- end of tagger -->
+		
+		
+		<div id="web" class="col-md-10">
+			<div class="row" style="min-height: 282px; padding: 20px; border-bottom: 1px solid #30363c">
+				
+				<div data-bind="if:showkey()" class="col-md-2">
+					<div id="zoomkey"></div> 
+				</div>
+				<div data-bind="attr:{class:squidclass}">
+					<div id="squidgraph" class="render" style="width:100%"></div>
+				</div>
+				<div data-bind="visible:overlay">
+					<ul class="list-inline" style="margin-left: 45px" data-bind="foreach:zonekey">
+						<li class="location">
+							<div class="locationkeyitem" data-bind="style:{background:zcolor}"></div>
+							<div class="locationkeytxt" data-bind="text:name"></div> 
+						</li>
+					</ul>
+				</div>
+			
+			</div>
+			
+		</div>
+	</div>
+	
+	<div id="tags">
+		<div class="row">
+			<div class="col-md-2 tagchartbar" style="background:#080808;">
+				<div class="row" style="background:#ff0000;">
+					<div class="col-md-12">
+						<div class="title"><strong>tagged</strong> activity</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-10">
+				<div class="row" style="padding: 10px 10px 20px 10px;"><!-- tag graph -->			
+					<div class="col-md-2 key">
+				
+						<div data-bind="foreach:reversedtags">
+							<p  class="keyline" data-bind="style:{height:$parent.tagheight()}"><a href="#tags", data-bind="text:$data, click:function(){$parent.getdomainsfortag($data)}, popover: {template: 'popoverBindingTemplate', title: $data}"></a></p>
+						</div>
+					</div>
+					<div class="col-md-10">
+						<div id="activitygraph" class="activityrender"></div>
+					</div>	
+				</div>	<!-- end of tag graph -->
+				<div class="row">
+					<div class="col-md-12" style="padding-left:0px">
+						<div class="controlbar">
+							<div class="row">
+								<div class="col-md-3 col-md-offset-9">
+									<div class="row">
+										<div class="col-md-8">
+											<input type="text" class="pull-right form-control" data-bind="value: newtag" placeholder="create new tag" />
+										</div>
+										<div class="col-md-4">
+											<a href="#" data-bind="click:function(){addtag()}" class="pull-right btn btn-sm btn-primary">ADD TAG</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> <!-- end of 10 cols -->
+		</div> <!-- end of row -->
+	</div> <!-- end of tags -->
+		
+
+		
+	<!--	<div class="row">
+			<div class="col-md-12">
+				<div class="controlbar">
+					<div class="row">
+						<div class="col-md-3 col-md-offset-9">
+							<div class="row">
+					 			<div class="col-md-8">
+					 				<input type="text" class="pull-right form-control" data-bind="value: newtag" placeholder="create new tag" />
+								</div>
+								<div class="col-md-4">
+									<a href="#" data-bind="click:function(){addtag()}" class="pull-right btn btn-sm btn-primary">ADD TAG</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</div>  -->
+</div>	<!-- end of viz -->
+
+<script type="text/html" id="popoverBindingTemplate">
+	<button class="close pull-right" type="button" data-dismiss="popover">x</button>
+	<div class="row">
+	
+		<div class="col-md-12">
+			
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<th>domain</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody data-bind="foreach:$root.domainsfortag">
+					<tr>
+						<td data-bind="text:$data"></td>
+						<td> <a href="#" data-bind="click:function(){$root.removetag($parent,$data)}">remove</a> </td>
+					</tr>
+				</tbody>
+			</table>
+			<!-- MUST ADD OPTION TO DELETE ENTIRE TAG -->
+			<!--<a href="#" data-bind="click:function(){$root.removetag($parent)}">delete this tag!</a>-->
+		</div>
+	
+	</div>	
+</script>
+				
+<script data-main="{{url_for('static', filename='js/modules.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
+{% endblock %}

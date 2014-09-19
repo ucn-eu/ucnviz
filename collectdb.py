@@ -80,4 +80,3 @@ class CollectDB(object):
 			filepos INTEGER);''')
 				
 		self.conn.commit()
-	
