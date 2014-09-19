@@ -1,37 +1,41 @@
 from flask import current_app, Blueprint,request, jsonify
 from vpnresolve import VPNResolve
 import json
-import os
-import datetime
-from datetime import date
+import logging
 
 ios_api = Blueprint('ios_api', __name__)
 
+logger = logging.getLogger( "ucn_logger" )
+
 @ios_api.route("/log", methods=['POST'])
 def log():
+	
 	vpnres = VPNResolve(current_app.config["CIDR"], current_app.config["OPENVPN_STATUS"])
 	host = vpnres.clientip(request)
+	logger.debug("saving ios data for host %s", host)
 	
 	data = request.get_json(force=False)
-	datestr = datetime.datetime.now().strftime("%d-%m-%y_%H:%M:%S") 
 	
 	current_app.config["logger"].debug("received data for host %s" % host)
 	
-	try:
-		strdata = "%s" % json.dumps(data)
-		directory = "/var/log/netdata/%s" % (host)
-
-		if not os.path.exists(directory):
-			current_app.config["logger"].debug("creating new dir %s" % directory)
-			os.makedirs(directory)
-
-		with open("%s/%s.txt" % (directory, datestr), "w") as logfile:
-			logfile.write(strdata)	
-			current_app.config["logger"].debug("written to %s/%s.txt" % (directory, datestr))
-			return jsonify(success=True)
+	#shove the processes into the table in bulk!
+	success= True
 	
-	except Exception as e:
-		current_app.config["logger"].error("exception writing data %s" % str(e))
-		return jsonify(success=False, error=str(e))
-
-	return jsonify(success=False)
+	if 'processes' in data:
+		logger.debug("saving ios process data for host %s", host)
+		success = current_app.config["datadb"].bulk_insert_processes(host,data['processes'])
+		if success:
+			logger.debug("sucessfully saved ios process data for host %s", host)
+		else:
+			logger.error("failed to save ios process data")
+			
+	if 'network' in data:
+		logger.debug("saving ios network for host %s", host)
+		success = success and current_app.config["datadb"].insert_network_data(host, data['network'])
+		if success:
+			logger.debug("sucessfully saved ios network data for host %s", host)
+		else:
+			logger.error("failed to save ios network data")
+			logger.error(data['network'])
+		
+	return jsonify(success=success)

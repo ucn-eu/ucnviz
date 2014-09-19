@@ -11,6 +11,8 @@ from os import listdir
 from os.path import isfile, isdir, join
 import json
 
+logger = logging.getLogger( "ucn_logger" )
+
 def reconnect(fn):
 	""" decorator to reconnect to the database if needed """
 	def wrapped(self, *args, **kwargs):
@@ -58,8 +60,12 @@ class NetDB( object ):
 		
 		sql = "SELECT u.ts, u.domain,  u.host from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s ORDER BY u.host, u.ts ASC" % (home,whereclause)
 		
-		result = self.conn.execute(sql)
-		
+		try:
+			result = self.conn.execute(sql)
+		except Exception, e:
+			logger.error("error fetching timebins for home %s" % home)
+			return None
+			 
 		hosts = {}
 		ts = mints
 		keys = []
@@ -262,6 +268,7 @@ class NetDB( object ):
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
 		
 		return urls
+		
 	@reconnect
 	def fetch_zones_for_host(self, host, fromts=None, tots=None):
 		
@@ -275,7 +282,8 @@ class NetDB( object ):
 		result = self.conn.execute(sql)
 		zones = [{"name":row[0], "enter":row[1], "exit":row[2]} for row in result]
 
-		return zones		
+		return zones	
+			
 	@reconnect
 	def fetch_top_urls_for_host(self, host, limit=10, fromts=None, tots=None):
 		timerange = ""
@@ -339,8 +347,8 @@ class NetDB( object ):
 		if fromts and tots:
 			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
 			
-		sql = "SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange)
-		result = self.conn.execute(sql)
+
+		result = self.conn.execute("SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange))
 		
 		currenttag = None
 		reading = None
@@ -380,38 +388,32 @@ class NetDB( object ):
 		if fromts and tots:
 			timerange = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
 		
-		sql = "SELECT ts FROM URLS WHERE host = '%s' AND domain = '%s' %s ORDER BY ts DESC" % (host,domain,timerange)
-	
-		result = self.conn.execute(sql)
+		result = self.conn.execute("SELECT ts FROM URLS WHERE host = '%s' AND domain = '%s' %s ORDER BY ts DESC" % (host,domain,timerange))
 		requests = [row[0] for row in result]
 		return requests
 	
 	@reconnect
 	def fetch_netdata_for_host(self, host):
-		sql = "SELECT ts,wifiup,wifidown,cellup,celldown from NETDATA WHERE host = '%s' ORDER BY ts DESC" % (host)
-		result = self.conn.execute(sql)
+		result = self.conn.execute("SELECT ts,wifiup,wifidown,cellup,celldown from NETDATA WHERE host = ? ORDER BY ts DESC", (host,))
 		netdata = [{"ts":row[0], "wifiup":row[1], "wifidown":row[2], "cellup":row[3], "celldown":row[4]} for row in result]
 		return netdata
 	
 	@reconnect
 	def fetch_hosts_for_home(self, home):
-		#use ? instead!
-		sql = "SELECT host FROM HOUSE WHERE name =  '%s'" % (home)
-		result = self.conn.execute(sql)
+		result = self.conn.execute("SELECT host FROM HOUSE WHERE name = ?", (home,))
 		hosts = [row[0] for row in result]
 		return hosts
 	
 	@reconnect	
 	def fetch_latest_ts_for_home(self, home):
-		sql = "SELECT max(u.ts) FROM URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s'" % (home)  
-		result = self.conn.execute(sql)
+	
+		result = self.conn.execute("SELECT max(u.ts) FROM URLS u, HOUSE h WHERE u.host = h.host AND h.name = (?)",(home,))
 		ts = result.fetchone()
 		return ts[0]
 	
 	@reconnect
 	def fetch_latest_ts_for_host(self, host):
-		sql = "SELECT max(u.ts) FROM URLS u WHERE u.host = '%s'" % (host)  
-		result = self.conn.execute(sql)
+		result = self.conn.execute("SELECT max(u.ts) FROM URLS u WHERE u.host = ?", (host,))
 		return result.fetchone()[0]
 	
 	@reconnect		
@@ -423,7 +425,7 @@ class NetDB( object ):
 	@reconnect
 	def insert_tag(self,tag):
 		try:
-			self.conn.execute("INSERT INTO TAG(tag) VALUES('%s')" % tag)
+			self.conn.execute("INSERT INTO TAG(tag) VALUES(?)", (tag,))
 			self.conn.commit()
 			return True
 		except Exception, e:
@@ -431,22 +433,47 @@ class NetDB( object ):
 	
 	@reconnect		
 	def remove_tag_for_host(self,host,tag):
-		sql = "DELETE FROM TAGS WHERE host='%s' AND domain = '%s'" % (host,tag)
-		self.conn.execute(sql)
+		self.conn.execute("DELETE FROM TAGS WHERE host=? AND domain = ?", (host,tag))
 		self.conn.commit()
 	
 	@reconnect
-	def insert_network_data(self, netdata):
-		self.conn.execute("INSERT INTO NETDATA(ts, host, wifiup, wifidown,cellup,celldown) VALUES(?,?,?,?,?,?)", (netdata['ts'],netdata['host'], netdata['wifiup'], netdata['wifidown'],netdata['cellup'], netdata['celldown']))
-		self.conn.commit()
-		
+	def insert_network_data(self, host, netdata):
+		try:
+			self.conn.execute("INSERT INTO NETDATA(ts, host, wifiup, wifidown,cellup,celldown) VALUES(?,?,?,?,?,?)", (netdata['ts'],host, netdata['wifiup'], netdata['wifidown'],netdata['cellup'], netdata['celldown']))
+			self.conn.commit()
+			return True
+		except Exception as e:
+			logger.error("failed to insert network data")
+			return False
+			
 	@reconnect	
 	def insert_process(self, process):
 		self.conn.execute("INSERT INTO PROCESSES(ts,host,name,starttime) VALUES(?,?,?,?)", (process['ts'],process['host'], process['name'], process['starttime']))
 		self.conn.commit()
 	
 	@reconnect	
-	def bulk_insert_processes(self, datafile):
+	def bulk_insert_processes(self,host,processes):
+		
+		try:
+			for process in processes:
+				if "bytessent" not in process:
+					process["bytessent"] = 0
+				if "bytesrecv" not in process:
+					process["bytesrecv"] = 0
+				
+				try:	
+					self.conn.execute("INSERT INTO PROCESSES(ts,host,foreground,name,starttime,bytessent,bytesrecv) VALUES(?,?,?,?,?,?,?)", (process['ts'], host, process['foreground'],process['name'], process['starttime'], process['bytesrecv'], process['bytessent']))
+				except Exception, e:
+					logger.debug("error bulk inserting process %s for host" % (str(process), host))
+			
+			self.conn.commit()
+			return True
+		except Exception, e:
+			logger.debug("error bulk inserting processes for host %s" % host)
+			return False
+			
+	@reconnect	
+	def bulk_insert_processes_from_file(self, datafile):
 		datafiles = [f for f in listdir(datafile) if isdir(join(datafile,f))]
 		devicefiles = []
 	
@@ -464,17 +491,26 @@ class NetDB( object ):
 				
 				for item in data:
 					for process in item['processes']:
-						self.conn.execute("INSERT INTO PROCESSES(ts,host,name,starttime) VALUES(?,?,?,?)", (ts, device, process['name'], process['starttime']))
+						try:
+							self.conn.execute("INSERT INTO PROCESSES(ts,host,name,starttime) VALUES(?,?,?,?)", (ts, device, process['name'], process['starttime']))
+						except Exception, e:
+							logger.error("error process from file %s" % str(process))
 		
-		self.conn.commit()
+		try:	
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error bulk commiting processes from file")
 	
 	
 						
 	@reconnect	
 	def insert_url(self, url):
-		self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
-		self.conn.commit()
-	
+		try:
+			self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error inserting url %s" % str(url))
+			
 	@reconnect
 	def bulk_insert_urls(self, content):
 		
@@ -496,35 +532,50 @@ class NetDB( object ):
 					path = "".join(parts[1:])
 				
 				url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
+				try:
+					self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
+				except Exception, e:
+					logger.error("error inserting url %s" % str(url))
+					
+		#commit now..
+		try:	
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error bulk commiting urls")
 			
-				self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
-		
-		#commit now..	
-		self.conn.commit()
-
 	@reconnect	
 	def insert_zone(self,zone):
-		self.conn.execute("INSERT INTO ZONES(host, date,locationid, name, lat, lng, enter, exit) VALUES(?,?,?,?,?,?,?,?)", (zone['host'],zone['date'],zone['locationid'], zone['name'], zone['lat'], zone['lng'], zone['enter'], zone['exit']))
-		self.conn.commit()
-	
+		try:
+			self.conn.execute("INSERT INTO ZONES(host, date,locationid, name, lat, lng, enter, exit) VALUES(?,?,?,?,?,?,?,?)", (zone['host'],zone['date'],zone['locationid'], zone['name'], zone['lat'], zone['lng'], zone['enter'], zone['exit']))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error inserting zone %s" % str(zone))
 	
 	@reconnect
 	def remove_zones(self, host, date):
-		self.conn.execute("DELETE FROM ZONES WHERE host = ? AND date = ?" , (host, date))
-		self.conn.commit()
-		
+		try:
+			self.conn.execute("DELETE FROM ZONES WHERE host = ? AND date = ?" , (host, date))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error removing zones %s %s" % (host, date))
+			
 	@reconnect
 	def insert_zones(self, zones):
-		for zone in zones:
-			self.conn.execute("INSERT INTO ZONES(host, date, locationid, name, lat, lng, enter, exit) VALUES(?,?,?,?,?,?,?,?)", (zone['host'],zone['date'],zone['locationid'], zone['name'], zone['lat'], zone['lng'], zone['enter'], zone['exit']))
-		self.conn.commit()
-		
+		try:
+			for zone in zones:
+				self.conn.execute("INSERT INTO ZONES(host, date, locationid, name, lat, lng, enter, exit) VALUES(?,?,?,?,?,?,?,?)", (zone['host'],zone['date'],zone['locationid'], zone['name'], zone['lat'], zone['lng'], zone['enter'], zone['exit']))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error inserting zones %s" % str(zones))
 			
 	@reconnect	
 	def add_host_to_house(self, host):
-		self.conn.execute("INSERT INTO HOUSE(name, host) VALUES(?,?)", (host['house'], host['host']))
-		self.conn.commit()
-		
+		try:
+			self.conn.execute("INSERT INTO HOUSE(name, host) VALUES(?,?)", (host['house'], host['host']))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error adding host to house %s" % str(host))
+			
 	@reconnect			
 	def createTables(self):
 		
@@ -556,10 +607,13 @@ class NetDB( object ):
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS PROCESSES
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
 			ts INTEGER,
+			foreground INTEGER,
 			host CHAR(16),
 			name  CHAR(128),
+			bytessent INTEGER,
+			bytesrecv INTEGER,
 			starttime INTEGER,
-			UNIQUE(ts, name) ON CONFLICT IGNORE);''')
+			UNIQUE(ts, host, name) ON CONFLICT IGNORE);''')
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS NETDATA
 			(ts INTEGER,
