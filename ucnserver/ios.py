@@ -16,7 +16,7 @@ def log():
 	
 	data = request.get_json(force=False)
 	
-	current_app.config["logger"].debug("received data for host %s" % host)
+	logger.debug("received data for host %s" % host)
 	
 	#shove the processes into the table in bulk!
 	success= True

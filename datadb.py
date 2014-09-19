@@ -280,7 +280,7 @@ class NetDB( object ):
 		sql = "SELECT name,enter,exit FROM ZONES WHERE host = '%s' %s ORDER BY enter DESC" % (host,timerange)
 		
 		result = self.conn.execute(sql)
-		zones = [{"name":row[0], "enter":row[1], "exit":row[2]} for row in result]
+		zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
 
 		return zones	
 			
