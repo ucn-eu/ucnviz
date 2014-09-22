@@ -493,6 +493,17 @@ class NetDB( object ):
 		self.conn.execute("DELETE FROM TAGS WHERE host=? AND domain = ?", (host,tag))
 		self.conn.commit()
 	
+	@reconnect		
+	def remove_tag_for_host(self, host,tag):
+		try:
+			self.conn.execute("DELETE FROM TAGS WHERE host=? AND tag = ?", (host,tag))
+			self.conn.execute("DELETE FROM TAG WHERE host=? AND tag = ?", (host,tag))
+			self.conn.commit()
+			return True
+		except Exception as e:
+			logger.error("failed to remove tag %s for host %s" % (tag, host))
+			return False
+		
 	@reconnect
 	def insert_network_data(self, host, netdata):
 		try:

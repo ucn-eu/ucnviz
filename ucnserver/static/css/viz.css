@@ -6,7 +6,7 @@
 }
 
 .querybox{
-	height: 40px;
+	height: 60px;
 	overflow-y:scroll;
 	color: #30363c;
     font-size: 11px;
@@ -138,6 +138,11 @@ text.key{
 	font-size:140%;
 }
 
+.queryactive{
+	font-size: 130%;
+	color: red;
+}
+
 .helptext{
 	color:white;
 	font-size:14px;
@@ -151,6 +156,11 @@ text.key{
 	line-height: 50px;
 	font-size: 120%;
 	padding-left: 15px;
+}
+
+.querytext{
+	color:white;
+	font-size: 115%;
 }
 
 .controlbar{

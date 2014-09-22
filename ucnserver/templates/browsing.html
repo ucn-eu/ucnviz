@@ -68,7 +68,7 @@
 <div id="visualisation">
 	
 	<div class="row" style="border-bottom: 1px solid #30363c">
-		<div class="col-md-2" style="height:520px; background:#30363c">
+		<div class="col-md-2" style="height:420px; background:#30363c">
 			<div class="row" style="background:#3b5998;">
 				<div class="col-md-12">
 					<div class="title">
@@ -88,30 +88,33 @@
 		<div class="col-md-10">
 			<div id="overall"> 
 				<div class="row">
-					<div class="col-md-12" style="height:280px">
+					<div class="col-md-12" style="height:240px">
 						<div id="context"></div>
 					</div>
 				</div>
 				<div class="row">		
-					<div class="col-md-12" style="height:160px">
+					<div class="col-md-12" style="height:140px">
 						<div id="zoom"></div>
 					</div>
 				</div>
 			</div>
 			<div id="queries">
-				<div class="row">
+				<!--<div class="row">
 					<div class="col-md-12 querybox">
 						<div  data-bind="foreach:queries, visible:showqueries">
-							<span data-bind="text:query"></span>
+							<span data-bind="text:query, css:{queryactive: $parent.queryisselected($data)}"></span>
 						</div>
 					</div>
-				</div>
+				</div>-->
 				<div class="row">
 					<div class="col-md-12" style="padding-left:0px">
 						<div class="controlbar">
 							<div class="row">
-								<div class="col-md-3 col-md-offset-9">
-									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">show queries</button>
+								<div class="col-md-9">
+									<div class="querytext" data-bind="text:selectedquery"></div>
+								</div>
+								<div class="col-md-3">
+									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">overlay queries</button>
 								</div>	
 							</div>
 						</div>

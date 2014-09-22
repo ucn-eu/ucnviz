@@ -187,7 +187,6 @@ def tagurls():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
 	domains = request.args.getlist('domains[]')
-	#current_app.config["datadb"].connect()
 	for domain in domains:
 		current_app.config["datadb"].insert_tag_for_host(host,domain,tag)
 		
@@ -197,15 +196,21 @@ def tagurls():
 def addtag():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
-	#current_app.config["datadb"].connect()
 	result = current_app.config["datadb"].insert_tag(tag, host)
 	return jsonify(success=result)
 
-@viz_api.route("/tag/removeassociation")
+@viz_api.route("/tag/removetag")
 def removetag():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
-	#current_app.config["datadb"].connect()
+	current_app.config["datadb"].remove_tag_for_host(host,tag)
+	return jsonify(success=True)
+
+
+@viz_api.route("/tag/removeassociation")
+def removeassociation():
+	host = request.args.get('host')
+	tag	 = request.args.get('tag')
 	current_app.config["datadb"].remove_tag_association_for_host(host,tag)
 	return jsonify(success=True)
 

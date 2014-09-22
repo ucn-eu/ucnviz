@@ -8,6 +8,19 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 		
 		showqueries   = ko.observable(false),
 		
+		selectedquery = ko.observable(""),
+		
+		
+		
+		_queryListener = ko.postbox.subscribe("query", function(data){
+			
+			if (data){
+				selectedquery(data.query);
+			}else{
+				selectedquery("");
+			}
+		}),
+		
 		//don't need to pull this in again and again, do array filter on original!
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
 			if (!data)
@@ -15,6 +28,11 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 			queries([]);
 			ajaxservice.ajaxGetJson('web/queries',{host:data.host, fromts: data.fromts, tots:data.tots}, updatequeries);
 		}),
+		
+		
+		queryisselected = function(query){
+			return selectedquery() == query;
+		},	
 		
 		updatequeries = function(data){
 			if (data && data.queries){
@@ -41,5 +59,7 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 		queries:queries,
 		togglequeries: togglequeries,
 		showqueries: showqueries,
+		selectedquery:selectedquery,
+		queryisselected:queryisselected,
 	}
 });

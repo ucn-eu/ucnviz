@@ -33,8 +33,6 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 				
 				if (!data)
 					return;
-				console.log("SELECTED HOST IS!")
-				console.log(data.host);
 				
 				selectedhost(data.host);
     			urlsfortagging([]);
@@ -72,7 +70,6 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		},
 		
 		addtag 	= function(){
-			console.log("calling add tag" + selectedhost());
 			ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
 		},
 		

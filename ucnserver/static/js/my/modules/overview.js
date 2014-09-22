@@ -15,6 +15,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		timerange	  = ko.observable().syncWith("range"),
 			
+		selectedquery = ko.observable().publishOn("query"),
+		
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
 			//check against x2.domain()
 			//zoom.select(".brush").call(brush.extent([new Date(newValue.fromts*1000), new Date(newValue.tots*1000)]));
@@ -89,6 +91,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 				.attr("class", "activitykey"),
+		
 				
 		init = function(data, cf){
 			
@@ -385,12 +388,12 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			l = svg.selectAll(".queries")
 						
 						
-			lines = l.selectAll("line").data(queries, function(d,i){return i});
-						
+			lines 	= l.selectAll("line").data(queries, function(d,i){return i});
+			circles = l.selectAll("circle").data(queries, function(d,i){return i});		
+			
 			lines
-				.transition()
-				.duration(1000)		
-			 	.attr("y1", 0)
+				.transition()	
+			 	.attr("y1", 6)
 				.attr("x1", function(d){return x(d.ts*1000)})
 				.attr("y2", height)
 				.attr("x2", function(d){return x(d.ts*1000)});
@@ -399,17 +402,43 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.enter()
 				 .append("line")
 				 .attr("class", "divide")
-				 .attr("y1", 0)
+				 .attr("y1", 6)
 				 .attr("x1", function(d){return x(d.ts*1000)})
 				 .attr("y2", height)
 				 .attr("x2", function(d){return x(d.ts*1000)})
-				 .style("stroke", function(d){return "#000000"});	
+				 .style("stroke", function(d){return color(selectedhost());})
+			 	 .style("stroke-opacity", 1.0);
 			
+			circles.transition()
+				 .attr("cx", function(d) {return x(d.ts*1000)});
+			
+			circles.enter()
+				 .append("circle")
+				 .attr("cx", function(d) {return x(d.ts*1000)})
+				 .attr("cy", function(d) {return 0})
+				 .attr("r", 6)
+				 .style("fill", function(d){return "#f59946"})	
+				 .style("fill-opacity", function(d){return 0.4})	
+				 .style("stroke", function(d){return "#f59946"})	
+				 .style("stroke-opacity", 1.0)
+				 .on("mouseover", queryselected)
+				 .on("mouseout", querydeselected);
+				 
 			lines.exit()
+				.remove();
+				
+			circles.exit()
 				.remove();	
 		},
 		
+		queryselected = function(d){
+			selectedquery(d);
+		},
 		
+		querydeselected = function(d){
+			selectedquery("");
+		},
+				
 		redraw = function(){
 			
 			xrange = brush.empty() ? x2.domain() : brush.extent();
@@ -545,6 +574,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 	return {
 		init: init,
 		subtitle: subtitle,
+		
 	}
 	
 });

@@ -68,13 +68,11 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 	
 		
 		reversedtags = ko.computed(function(){
-			//reversed = [];
-			//for (i = tags().length-1; i >=0; i--){ 
-			//	reversed.push(tags()[i]);
-			//}
-			console.log("reversed tags are ");
-			console.log(tags().reverse());
-			return tags().reverse();
+			var reversed = [];
+			for (var i = tags().length-1; i >= 0; i--){
+				reversed.push(tags()[i]);
+			}
+			return reversed;
 		}),
 		
 		tagheight = ko.computed(function(){
@@ -111,11 +109,13 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		removeassociation = function(tag, domain){	
-			ajaxservice.ajaxGetJson('tag/removeassociation',{host: selectedhost(), tag:domain}, curry(associationremoved, tag));
+			ajaxservice.ajaxGetJson('tag/removeassociation',{host: selectedhost(), tag:domain}, curry(tagupdated, tag));
 		},
 		
-		
-		
+		removetag = function(tag){
+			ajaxservice.ajaxGetJson('tag/removetag',{tag:tag, host: selectedhost()}, curry(tagupdated, tag));
+		},
+	
 		curry = function(fn){
 			var args = Array.prototype.slice.call(arguments, 1);
 			return function(){
@@ -124,10 +124,10 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		
-		associationremoved = function(tag, data){
+		tagupdated = function(tag, data){
 			
 			//reload dependent data
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
+			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(),fromts:fromts, tots:tots, bin:bin}, renderactivity);
 			//ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
 			
 			//need to pass in tag, NOT data, which is the domain that was deleted!
@@ -138,10 +138,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		
 		renderactivity = function(data){
-			console.log("RENDERING ACTIVITY!!");
-			console.log("TAGS ARE ");
-			console.log(data.tags);
-			console.log(data);
+			
 			
 			container = document.getElementById("activitygraph");
 			timeline  = { show : true, barWidth : .8 };
@@ -230,5 +227,6 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		newtag:newtag,
 		addtag:addtag,
 		removeassociation: removeassociation,
+		removetag: removetag,
 	}
 });
