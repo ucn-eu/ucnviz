@@ -348,18 +348,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			
 			if (idx == -1){
 				filters.push(host);
-			}else{
+			}else if (hosts.length < 1){
 				filters.splice(idx,1);
 			}
 			
 			if (filters.length == 1){
 				selectedhost(filters[0]);
 				triggerupdate(filters[0]);
-				
 			}
 			
-				
 			redraw();
+		
 			updatekey();			
 		},
 		
