@@ -406,7 +406,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				 .attr("x1", function(d){return x(d.ts*1000)})
 				 .attr("y2", height)
 				 .attr("x2", function(d){return x(d.ts*1000)})
-				 .style("stroke", function(d){return color(selectedhost());})
+				 .style("stroke", function(d){return "#000000"})
 			 	 .style("stroke-opacity", 1.0);
 			
 			circles.transition()
