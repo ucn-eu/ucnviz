@@ -98,11 +98,12 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			if (data && data.hosts && Object.keys(data.hosts).length > 0){
 				hosts = Object.keys(data.hosts);
 				color = cf.colourfor;
-				renderactivity(data);			
+				renderactivity(data);
+				if (hosts.length == 1){
+					updatefilters(hosts[0]);
+				}			
 			}
-			if (hosts.length == 1){
-				updatefilters(hosts[0]);
-			}
+			
 		},
 		
 		brushed = function(){
@@ -348,7 +349,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			
 			if (idx == -1){
 				filters.push(host);
-			}else if (hosts.length < 1){
+			}else if (hosts.length > 1){
 				filters.splice(idx,1);
 			}
 			
