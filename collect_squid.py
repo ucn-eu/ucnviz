@@ -12,6 +12,9 @@ def insert_urls(datafile):
 	
 	fpos = collectdb.fetch_filepos_for('squid')
 	
+	if fpos > path.getsize(datafile):
+		fpos = 0
+		
 	if fpos < path.getsize(datafile):
 		with open(datafile) as f:
 			f.seek(fpos)
