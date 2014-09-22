@@ -6,20 +6,27 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		
 		timerange	  = ko.observable().syncWith("range"),
 		
+		zoomedin  	  = false, //nasty hack for now..
 		
 		/* set up listeners-- listen on host / range change from overview */
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
 			if (!data)
 				return;
+			
 			selectedhost(data.host);
 			fromts = data.fromts;
 			tots = data.tots;
 			parameters[depth()] = {host: selectedhost(), bin:calculatebin(tots-fromts), fromts:fromts, tots:tots};
-			ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
+			console.log("zoomed in is " + zoomedin);
+			if (!zoomedin){
+				ajaxservice.ajaxGetJson('web/summary',parameters[depth()], renderroot);
+			}
 		}),
 		
 		
 		ZOOMVALUE = 50,
+		
+		
 		
 		cache  	  = [],
 		
@@ -116,7 +123,7 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 		},
 		
 		clickcallback = function(){
-			console.log("would zoom out here!");
+			zoomedin = false;
 			depth(depth() - 1);
 			timerange(parameters[depth()]);
 			//timerange({fromts:fromts, tots:tots, host:selectedhost()});
@@ -174,12 +181,12 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 				parameters[depth()+1] = {host: selectedhost(), bin:bin, fromts:fromts, tots:tots};
 				depth(depth()+1);
 				
-				
-				
-				if (total <= ZOOMVALUE){
-					ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));	
-				}else{
-					timerange({fromts:fromts, tots:tots, host:selectedhost()});
+				zoomedin = total <= ZOOMVALUE;
+					
+				timerange({fromts:fromts, tots:tots, host:selectedhost()});	
+					
+				if (zoomedin){
+					ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 				}
 					
 				setTimeout(function(){selected=false},100);
@@ -215,9 +222,11 @@ define(['jquery','ajaxservice', 'knockout','moment','flotr', 'flot', 'flottime',
 					
 					depth(depth()+1);
 					
-					if (total > ZOOMVALUE){
-						timerange({fromts:fromts, tots:tots, host:selectedhost()});	
-					}else{
+					zoomedin = total <= ZOOMVALUE;
+					
+					timerange({fromts:fromts, tots:tots, host:selectedhost()});	
+					
+					if (zoomedin){
 						ajaxservice.ajaxGetJson('web/browsing' ,{host: selectedhost(), fromts: fromts, tots: tots}, curry(renderzoom,fromts));// fromts+torange[depth()-1]}, curry(renderzoom,fromts));	
 					}
 				}else{
