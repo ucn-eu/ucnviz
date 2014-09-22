@@ -62,17 +62,19 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		hosts	= ko.observableArray([]),
 		
-		tags	= ko.observableArray([]),
+		tags	= ko.observableArray([]).publishOn("tags"),
 		
 		subtitle = ko.observable(""),
 	
 		
 		reversedtags = ko.computed(function(){
-			reversed = [];
-			for (i = tags().length-1; i >=0; i--){ 
-				reversed.push(tags()[i]);
-			}
-			return reversed;
+			//reversed = [];
+			//for (i = tags().length-1; i >=0; i--){ 
+			//	reversed.push(tags()[i]);
+			//}
+			console.log("reversed tags are ");
+			console.log(tags().reverse());
+			return tags().reverse();
 		}),
 		
 		tagheight = ko.computed(function(){
@@ -85,7 +87,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		addtag = function(){
-			ajaxservice.ajaxGetJson('tag/add', {tag:newtag()}, tagadded);
+			ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
 		},
 		
 		selectedhost = ko.observable(),
@@ -96,8 +98,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				
 		tagparameters = [],	
 	
-		init = function(taglist, cf){
-			tags(taglist);
+		init = function(cf){
 			colourfactory = cf;			
 		},
 		
@@ -109,8 +110,8 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
 		},
 		
-		removetag = function(tag, domain){	
-			ajaxservice.ajaxGetJson('tag/remove',{host: selectedhost(), tag:domain}, curry(tagremoved, tag));
+		removeassociation = function(tag, domain){	
+			ajaxservice.ajaxGetJson('tag/removeassociation',{host: selectedhost(), tag:domain}, curry(associationremoved, tag));
 		},
 		
 		
@@ -123,7 +124,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		
-		tagremoved = function(tag, data){
+		associationremoved = function(tag, data){
 			
 			//reload dependent data
 			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost()}, renderactivity);
@@ -137,7 +138,11 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		
 		renderactivity = function(data){
-		
+			console.log("RENDERING ACTIVITY!!");
+			console.log("TAGS ARE ");
+			console.log(data.tags);
+			console.log(data);
+			
 			container = document.getElementById("activitygraph");
 			timeline  = { show : true, barWidth : .8 };
 			 
@@ -224,6 +229,6 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		domainsfortag:domainsfortag,
 		newtag:newtag,
 		addtag:addtag,
-		removetag: removetag,
+		removeassociation: removeassociation,
 	}
 });

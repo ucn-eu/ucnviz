@@ -249,9 +249,7 @@
 <script type="text/html" id="popoverBindingTemplate">
 	<button class="close pull-right" type="button" data-dismiss="popover">x</button>
 	<div class="row">
-	
 		<div class="col-md-12">
-			
 			<table class="table table-striped">
 				<thead>
 					<tr>
@@ -262,15 +260,19 @@
 				<tbody data-bind="foreach:$root.domainsfortag">
 					<tr>
 						<td data-bind="text:$data"></td>
-						<td> <a href="#" data-bind="click:function(){$root.removetag($parent,$data)}">remove</a> </td>
+						<td> <a href="#" data-bind="click:function(){$root.removeassociation($parent,$data)}">remove</a> </td>
 					</tr>
 				</tbody>
 			</table>
 			<!-- MUST ADD OPTION TO DELETE ENTIRE TAG -->
 			<!--<a href="#" data-bind="click:function(){$root.removetag($parent)}">delete this tag!</a>-->
 		</div>
-	
 	</div>	
+	<div class="row">
+		<div class="col-md-12">
+			<button class="btn btn-danger btn-sm pull-right" data-bind="click:function(){$root.removetag($data);}">delete entire tag</button>
+		</div>
+	</div>
 </script>
 				
 <script data-main="{{url_for('static', filename='js/modules.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>

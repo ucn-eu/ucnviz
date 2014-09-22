@@ -150,8 +150,9 @@ def hosts():
 	home = request.args.get('home') or "lodges"
 	#current_app.config["datadb"].connect()
 	hosts = current_app.config["datadb"].fetch_hosts_for_home(home)	
-	tags  = current_app.config["datadb"].fetch_tags()
-	return jsonify(hosts=hosts, tags=tags)
+	#tags  = current_app.config["datadb"].fetch_tags_for_host()
+	return jsonify(hosts=hosts)
+	#, tags=tags)
 	
 @viz_api.route("/web/domainsummary")
 def domainsummary():
@@ -194,25 +195,29 @@ def tagurls():
 
 @viz_api.route("/tag/add")
 def addtag():
+	host = request.args.get('host')
 	tag	 = request.args.get('tag')
 	#current_app.config["datadb"].connect()
-	result = current_app.config["datadb"].insert_tag(tag)
+	result = current_app.config["datadb"].insert_tag(tag, host)
 	return jsonify(success=result)
 
-@viz_api.route("/tag/remove")
+@viz_api.route("/tag/removeassociation")
 def removetag():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
 	#current_app.config["datadb"].connect()
-	current_app.config["datadb"].remove_tag_for_host(host,tag)
+	current_app.config["datadb"].remove_tag_association_for_host(host,tag)
 	return jsonify(success=True)
 
 @viz_api.route("/tag/activity")
 def activity():
-	host 	= request.args.get('host')
+	host 	= request.args.get('host') or None
 	fromts 	= request.args.get('fromts') or None
 	tots	= request.args.get('tots') or None
+	if host is None:
+		return jsonify(activity=[], tags=[])
+
 	#current_app.config["datadb"].connect()
-	activity = current_app.config["datadb"].fetch_tags_for_host(host,fromts,tots)
-	tags  = current_app.config["datadb"].fetch_tags()
+	activity = current_app.config["datadb"].fetch_tagged_for_host(host,fromts,tots)
+	tags  = current_app.config["datadb"].fetch_tags_for_host(host)
 	return jsonify(activity=activity, tags=tags)

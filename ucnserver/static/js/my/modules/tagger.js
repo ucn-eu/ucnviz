@@ -14,6 +14,13 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			return "tag activity <small>" + timetext() + "<small>";
 		}),
 		
+		_tagListener = ko.postbox.subscribe("tags", function(data) {
+			
+			if (data){
+				tags(data);
+			}		
+		}),
+		
 		_timeListener = ko.postbox.subscribe("fromto", function(data) {
 			if (data.length > 0){
 				m1 = moment.unix((data[0].getTime())/1000);
@@ -26,6 +33,8 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 				
 				if (!data)
 					return;
+				console.log("SELECTED HOST IS!")
+				console.log(data.host);
 				
 				selectedhost(data.host);
     			urlsfortagging([]);
@@ -63,7 +72,8 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		},
 		
 		addtag 	= function(){
-			ajaxservice.ajaxGetJson('tag/add', {tag:newtag()}, tagadded);
+			console.log("calling add tag" + selectedhost());
+			ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
 		},
 		
 		shouldshowtags = ko.computed(function(){
@@ -81,8 +91,8 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			return selectedhost() == ahost;
 		},
 			
-		init = function(taglist){
-			tags(taglist);			
+		init = function(){
+					
 		},
 		
 		/*

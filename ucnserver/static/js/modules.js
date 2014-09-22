@@ -42,8 +42,8 @@ require(['jquery','modules/colours', 'modules/queries', 'modules/overview', 'mod
 		ko.applyBindings(overview, $("#overall")[0]);
 		
 		ajaxservice.ajaxGetJson('web/bootstrap', {home:'lodges'}, function(data){
-			tags.init(data.tags || [], cf);
-			tagger.init(data.tags || []);
+			tags.init(cf);
+			tagger.init();
 			
 		
 			ko.applyBindings(web, $("#web")[0]);

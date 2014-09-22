@@ -250,7 +250,78 @@ class NetDB( object ):
 		result = self.conn.execute(sql)
 		urls = [row[0] for row in result]
 		return urls
+	
+	@reconnect
+	def fetch_tags_for_host(self, host):
 		
+		result = self.conn.execute("SELECT tag FROM tag WHERE host = ?", (host,))
+		
+		tags = [row[0] for row in result]
+		
+		if len(tags) <= 0:
+			logger.debug("creating default set of tables for tags for host %s" % host)
+			#create the default set of tags for this host!
+			tags = ["research", "work", "gaming", "finance", "family", "video streaming", "shopping", "health", "social", "hobby", "news", "entertainment"]
+
+			for tag in tags:
+				result = self.conn.execute("INSERT INTO TAG (tag, host) VALUES (?,?)", (tag, host))	
+			self.conn.commit()
+		tags.sort()
+		return tags
+	
+# 	@reconnect
+# 	def fetch_tags(self):
+# 		sql = "SELECT tag FROM TAG"
+# 		result = self.conn.execute(sql)
+# 		tags = [row[0] for row in result]
+# 		tags.sort()
+# 		return tags
+	
+	@reconnect
+	def fetch_tagged_for_host(self, host, fromts=None, tots=None):
+		
+		#milliseconds
+		delta = 10000
+		
+		timerange=""
+		
+		if fromts and tots:
+			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
+			
+
+		result = self.conn.execute("SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange))
+		
+		currenttag = None
+		reading = None
+		readings = []
+		#activity = []
+		
+		for row in result:
+			if currenttag != row[0]:
+				if reading is not None:
+					readings.append(reading)
+				reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 	
+				currenttag = row[0]
+			else:
+				if (reading["tots"] + delta) >= row[1]:
+					reading["tots"] = row[1]
+				else:
+					readings.append(reading)
+					reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 
+		
+		if reading:
+			readings.append(reading)
+		
+		return readings
+	
+	@reconnect
+	def fetch_tags(self):
+		sql = "SELECT tag FROM TAG"
+		result = self.conn.execute(sql)
+		tags = [row[0] for row in result]
+		tags.sort()
+		return tags
+			
 	@reconnect	
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
 		whereclause = ""
@@ -366,52 +437,7 @@ class NetDB( object ):
 			urls.append(url)
 		
 		return urls
-	
-	@reconnect
-	def fetch_tags_for_host(self, host, fromts=None, tots=None):
 		
-		#milliseconds
-		delta = 10000
-		
-		timerange=""
-		
-		if fromts and tots:
-			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
-			
-
-		result = self.conn.execute("SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange))
-		
-		currenttag = None
-		reading = None
-		readings = []
-		#activity = []
-		
-		for row in result:
-			if currenttag != row[0]:
-				if reading is not None:
-					readings.append(reading)
-				reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 	
-				currenttag = row[0]
-			else:
-				if (reading["tots"] + delta) >= row[1]:
-					reading["tots"] = row[1]
-				else:
-					readings.append(reading)
-					reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 
-		
-		if reading:
-			readings.append(reading)
-		
-		return readings
-	
-	@reconnect
-	def fetch_tags(self):
-		sql = "SELECT tag FROM TAG"
-		result = self.conn.execute(sql)
-		tags = [row[0] for row in result]
-		tags.sort()
-		return tags
-	
 	@reconnect	
 	def fetch_domain_requests_for_host(self, host,domain,fromts, tots):
 		timerange = ""
@@ -454,16 +480,16 @@ class NetDB( object ):
 		self.conn.commit()
 	
 	@reconnect
-	def insert_tag(self,tag):
+	def insert_tag(self,tag, host):
 		try:
-			self.conn.execute("INSERT INTO TAG(tag) VALUES(?)", (tag,))
+			self.conn.execute("INSERT INTO TAG(tag, host) VALUES(?, ?)", (tag,host))
 			self.conn.commit()
 			return True
 		except Exception, e:
 			return False
 	
 	@reconnect		
-	def remove_tag_for_host(self,host,tag):
+	def remove_tag_association_for_host(self,host,tag):
 		self.conn.execute("DELETE FROM TAGS WHERE host=? AND domain = ?", (host,tag))
 		self.conn.commit()
 	
@@ -662,7 +688,9 @@ class NetDB( object ):
 			UNIQUE(host, domain) ON CONFLICT REPLACE);''')		
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS TAG
-			(tag CHAR(128) PRIMARY KEY);''')
+			(tag CHAR(128),
+			 host CHAR(16),
+			 UNIQUE(tag,host) ON CONFLICT REPLACE);''')
 			
 		
 		
