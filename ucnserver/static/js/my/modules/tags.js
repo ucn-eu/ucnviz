@@ -85,7 +85,9 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		addtag = function(){
-			ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
+			if (newtag() != ""){
+				ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
+			}
 		},
 		
 		selectedhost = ko.observable(),

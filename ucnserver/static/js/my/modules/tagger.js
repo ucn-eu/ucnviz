@@ -70,7 +70,9 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		},
 		
 		addtag 	= function(){
-			ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
+			if (newtag() && newtag() != ""){
+				ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
+			}
 		},
 		
 		shouldshowtags = ko.computed(function(){
