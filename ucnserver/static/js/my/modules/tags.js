@@ -170,9 +170,9 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				m1 = moment.unix(x/1000);
 				
 				if ((tots-fromts) > 24*60*60){
-					return m1.format('MMM Do h:mm');
+					return m1.utc().format('MMM Do h:mm');
 				}
-				return m1.format('h:mm:ss a');
+				return m1.utc().format('h:mm:ss a');
 			},
 			
 			m1 = moment.unix(fromts);
@@ -196,6 +196,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 					min: start * 1000,
 					max: end * 1000,
 					noTicks:48,
+					timeMode: 'UTC',
 					showLabels : true,
 				 	tickFormatter: tickFormatter,
 				  },

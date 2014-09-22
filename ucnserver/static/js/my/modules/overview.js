@@ -39,8 +39,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		height    = 250 - margin.top - margin.bottom,
 		height2   = 140 - margin.top - margin.bottom,
 	
-		x  = d3.time.scale().range([0,width]),
-		x2 = d3.time.scale().range([0, width]),
+		x  = d3.time.scale.utc().range([0,width]),
+		x2 = d3.time.scale.utc().range([0, width]),
 		 
 		y  = d3.scale.linear().range([height,0]),
 		y2 = d3.scale.linear().range([height2,0]),
@@ -163,7 +163,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			if (fromto().length > 1){
 				m1 = moment.unix((fromto()[0].getTime())/1000);
 				m2 = moment.unix((fromto()[1].getTime())/1000);
-				return (m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));	
+				return (m1.utc().format('MMM Do YYYY h:mm:ss a') + " to " + m2.utc().format('MMM Do YYYY h:mm:ss a'));	
 			}
 		}),
 		
