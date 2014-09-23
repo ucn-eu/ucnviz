@@ -582,14 +582,27 @@ class NetDB( object ):
 	@reconnect
 	def bulk_insert_urls(self, content):
 		
+		sampled = False
+		urlindex = 6
+		hostindex = 2
+		tsindex = 0
+		
 		for line in content:
-		
+			
 			items = line.split()
+			
+			if sampled is not True:
+				if items[0][:1] == "[":
+					urlindex = 8
+					hostindex = 4
+					tsindex = 2
 		
-			if ("http" in items[6]  and "//" in items[6]):
-				parts  = items[6].split("//")[1].split("/")
+				sampled = True	
+				
+			if ("http" in items[urlindex]  and "//" in items[urlindex]):
+				parts  = items[urlindex].split("//")[1].split("/")
 				domain = parts[0]
-				res = get_tld(items[6], as_object=True, fail_silently=True)
+				res = get_tld(items[urlindex], as_object=True, fail_silently=True)
 			
 				if res is not None:	
 					tld = "%s.%s" % (res.domain, res.suffix)
@@ -599,7 +612,7 @@ class NetDB( object ):
 				if len(parts) > 0:
 					path = "".join(parts[1:])
 				
-				url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
+				url = {'ts':items[tsindex].split(".")[0], 'host':items[hostindex], 'tld':tld, 'domain':domain, 'path': path}
 				try:
 					self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
 				except Exception, e:
