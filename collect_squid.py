@@ -13,17 +13,19 @@ def insert_urls(datafile):
 	fpos = collectdb.fetch_filepos_for('squid')
 	
 	if fpos > path.getsize(datafile):
+		logger.debug("resetting fpos to 0 (%d > %d)" % ((fpos+1), path.getsize(datafile)))
 		fpos = 0
+
 		
 	if fpos < path.getsize(datafile):
 		with open(datafile) as f:
 			f.seek(fpos)
 			content = f.readlines()
+			logger.debug("adding %d new entries" % len(content))
 			datadb.bulk_insert_urls(content)
-			collectdb.update_squid(int(time.mktime(datetime.now().timetuple())), f.tell()+1)
-			logger.debug("written %d bytes of squid log to db" % (f.tell() - fpos))
-	
-	
+			collectdb.update_squid(int(time.mktime(datetime.now().timetuple())), f.tell())	
+			logger.debug("written %d bytes of squid log to db" % (f.tell() - fpos))	
+
 if __name__ == "__main__":
 	cfg = TestingConfig()
 	hdlr = logging.FileHandler(cfg.COLLECT_LOGFILE or '/var/tmp/collect.log') 

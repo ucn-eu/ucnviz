@@ -588,7 +588,6 @@ class NetDB( object ):
 		tsindex = 0
 		
 		for line in content:
-			
 			items = line.split()
 			
 			if sampled is not True:
@@ -603,7 +602,6 @@ class NetDB( object ):
 				parts  = items[urlindex].split("//")[1].split("/")
 				domain = parts[0]
 				res = get_tld(items[urlindex], as_object=True, fail_silently=True)
-			
 				if res is not None:	
 					tld = "%s.%s" % (res.domain, res.suffix)
 				else:
