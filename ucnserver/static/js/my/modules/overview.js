@@ -44,8 +44,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		margin    = {top:10, right:0, bottom:80,left:50},
 		margin2   = {top:20, right:0, bottom:53,left:50},
 		
-		width 	  = 1100 - margin.left - margin.right,
-		
+		width 	  = 1000 - margin.left - margin.right,
 		height    = 250 - margin.top - margin.bottom,
 		height2   = 140 - margin2.top - margin2.bottom,
 	
