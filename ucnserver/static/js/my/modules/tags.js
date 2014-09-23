@@ -76,7 +76,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		}),
 		
 		tagheight = ko.computed(function(){
-			return ((tags().length+1)*19)/tags().length + "px"
+			return ((tags().length+1)*20)/tags().length + "px"
 		}),
 				
 		tagadded = function(){	
@@ -170,17 +170,16 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				m1 = moment.unix(x/1000);
 				
 				if ((tots-fromts) > 24*60*60){
-					return m1.utc().format('MMM Do h:mm');
+					return m1.utc().format('DD/MM hh:mm');
 				}
-				return m1.utc().format('h:mm:ss a');
+				return m1.utc().format('hh:mm:ss a');
 			},
 			
 			m1 = moment.unix(fromts);
 			m2 = moment.unix(tots);
 			subtitle(m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));
 		
-			
-			
+		
 			Flotr._.each(readings, function(d){
 				
 				data.push({
@@ -214,7 +213,11 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				  HtmlText : false,
 			};
 			
+			
 			$(container).height( ((tags().length+1) * 20) + 70 );
+			
+			
+			//lhs info
 			$(".tagchartbar").height(((tags().length+1) * 20) + 150 );
 			Flotr.draw(container, data, options);
 		
