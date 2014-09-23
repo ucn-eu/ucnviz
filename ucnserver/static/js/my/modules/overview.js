@@ -18,8 +18,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		selectedquery = ko.observable().publishOn("query"),
 		
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
-			//check against x2.domain()
-			//zoom.select(".brush").call(brush.extent([new Date(newValue.fromts*1000), new Date(newValue.tots*1000)]));
+			
+			if (range){
+				minfrom 		= (x2.domain()[0]).getTime();
+				maxto   		= (x2.domain()[1]).getTime();
+				selectedfrom 	= range.fromts * 1000;
+				selectedto		= range.tots * 1000;
+				 
+				if (minfrom < selectedfrom && maxto > selectedto){
+					zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
+				}
+			}
 		}),
 		
 		_queryListener = ko.postbox.subscribe("queries", function(queries) {
