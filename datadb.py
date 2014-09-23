@@ -11,6 +11,11 @@ from os import listdir
 from os.path import isfile, isdir, join
 import json
 
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+h = NullHandler()
+logging.getLogger('ucn_logger').addHandler(h)
 logger = logging.getLogger( "ucn_logger" )
 
 def reconnect(fn):

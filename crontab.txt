@@ -1,0 +1,1 @@
+* * * * * cd /home/txl/ucnviz && venv/bin/python collect_squid.py
