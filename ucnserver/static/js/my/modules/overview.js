@@ -32,12 +32,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		filters   = [],
 		
-		margin    = {top:20, right:90, bottom:40,left:50},
+		margin    = {top:10, right:0, bottom:80,left:50},
+		margin2   = {top:20, right:0, bottom:53,left:50},
 		
 		width 	  = 1100 - margin.left - margin.right,
 		
 		height    = 250 - margin.top - margin.bottom,
-		height2   = 140 - margin.top - margin.bottom,
+		height2   = 140 - margin2.top - margin2.bottom,
 	
 		x  = d3.time.scale.utc().range([0,width]),
 		x2 = d3.time.scale.utc().range([0, width]),
@@ -80,10 +81,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),		
 		
 		zoom = d3.select("#zoom").append("svg")
-				.attr("width", width + margin.left + margin.right)
-				.attr("height", height2 + margin.top + margin.bottom)
+				.attr("width", width + margin2.left + margin2.right)
+				.attr("height", height2 + margin2.top + margin2.bottom)
 				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
+				.attr("transform", "translate(" + margin2.left + "," + margin2.top + ")"),
 		
 		key = d3.select("#activitykey").append("svg")
 				.attr("width", width + margin.left + margin.right)

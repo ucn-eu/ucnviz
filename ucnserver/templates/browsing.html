@@ -22,7 +22,17 @@
 				<div class="modal-body">
 					<div class="row">
 						<div class="col-md-7">
-							<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
+							
+							<div class="row">
+								<div class="col-md-12">
+									<select multiple class="form-control" style="height:150px;" data-bind="options:urlsfortagging, optionsText: rendertagselectionitem, selectedOptions:chosenurlstotag"></select>
+								</div>
+							</div>
+							<div class="row">
+								<div style="padding-top: 10px;" class="col-md-12">
+									<a href="#" data-bind="click:function(){selectall()}">SELECT ALL</a>
+								</div>
+							</div>
 						</div>
 						<div class="col-md-3">
 							<div class="row">
@@ -87,14 +97,15 @@
 		</div>
 		<div class="col-md-10">
 			<div id="overall"> 
-				<div class="row">
-					<div class="col-md-12" style="height:240px">
-						<div id="context"></div>
-					</div>
-				</div>
+				
 				<div class="row">		
 					<div class="col-md-12" style="height:140px">
 						<div id="zoom"></div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12" style="height:240px">
+						<div id="context"></div>
 					</div>
 				</div>
 			</div>
@@ -114,7 +125,7 @@
 									<div class="querytext" data-bind="text:selectedquery"></div>
 								</div>
 								<div class="col-md-3">
-									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">overlay queries</button>
+									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">overlay searches</button>
 								</div>	
 							</div>
 						</div>

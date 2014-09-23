@@ -121,6 +121,10 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);
 		},
 		
+		selectall = function(){
+			chosenurlstotag(urlsfortagging());
+		},
+		
 		updatetagdata = function(data){
 			urlsfortagging(data.urls);
 		},
@@ -157,5 +161,6 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		
 		rendertagselectionitem:rendertagselectionitem,
 		taggerlabel: taggerlabel,
+		selectall:selectall,
 	}
 });

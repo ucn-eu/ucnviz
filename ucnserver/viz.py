@@ -41,7 +41,7 @@ def overview():
  		if tots is None:
  			return jsonify({"keys":[], "hosts":[]})
  			
- 		fromts 	= tots - 4 * 24*60*60
+ 		fromts 	= tots - 7 * 24*60*60
  		
  	if bin is not None:
  		bin = int(bin)
