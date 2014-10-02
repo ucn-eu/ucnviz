@@ -11,11 +11,6 @@ from os import listdir
 from os.path import isfile, isdir, join
 import json
 
-class NullHandler(logging.Handler):
-    def emit(self, record):
-        pass
-h = NullHandler()
-logging.getLogger('ucn_logger').addHandler(h)
 logger = logging.getLogger( "ucn_logger" )
 
 def reconnect(fn):
@@ -344,20 +339,8 @@ class NetDB( object ):
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
 		
 		return urls
-		
-	@reconnect
-	def fetch_zones_for_host(self, host, fromts=None, tots=None):
-		
-		timerange = ""
-		
-# 		if fromts and tots:
-#  			timerange = "AND (enter >= %s AND exit <= %s)" % (fromts, tots)
-		
-		
-		result = self.conn.execute("SELECT name,enter,exit FROM ZONES WHERE host = ? ORDER BY enter DESC", (host,))
-		zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
-
-		return zones	
+	
+	
 	
 	#return foregrounded apps along with timerange that have been in foreground
 	
@@ -587,26 +570,15 @@ class NetDB( object ):
 	@reconnect
 	def bulk_insert_urls(self, content):
 		
-		sampled = False
-		urlindex = 6
-		hostindex = 2
-		tsindex = 0
-		
 		for line in content:
-			items = line.split()
-			
-			if sampled is not True:
-				if items[0][:1] == "[":
-					urlindex = 8
-					hostindex = 4
-					tsindex = 2
 		
-				sampled = True	
-				
-			if ("http" in items[urlindex]  and "//" in items[urlindex]):
-				parts  = items[urlindex].split("//")[1].split("/")
+			items = line.split()
+		
+			if ("http" in items[6]  and "//" in items[6]):
+				parts  = items[6].split("//")[1].split("/")
 				domain = parts[0]
-				res = get_tld(items[urlindex], as_object=True, fail_silently=True)
+				res = get_tld(items[6], as_object=True, fail_silently=True)
+			
 				if res is not None:	
 					tld = "%s.%s" % (res.domain, res.suffix)
 				else:
@@ -615,7 +587,7 @@ class NetDB( object ):
 				if len(parts) > 0:
 					path = "".join(parts[1:])
 				
-				url = {'ts':items[tsindex].split(".")[0], 'host':items[hostindex], 'tld':tld, 'domain':domain, 'path': path}
+				url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
 				try:
 					self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
 				except Exception, e:
@@ -651,7 +623,33 @@ class NetDB( object ):
 			self.conn.commit()
 		except Exception, e:
 			logger.error("error inserting zones %s" % str(zones))
+	
+	@reconnect
+	def fetch_zones_for_home(self, home,fromts=None, tots=None):
+		result = self.conn.execute("SELECT z.name,z.enter,z.exit, z.host FROM ZONES z, HOUSE h WHERE h.name= ? AND h.host = z.host ORDER BY z.host, z.enter DESC", (home,))
+		#zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
+		zones = {}
+		for row in result:
+			if row[3] not in zones:
+				zones[row[3]] = []
+			zones[row[3]].append({"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]})
 			
+		return zones	
+			
+	@reconnect
+	def fetch_zones_for_host(self, host, fromts=None, tots=None):
+		
+		timerange = ""
+		
+# 		if fromts and tots:
+#  			timerange = "AND (enter >= %s AND exit <= %s)" % (fromts, tots)
+		
+		
+		result = self.conn.execute("SELECT name,enter,exit FROM ZONES WHERE host = ? ORDER BY enter DESC", (host,))
+		zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
+
+		return zones	
+				
 	@reconnect	
 	def add_host_to_house(self, host):
 		try:

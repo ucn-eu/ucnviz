@@ -49,10 +49,10 @@ def overview():
  		#set bin to hourly
  		bin = 60 * 60
  	
- 	#might be quicker to do a single sql select on home?  each call to fetch_timebins_for_host  takes approx 0.15s!
-	
+ 	
+	zones  = current_app.config["datadb"].fetch_zones_for_home(home,fromts, tots)
 	values = current_app.config["datadb"].fetchtimebins_for_home(bin,home,fromts, tots)
-
+	values['zones'] = zones
 	return jsonify(values)
 		
 #return all devices that have associated phone data (i.e running processes data)

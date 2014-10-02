@@ -36,9 +36,14 @@
 
 path { 
 	stroke-width: 1;
+	shape-rendering: auto;
 }            
 
 .area{
+	clip-path: url(#clip);
+}
+
+.locations{
 	clip-path: url(#clip);
 }
 
@@ -50,8 +55,20 @@ path {
 	shape-rendering: crispEdges;
 }
 
+.locationline{
+	stroke: black;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+
+.locationspan{
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+
 .axis text{
-	font-family: sans-serif;
+	
+	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
 	font-size: 11px;
 }
 
@@ -59,7 +76,12 @@ path {
 	stroke: #fff;
 	fill-opacity: .125;
 	shape-rendering: crispEdges;
-}		    
+}	
+	
+.divide{
+	shape-rendering: crispEdges;    
+}
+
 .loader {
 	position: absolute;
 	top: 0;

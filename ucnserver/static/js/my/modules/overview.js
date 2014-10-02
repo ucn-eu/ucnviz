@@ -108,6 +108,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				hosts = Object.keys(data.hosts);
 				color = cf.colourfor;
 				renderactivity(data);
+				if (data.zones){
+					overlaylocation(data.zones)
+				}
 				if (hosts.length == 1){
 					updatefilters(hosts[0]);
 				}			
@@ -157,6 +160,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("d", function(d) {return area(d.values);})
 				.style("fill", function(d){return color(d.name)})	
 			
+			var avar = svg.selectAll("rect.locationspan")
+						  .attr("x", function(d){return x(d.enter*1000)})  
+						  .attr("width" , function(d){return x(d.exit*1000) - x(d.enter*1000)})
+	  		 
 			svg.select(".x.axis").call(xAxis);
 			svg.select(".y.axis").call(yAxis);
 			
@@ -193,10 +200,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("class", "topg")
 				.attr("width", width)
 				.attr("height", height)
-				.append("rect")
-				.attr("class", "cback")
-				.attr("width", width)
-				.attr("height", height);
+				//.append("rect")
+				//.attr("class", "cback")
+				///.attr("width", width)
+				//.attr("height", height);
 					
 			data = d;
 			
@@ -388,6 +395,70 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			}
 		},
 		
+		
+		overlaylocation = function(zones){
+		
+			rectpadding = 5;
+			
+			locations = Object.keys(zones).map(function(zone){
+				return {
+					name:zone,
+					values: zones[zone].map(function(d, i){
+						return {enter:d['enter'], exit:d['exit'], name:d['name']};
+					})
+				};
+			});	
+			
+			var loc = svg.append("g")
+						  .attr("class", "locations")
+						  .attr("width", width)
+						   .attr("height", height)
+							
+			var hostloc = loc.selectAll("host")
+							.data(locations)
+							.enter()
+							.append("g")
+							.attr("class", "host")
+						    
+						
+							
+			var line = hostloc.selectAll("locations")
+							  .data(function(d,i){return d.values;})
+							  .enter()
+							  
+							  
+				line.append("rect")
+							  .attr("class", "locationspan")
+							  .attr("x", function(d){return x(d.enter*1000)})
+					 		  .attr("y", function(d,i,j){return (height/Object.keys(zones).length)*j + rectpadding})
+							  .attr("width" , function(d){return x(d.exit*1000) - x(d.enter*1000)})
+	  			   			  .attr("height", function(d){return (height/Object.keys(zones).length) - 2*rectpadding})		
+							  .style("fill", function(d,i,j){return "url(#lightstripe) #ff0000";})
+							  .style("fill-opacity", function(d){return 0.1})	
+							  .style("stroke", function(d,i,j){return color(d.name)})	
+				 			  .style("stroke-opacity", 1.0)
+				
+				line.append("rect")
+							  .attr("class", "locationspan")
+							  .attr("x", function(d){return x(d.enter*1000)})
+					 		  .attr("y", function(d,i,j){return (height/Object.keys(zones).length)*j + rectpadding})
+							  .attr("width" , function(d){return x(d.exit*1000) - x(d.enter*1000)})
+	  			   			  .attr("height", function(d){return (height/Object.keys(zones).length - 2*rectpadding)})		
+							  .style("fill", function(d,i,j){return color(d.name)})	
+							  .style("fill-opacity", function(d){return 0.2})	
+					 			.style("stroke", "none")
+				
+				line.append("line")	
+							 .attr("class", "locationline")
+				 			 .attr("y1", function(d,i,j){return (height/Object.keys(zones).length)*j})
+				 			 .attr("x1", 0)
+				 			 .attr("y2", function(d,i,j){return (height/Object.keys(zones).length)*j})
+							 .attr("x2", width)
+				 			 .style("stroke-dasharray", "4,4")
+				 			 
+									
+				
+		},
 		
 		overlayqueries = function(queries){
 			
