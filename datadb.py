@@ -342,8 +342,39 @@ class NetDB( object ):
 	
 	
 	
-	#return foregrounded apps along with timerange that have been in foreground
 	
+	@reconnect
+	def fetch_apps_for_home(self, home,fromts=None, tots=None):
+		delta = 60*60*1000
+		result = self.conn.execute("SELECT p.name, p.ts, p.host FROM PROCESSES p, HOUSE h  WHERE  p.foreground = 1 AND p.host = h.host AND h.name = ? ORDER BY p.host, p.name, p.ts ASC", (home,))
+		
+		apps = {}
+		currentapp= None
+		app = None
+		host = None
+		
+		for row in result:
+			host = row[2]
+			if host not in apps:
+				apps[host] = []
+			if currentapp != row[0]:
+				if app is not None:
+					apps[host].append(app)
+				app = {"name":row[0], "start":row[1], "end":row[1]} 	
+				currentapp = row[0]
+			else:
+				if (app["end"] + delta) >= row[1]:
+					app["end"] = row[1]
+				else:
+					apps[host].append(app)
+					app = {"name":row[0], "start":row[1], "end":row[1]} 		
+			if app:
+				apps[host].append(app)
+			
+		return apps
+				
+
+	#return foregrounded apps along with timerange that have been in foreground
 	@reconnect
 	def fetch_apps_for_host(self, host, fromts=None, tots=None):
 		delta = 60*60*1000

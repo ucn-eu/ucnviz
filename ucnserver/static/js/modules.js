@@ -32,13 +32,17 @@ require.config({
 })
 
 //'async!https://maps.google.com/maps/api/js?v=3&libraries=drawing&sensor=false'
-require(['jquery','modules/colours', 'modules/queries', 'modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function($, cf, queries, overview,web, tagger, tags, ko, ajaxservice) {
+require(['jquery','modules/colours', 'modules/overlays', 'modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function($, cf, overlays, overview,web, tagger, tags, ko, ajaxservice) {
   
   	ajaxservice.ajaxGetJson('overview/activity', {home:'lodges'}, function(data){
-		
+		console.log("data is ");
+		console.log(data);
+		console.log("data apps are...");
+		console.log(data.apps);
 		cf.init(data.hosts);
 		web.init(cf);
 		overview.init(data, cf);
+		overlays.init(data.zones, data.apps);
 		ko.applyBindings(overview, $("#overall")[0]);
 		
 		ajaxservice.ajaxGetJson('web/bootstrap', {home:'lodges'}, function(data){
@@ -49,7 +53,7 @@ require(['jquery','modules/colours', 'modules/queries', 'modules/overview', 'mod
 			ko.applyBindings(web, $("#web")[0]);
 			ko.applyBindings(tagger, $("#tagger")[0]);
 			ko.applyBindings(tags, $("#tags")[0]);
-			ko.applyBindings(queries, $("#queries")[0]);
+			ko.applyBindings(overlays, $("#overlays")[0]);
 		 	$('.main').css('display','block');
 		});
 	});

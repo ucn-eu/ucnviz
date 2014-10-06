@@ -51,8 +51,10 @@ def overview():
  	
  	
 	zones  = current_app.config["datadb"].fetch_zones_for_home(home,fromts, tots)
+	apps   = current_app.config["datadb"].fetch_apps_for_home(home,fromts, tots)
 	values = current_app.config["datadb"].fetchtimebins_for_home(bin,home,fromts, tots)
 	values['zones'] = zones
+	values['apps'] = apps
 	return jsonify(values)
 		
 #return all devices that have associated phone data (i.e running processes data)

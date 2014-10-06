@@ -155,7 +155,7 @@
 					</div>
 				</div>
 			</div>
-			<div id="queries">
+			<div id="overlays">
 				<!--<div class="row">
 					<div class="col-md-12 querybox">
 						<div  data-bind="foreach:queries, visible:showqueries">
@@ -167,11 +167,13 @@
 					<div class="col-md-12" style="padding-left:0px">
 						<div class="controlbar">
 							<div class="row">
-								<div class="col-md-9">
+								<div class="col-md-6">
 									<div class="querytext" data-bind="text:selectedquery"></div>
 								</div>
-								<div class="col-md-3">
+								<div class="col-md-6">
 									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">overlay searches</button>
+									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglelocations();}">overlay locations</button>
+									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){toggleapps();}">overlay apps</button>
 								</div>	
 							</div>
 						</div>

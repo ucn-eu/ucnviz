@@ -4,13 +4,15 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 	
 		//respond to new host selected (ko.postbox)
 		
-		_queries = [],
+		_queries 	= [],
+		_locations 	= [],
+		_apps		= [],
 		
-		showqueries   = ko.observable(false),
+		showqueries   	= ko.observable(false),
+		showlocations   = ko.observable(false),
+		showapps   		= ko.observable(false),
 		
 		selectedquery = ko.observable(""),
-		
-		
 		
 		_queryListener = ko.postbox.subscribe("query", function(data){
 			
@@ -27,6 +29,7 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 				return;
 			queries([]);
 			ajaxservice.ajaxGetJson('web/queries',{host:data.host, fromts: data.fromts, tots:data.tots}, updatequeries);
+			//ajaxservice.ajaxGetJson('web/apps',{host:data.host, fromts: data.fromts, tots:data.tots}, updatequeries);
 		}),
 		
 		
@@ -43,8 +46,9 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 			}
 		},
 		
-		queries = ko.observableArray([]).publishOn("queries"),
-	
+		queries 	= ko.observableArray([]).publishOn("queries"),
+		locations 	= ko.observableArray([]).publishOn("locations"),
+		apps 		= ko.observableArray([]).publishOn("apps"),
 		
 		togglequeries = function(){
 			showqueries(!showqueries());
@@ -53,11 +57,40 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 			}else{
 				queries(_queries);
 			}
-		}
+		},
 				
+				
+		togglelocations = function(){
+			showlocations(!showlocations());
+			if (!showlocations()){
+				locations([]);
+			}else{
+				locations(_locations);
+			}
+		},
+		
+		toggleapps= function(){
+		
+			showapps(!showapps());
+			if (!showapps()){
+				apps([]);
+			}else{
+				apps(_apps);
+			}
+		},
+			
+		
+		init = function(locations, apps){
+			_locations = locations;
+			_apps	   = apps;
+		}
+		
 	return{
+		init: init,
 		queries:queries,
 		togglequeries: togglequeries,
+		togglelocations:togglelocations,
+		toggleapps:toggleapps,
 		showqueries: showqueries,
 		selectedquery:selectedquery,
 		queryisselected:queryisselected,

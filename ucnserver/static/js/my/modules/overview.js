@@ -32,14 +32,27 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		}),
 		
 		_queryListener = ko.postbox.subscribe("queries", function(queries) {
+			
 			if (queries){
 				overlayqueries(queries);
 			}
 		}),
 		
+		_locationListener = ko.postbox.subscribe("locations", function(locations) {
+			if (locations){
+				overlaylocations(locations);
+			}
+		}),
+		
+		_appListener = ko.postbox.subscribe("apps", function(apps) {
+			if (apps){
+				overlayapps(apps);
+			}
+		}),
+		
 		data 	  = [],
 		
-		filters   = [],
+		filters   = ko.observableArray([]),
 		
 		margin    = {top:10, right:0, bottom:80,left:50},
 		margin2   = {top:20, right:0, bottom:53,left:50},
@@ -108,9 +121,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				hosts = Object.keys(data.hosts);
 				color = cf.colourfor;
 				renderactivity(data);
-				if (data.zones){
-					overlaylocation(data.zones)
-				}
+				
 				if (hosts.length == 1){
 					updatefilters(hosts[0]);
 				}			
@@ -127,9 +138,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			var filtered;
 			
 			//recalculate stack values
-			if (filters.length > 0){
+			if (filters().length > 0){
 				filtered = stack(Object.keys(data.hosts).filter(function(value){
-					return filters.indexOf(value) != -1
+					return filters().indexOf(value) != -1
 				}).map(function(name){
 						return {
 							name:name,
@@ -170,8 +181,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		},
 		
 		brushend = function(){
-			if (filters.length == 1){
-				triggerupdate(filters[0]);
+			if (filters().length == 1){
+				triggerupdate(filters()[0]);
 			}
 		},
 		
@@ -273,7 +284,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.data(Object.keys(data.hosts))
 					
 			circles
-				.style("fill-opacity", function(d){return filters.indexOf(d) == -1 ? 0.2 : 1.0});
+				.style("fill-opacity", function(d){return filters().indexOf(d) == -1 ? 0.2 : 1.0});
 		}
 		
 		renderkey = function(){
@@ -290,7 +301,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("transform", function(d,i) {return "translate(" + (padding*i) + "," + 0 + ")"; })
 				.attr("r", 8)
 				.style("fill", function(d){return color(d)})	
-				.style("fill-opacity", function(d){return filters.indexOf(d) == -1 ? 0.2 : 1.0})	
+				.style("fill-opacity", function(d){return filters().indexOf(d) == -1 ? 0.2 : 1.0})	
 				.style("stroke", function(d){return color(d)})	
 				.style("stroke-opacity", 1.0)
 				.on("click", keyclicked);
@@ -361,7 +372,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 
 		updatefilters = function(host){
 		
-			var idx = filters.indexOf(host);
+			var idx = filters().indexOf(host);
 			
 			if (idx == -1){
 				filters.push(host);
@@ -369,9 +380,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				filters.splice(idx,1);
 			}
 			
-			if (filters.length == 1){
-				selectedhost(filters[0]);
-				triggerupdate(filters[0]);
+			if (filters().length == 1){
+				selectedhost(filters()[0]);
+				triggerupdate(filters()[0]);
 			}
 			
 			redraw();
@@ -390,15 +401,109 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			to   = xrange[1].getTime();
 			fromto(xrange);
 		
-			if (filters.length == 1){
+			if (filters().length == 1){
 				timerange({host:host, fromts:parseInt(from/1000), tots:parseInt(to/1000)});
 			}
 		},
 		
-		
-		overlaylocation = function(zones){
-		
+		overlayapps= function(apps){
+			console.log("overlaying apps!!");
+			console.log(apps);
+			svg.selectAll("g.apps").remove();
+			
 			rectpadding = 5;
+			
+			selected = [];
+			if (filters().length == 0){
+				selected = Object.keys(data.hosts);
+				//color.domain(Object.keys(data.hosts));
+			}else{
+				selected = filters();
+				//color.domain(filters);
+			}
+			
+			apps = Object.keys(apps).map(function(app){
+				return {
+					name:app,
+					values: apps[app].map(function(d, i){
+						return {start:d['start'], end:d['end'], name:d['name']};
+					})
+				};
+			}).filter(function(item){
+				return selected.indexOf(item.name) != -1;
+			});	
+			
+			var app = svg.append("g")
+						  .attr("class", "apps")
+						  .attr("width", width)
+						   .attr("height", height)
+							
+			var hostapp = app.selectAll("host")
+							.data(apps)
+							
+			hostapp
+					.enter()
+					.append("g")
+					.attr("class", "host")
+						    
+						
+							
+			var line = hostapp.selectAll("apps")
+							  .data(function(d,i){return d.values;})
+							  
+							  
+								  
+				line
+							  .enter()
+							  .append("rect")
+							  .attr("class", "locationspan")
+							  .attr("x", function(d){return x(d.start*1000)})
+					 		  .attr("y", function(d,i,j){return (height/selected.length)*j + rectpadding})
+							  .attr("width" , function(d){return x(d.end*1000) - x(d.start*1000)})
+	  			   			  .attr("height", function(d){return (height/selected.length) - 2*rectpadding})		
+							  .style("fill", function(d,i,j){return "url(#lightstripe) #ff0000";})
+							  .style("fill-opacity", function(d){return 0.1})	
+							  .style("stroke", function(d,i,j){return color(d.name)})	
+				 			  .style("stroke-opacity", 1.0)
+				
+				line
+							  .enter()
+							  .append("rect")
+							  .attr("class", "locationspan")
+							  .attr("x", function(d){return x(d.start*1000)})
+					 		  .attr("y", function(d,i,j){return (height/selected.length)*j + rectpadding})
+							  .attr("width" , function(d){return x(d.end*1000) - x(d.start*1000)})
+	  			   			  .attr("height", function(d){return (height/selected.length - 2*rectpadding)})		
+							  .style("fill", function(d,i,j){return color(d.name)})	
+							  .style("fill-opacity", function(d){return 0.2})	
+					 		  .style("stroke", "none")
+				
+				line 	
+							 .enter()
+							 .append("line")	
+							 .attr("class", "locationline")
+				 			 .attr("y1", function(d,i,j){return (height/selected.length)*j})
+				 			 .attr("x1", 0)
+				 			 .attr("y2", function(d,i,j){return (height/selected.length)*j})
+							 .attr("x2", width)
+				 			 .style("stroke-dasharray", "4,4")
+		},
+		
+		overlaylocations = function(zones){
+		
+			
+			svg.selectAll("g.locations").remove();
+			
+			rectpadding = 5;
+			
+			selected = [];
+			if (filters().length == 0){
+				selected = Object.keys(data.hosts);
+				//color.domain(Object.keys(data.hosts));
+			}else{
+				selected = filters();
+				//color.domain(filters);
+			}
 			
 			locations = Object.keys(zones).map(function(zone){
 				return {
@@ -407,6 +512,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 						return {enter:d['enter'], exit:d['exit'], name:d['name']};
 					})
 				};
+			}).filter(function(item){
+				return selected.indexOf(item.name) != -1;
 			});	
 			
 			var loc = svg.append("g")
@@ -416,46 +523,54 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 							
 			var hostloc = loc.selectAll("host")
 							.data(locations)
-							.enter()
-							.append("g")
-							.attr("class", "host")
+							
+			
+			hostloc
+					.enter()
+					.append("g")
+					.attr("class", "host")
 						    
 						
 							
 			var line = hostloc.selectAll("locations")
 							  .data(function(d,i){return d.values;})
+							  
+							  
+								  
+				line
 							  .enter()
-							  
-							  
-				line.append("rect")
+							  .append("rect")
 							  .attr("class", "locationspan")
 							  .attr("x", function(d){return x(d.enter*1000)})
-					 		  .attr("y", function(d,i,j){return (height/Object.keys(zones).length)*j + rectpadding})
+					 		  .attr("y", function(d,i,j){return (height/selected.length)*j + rectpadding})
 							  .attr("width" , function(d){return x(d.exit*1000) - x(d.enter*1000)})
-	  			   			  .attr("height", function(d){return (height/Object.keys(zones).length) - 2*rectpadding})		
+	  			   			  .attr("height", function(d){return (height/selected.length) - 2*rectpadding})		
 							  .style("fill", function(d,i,j){return "url(#lightstripe) #ff0000";})
 							  .style("fill-opacity", function(d){return 0.1})	
 							  .style("stroke", function(d,i,j){return color(d.name)})	
 				 			  .style("stroke-opacity", 1.0)
 				
-				line.append("rect")
+				line
+							  .enter()
+							  .append("rect")
 							  .attr("class", "locationspan")
 							  .attr("x", function(d){return x(d.enter*1000)})
-					 		  .attr("y", function(d,i,j){return (height/Object.keys(zones).length)*j + rectpadding})
+					 		  .attr("y", function(d,i,j){return (height/selected.length)*j + rectpadding})
 							  .attr("width" , function(d){return x(d.exit*1000) - x(d.enter*1000)})
-	  			   			  .attr("height", function(d){return (height/Object.keys(zones).length - 2*rectpadding)})		
+	  			   			  .attr("height", function(d){return (height/selected.length - 2*rectpadding)})		
 							  .style("fill", function(d,i,j){return color(d.name)})	
 							  .style("fill-opacity", function(d){return 0.2})	
-					 			.style("stroke", "none")
+					 		  .style("stroke", "none")
 				
-				line.append("line")	
+				line 	
+							 .enter()
+							 .append("line")	
 							 .attr("class", "locationline")
-				 			 .attr("y1", function(d,i,j){return (height/Object.keys(zones).length)*j})
+				 			 .attr("y1", function(d,i,j){return (height/selected.length)*j})
 				 			 .attr("x1", 0)
-				 			 .attr("y2", function(d,i,j){return (height/Object.keys(zones).length)*j})
+				 			 .attr("y2", function(d,i,j){return (height/selected.length)*j})
 							 .attr("x2", width)
 				 			 .style("stroke-dasharray", "4,4")
-				 			 
 									
 				
 		},
@@ -525,12 +640,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			from = xrange[0].getTime(); 
 			to   = xrange[1].getTime(); 
 			
+			//selected should be a computed observable based on filters...
 			selected = [];
-			if (filters.length == 0){
+			if (filters().length == 0){
 				selected = Object.keys(data.hosts);
 				//color.domain(Object.keys(data.hosts));
 			}else{
-				selected = filters;
+				selected = filters();
 				//color.domain(filters);
 			}
 			
