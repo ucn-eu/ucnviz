@@ -6,7 +6,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		
 		browser,
 	
-		
 		browsers,
 		
 		fromto = ko.observableArray([]).publishOn("fromto"),
@@ -16,6 +15,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		timerange	  = ko.observable().syncWith("range"),
 			
 		selectedquery = ko.observable().publishOn("query"),
+		
+		
+		_queries   = [],
+		_locations = [],
+		_apps = [],
 		
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
 			
@@ -34,19 +38,23 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 		_queryListener = ko.postbox.subscribe("queries", function(queries) {
 			
 			if (queries){
-				overlayqueries(queries);
+				_queries = queries;
+				overlayqueries();
 			}
 		}),
 		
 		_locationListener = ko.postbox.subscribe("locations", function(locations) {
 			if (locations){
-				overlaylocations(locations);
+				_locations = locations
+				overlaylocations();
 			}
 		}),
 		
 		_appListener = ko.postbox.subscribe("apps", function(apps) {
+			console.log("AM IN APPS!");
 			if (apps){
-				overlayapps(apps);
+				_apps = apps;
+				overlayapps();
 			}
 		}),
 		
@@ -129,6 +137,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			
 		},
 		
+		
+		
 		brushed = function(){
 			
 			xrange = brush.empty() ? x2.domain() : brush.extent();
@@ -171,10 +181,25 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				.attr("d", function(d) {return area(d.values);})
 				.style("fill", function(d){return color(d.name)})	
 			
-			var avar = svg.selectAll("rect.locationspan")
+			svg.selectAll("rect.locationspan")
 						  .attr("x", function(d){return x(d.enter*1000)})  
 						  .attr("width" , function(d){return x(d.exit*1000) - x(d.enter*1000)})
-	  		 
+	  		
+	  		svg.selectAll("rect.appspan")
+	  		 				.attr("x", function(d){return x(d.start*1000)})
+					 	    .attr("width" , function(d){return x(d.end*1000) - x(d.start*1000)})
+	  		
+	  		svg.selectAll("rect.applabel")
+	  		 				.attr("x", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2) - (d.width/2) - labelpadding})
+			
+			svg.selectAll("text.apptext")
+	  		 				.attr("x", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)});
+			
+			svg.selectAll("line.appline")
+	  		 				.attr("x1", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)})
+							.attr("x2", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)});
+	  		 			 
+						  
 			svg.select(".x.axis").call(xAxis);
 			svg.select(".y.axis").call(yAxis);
 			
@@ -285,7 +310,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 					
 			circles
 				.style("fill-opacity", function(d){return filters().indexOf(d) == -1 ? 0.2 : 1.0});
-		}
+		},
 		
 		renderkey = function(){
 		
@@ -386,10 +411,16 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			}
 			
 			redraw();
-		
-			updatekey();			
+			updatekey();
+			redrawoverlays();			
 		},
 		
+		
+		redrawoverlays = function(){
+			overlayqueries();
+			overlaylocations();
+			overlayapps();
+		},
 		/*
 		 * Notify other modules if the host has changed OR the selected range has changed.
 		 */
@@ -406,12 +437,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			}
 		},
 		
-		overlayapps= function(apps){
-			console.log("overlaying apps!!");
-			console.log(apps);
+		overlayapps= function(){
+			
 			svg.selectAll("g.apps").remove();
 			
-			rectpadding = 5;
+			padding =  {top:25, bottom: 5};
+			labelpadding = 5;
+			labelheight  = 15;
 			
 			selected = [];
 			if (filters().length == 0){
@@ -422,16 +454,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				//color.domain(filters);
 			}
 			
-			apps = Object.keys(apps).map(function(app){
+			apps = Object.keys(_apps).map(function(app){
 				return {
 					name:app,
-					values: apps[app].map(function(d, i){
+					values: _apps[app].map(function(d, i){
 						return {start:d['start'], end:d['end'], name:d['name']};
 					})
 				};
 			}).filter(function(item){
 				return selected.indexOf(item.name) != -1;
 			});	
+			
 			
 			var app = svg.append("g")
 						  .attr("class", "apps")
@@ -451,48 +484,81 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			var line = hostapp.selectAll("apps")
 							  .data(function(d,i){return d.values;})
 							  
-							  
-								  
-				line
-							  .enter()
-							  .append("rect")
-							  .attr("class", "locationspan")
-							  .attr("x", function(d){return x(d.start*1000)})
-					 		  .attr("y", function(d,i,j){return (height/selected.length)*j + rectpadding})
-							  .attr("width" , function(d){return x(d.end*1000) - x(d.start*1000)})
-	  			   			  .attr("height", function(d){return (height/selected.length) - 2*rectpadding})		
-							  .style("fill", function(d,i,j){return "url(#lightstripe) #ff0000";})
-							  .style("fill-opacity", function(d){return 0.1})	
-							  .style("stroke", function(d,i,j){return color(d.name)})	
-				 			  .style("stroke-opacity", 1.0)
 				
 				line
-							  .enter()
-							  .append("rect")
-							  .attr("class", "locationspan")
-							  .attr("x", function(d){return x(d.start*1000)})
-					 		  .attr("y", function(d,i,j){return (height/selected.length)*j + rectpadding})
-							  .attr("width" , function(d){return x(d.end*1000) - x(d.start*1000)})
-	  			   			  .attr("height", function(d){return (height/selected.length - 2*rectpadding)})		
-							  .style("fill", function(d,i,j){return color(d.name)})	
-							  .style("fill-opacity", function(d){return 0.2})	
-					 		  .style("stroke", "none")
-				
-				line 	
-							 .enter()
-							 .append("line")	
-							 .attr("class", "locationline")
-				 			 .attr("y1", function(d,i,j){return (height/selected.length)*j})
-				 			 .attr("x1", 0)
-				 			 .attr("y2", function(d,i,j){return (height/selected.length)*j})
-							 .attr("x2", width)
-				 			 .style("stroke-dasharray", "4,4")
-		},
-		
-		overlaylocations = function(zones){
-		
+					.enter()
+					.append("rect")
+					.attr("class", "appspan")
+					.attr("x", function(d){return x(d.start*1000)})
+					.attr("y", function(d,i,j){return (height/selected.length)*j + padding.top})
+					.attr("width" , function(d){return x(d.end*1000) - x(d.start*1000)})
+					.attr("height", function(d){return (height/selected.length - (padding.top - padding.bottom))})		
+					.style("fill", function(d,i,j){return color(d.name)})	
+					.style("fill-opacity", function(d){return 0.1})	
+					.style("stroke", function(d){return color(d.name)})
+					.style("shape-rendering", "crispEdges")		  
 			
+			
+				line	
+					.enter()
+					.append("line")
+					.attr("class", "appline")
+					.attr("x1", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)})
+					.attr("x2", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)})
+					.attr("y1", function(d,i,j){return ((height/selected.length)*j + labelheight)})
+					.attr("y2", function(d,i,j){return (height/selected.length)*j + padding.top})
+					.style("stroke", "#000")	
+				
+					
+				line	
+					.enter()
+					.append("text")
+					.attr("class", "apptext")
+					.attr("text-anchor", "middle")
+					.attr("dy", ".3em")
+					.attr("x", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)})
+					.attr("y", function(d,i,j){return ((height/selected.length)*j) + (labelheight/2)})
+					.style("fill", "#000")	
+					.text(function(d){return d.name})
+					.each(function(d){
+						d.width = this.getComputedTextLength();
+					})
+			
+				line	
+					.enter()
+					.insert("rect", ":first-child")
+					.attr("class", "applabel")
+					.attr("x", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2) - (d.width/2) - labelpadding})
+					.attr("y", function(d,i,j){return ((height/selected.length)*j) + 1})
+					.attr("width", function(d,i,j){return d.width + (2*labelpadding)})
+					.attr("height", labelheight)
+					.style("fill", "#fff")	
+					.style("stroke", "#000")
+					.style("shape-rendering", "crispEdges")		  
+				
+		}
+		
+		
+		overlaylocations = function(){
+		
+			//pull out all distinct locations for generating the key
 			svg.selectAll("g.locations").remove();
+			svg.selectAll("g.locationkey").remove();
+			
+			if (_locations.length <= 0)
+				return;
+			
+			var distinctlocations = Object.keys(_locations).map(function(item){	
+				return _locations[item].map(function(loc){
+					 return loc.name;
+				});
+			}).reduce(function(a,b){
+				return a.concat(b);
+			}).filter(function(item, index, self){
+				return self.indexOf(item) === index;
+			});
+			
+			
 			
 			rectpadding = 5;
 			
@@ -505,10 +571,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				//color.domain(filters);
 			}
 			
-			locations = Object.keys(zones).map(function(zone){
+			locations = Object.keys(_locations).map(function(zone){
 				return {
 					name:zone,
-					values: zones[zone].map(function(d, i){
+					values: _locations[zone].map(function(d, i){
 						return {enter:d['enter'], exit:d['exit'], name:d['name']};
 					})
 				};
@@ -573,9 +639,50 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 				 			 .style("stroke-dasharray", "4,4")
 									
 				
+				var key =  svg.append("g")
+							  .attr("class", "locationkey")
+				 			  .selectAll("locationkey")
+				 			  .data(distinctlocations);
+				
+				var offsets = [0];
+				var padding = 16 + 10;
+				
+				key.enter()
+					.append("text")
+					.style("fill", "#000")
+					.attr("dy", ".3em")
+	  				.attr("font-size", "35px")
+					.attr("y", function(d,i){return height + (margin.bottom/2)})
+					.text(function(d){return d})
+					.attr("x", function(d,i){
+									
+									offset = offsets.reduce(function(a,b){
+										return a+b;
+									});
+									
+									offsets.push(this.getComputedTextLength()+padding);
+									
+									
+									return offset;
+									
+								}
+					)
+					
+				key.enter()
+					.append("circle")
+					.attr("cx", function(d,i){
+							return offsets.slice(0,i+1).reduce(function(a,b){
+								return a+b;
+							}) - 10;
+						}
+					)
+					.attr("cy", function(d,i){return height + (margin.bottom/2)})
+					.attr("r", 8)
+					.style("fill", function(d){return color(d)});
+					
 		},
 		
-		overlayqueries = function(queries){
+		overlayqueries = function(){
 			
 			/* first must build the lines, then must ovelay! */
 			
@@ -583,8 +690,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 			l = svg.selectAll(".queries")
 						
 						
-			lines 	= l.selectAll("line").data(queries, function(d,i){return i});
-			circles = l.selectAll("circle").data(queries, function(d,i){return i});		
+			lines 	= l.selectAll("line").data(_queries, function(d,i){return i});
+			circles = l.selectAll("circle").data(_queries, function(d,i){return i});		
 			
 			lines
 				.transition()	
@@ -703,15 +810,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], functio
 							  .style("stroke", function(d){return color(d.name)})	
 							  .style("stroke-opacity", 1.0)
 							  .on("click", areaclicked)
-								
-							/*d3.select(this).append("circle")
-			   				  .attr("transform", function(d) {return "translate(" + (width-100) + "," + (20*idx) + ")"; })
-			   				  .attr("r", 8)
-			   				  .style("fill", function(d){return staticcolor[d.name]});
-			   				  
-			   				 d3.select(this).append("text")
-			   				  .attr("transform", function(d) {return "translate(" + (width-70) + "," + (20*idx) + ")"; })
-			   				 .text(function(d) { return d.name});*/
 						});
 						
 		

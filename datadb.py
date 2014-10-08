@@ -357,6 +357,7 @@ class NetDB( object ):
 			host = row[2]
 			if host not in apps:
 				apps[host] = []
+				
 			if currentapp != row[0]:
 				if app is not None:
 					apps[host].append(app)
@@ -368,9 +369,10 @@ class NetDB( object ):
 				else:
 					apps[host].append(app)
 					app = {"name":row[0], "start":row[1], "end":row[1]} 		
-			if app:
-				apps[host].append(app)
-			
+		if app:
+			apps[host].append(app)
+		print "Apps are"
+		print apps	
 		return apps
 				
 

@@ -8,6 +8,9 @@
 .locations{
 	clip-path: url(#clip);
 }
+.apps{
+	clip-path: url(#clip);
+}
 </style>
 
 <div id="patterns" style="height:0;">
@@ -171,9 +174,28 @@
 									<div class="querytext" data-bind="text:selectedquery"></div>
 								</div>
 								<div class="col-md-6">
-									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">overlay searches</button>
+									<form class="form-inline" role="form">
+										
+										<div class="checkbox">
+											<label>
+											<input type="checkbox" data-bind="checked: showqueries">overlay searches
+											</label>
+										</div>
+											<div class="checkbox">
+											<label>
+											<input type="checkbox" data-bind="checked: showlocations">overlay locations
+											</label>
+										</div>
+											<div class="checkbox">
+											<label>
+											<input type="checkbox" data-bind="checked: showapps">overlay apps
+											</label>
+										</div>
+									
+									</form>
+									<!--<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">overlay searches</button>
 									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglelocations();}">overlay locations</button>
-									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){toggleapps();}">overlay apps</button>
+									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){toggleapps();}">overlay apps</button>-->
 								</div>	
 							</div>
 						</div>

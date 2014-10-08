@@ -35,10 +35,7 @@ require.config({
 require(['jquery','modules/colours', 'modules/overlays', 'modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function($, cf, overlays, overview,web, tagger, tags, ko, ajaxservice) {
   
   	ajaxservice.ajaxGetJson('overview/activity', {home:'lodges'}, function(data){
-		console.log("data is ");
-		console.log(data);
-		console.log("data apps are...");
-		console.log(data.apps);
+		
 		cf.init(data.hosts);
 		web.init(cf);
 		overview.init(data, cf);

@@ -47,6 +47,13 @@ path {
 	clip-path: url(#clip);
 }
 
+
+.keylabel{
+  	    letter-spacing: 13;
+  	    font-family: "Helvetica Neue",Helvetica,"Myriad Pro","Lucida Grande",sans-serif;
+  	    font-size: 20px;
+}
+
 .axis path,
 .axis line {
 	fill: none;

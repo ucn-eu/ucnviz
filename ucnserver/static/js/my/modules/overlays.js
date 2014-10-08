@@ -14,6 +14,7 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 		
 		selectedquery = ko.observable(""),
 		
+		
 		_queryListener = ko.postbox.subscribe("query", function(data){
 			
 			if (data){
@@ -47,37 +48,40 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 		},
 		
 		queries 	= ko.observableArray([]).publishOn("queries"),
+		
 		locations 	= ko.observableArray([]).publishOn("locations"),
+		
 		apps 		= ko.observableArray([]).publishOn("apps"),
 		
-		togglequeries = function(){
-			showqueries(!showqueries());
+		
+	
+		
+		
+		
+		togglequeries = ko.computed(function(){
 			if (!showqueries()){
 				queries([]);
 			}else{
 				queries(_queries);
 			}
-		},
+		}),
 				
 				
-		togglelocations = function(){
-			showlocations(!showlocations());
+		togglelocations = ko.computed(function(){
 			if (!showlocations()){
 				locations([]);
 			}else{
 				locations(_locations);
 			}
-		},
+		}),
 		
-		toggleapps= function(){
-		
-			showapps(!showapps());
+		toggleapps = ko.computed(function(){
 			if (!showapps()){
 				apps([]);
 			}else{
 				apps(_apps);
 			}
-		},
+		}),
 			
 		
 		init = function(locations, apps){
@@ -88,10 +92,10 @@ define(['jquery','ajaxservice', 'knockout',  'knockoutpb'], function($,ajaxservi
 	return{
 		init: init,
 		queries:queries,
-		togglequeries: togglequeries,
-		togglelocations:togglelocations,
-		toggleapps:toggleapps,
+		
 		showqueries: showqueries,
+		showapps: showapps,
+		showlocations: showlocations,
 		selectedquery:selectedquery,
 		queryisselected:queryisselected,
 	}
