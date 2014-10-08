@@ -1,4 +1,4 @@
-define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb'], function($,ajaxservice,ko,d3,moment){
+define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstrap'], function($,ajaxservice,ko,d3,moment){
 	
 	var 
 	
