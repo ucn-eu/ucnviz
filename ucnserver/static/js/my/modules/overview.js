@@ -34,6 +34,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				if (minfrom < selectedfrom && maxto > selectedto){
 					zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
 					brushed();
+				}else{
+					console.log("unsetting brush");
+					d3.select(".brush").call(brush.clear());
+					//zoomout
+					
 				}
 			}
 		}),
