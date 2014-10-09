@@ -196,6 +196,7 @@ text.key{
 	background:#3b3b3b;
 	color:white;
 	padding: 5px 5px 5px 10px;
+	min-height: 40px;
 }
 
 .popover{

@@ -42,7 +42,13 @@ require(['jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'm
 		
 		cf.init(data.hosts);
 		web.init(cf);
-		calendar.init();
+		
+		if (data.keys){
+			calendar.init(new Date(data.keys.reduce(function(a,b){return Math.max(a,b)}) * 1000));
+		}else{
+			calendar.init(null);
+		}
+		
 		overview.init(data, cf);
 		overlays.init(data.zones, data.apps);
 		ko.applyBindings(overview, $("#overall")[0]);
@@ -52,7 +58,7 @@ require(['jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'm
 			tagger.init();
 			
 			ko.applyBindings(calendar, $("#calendar")[0]);
-			ko.applyBindings(web, $("#web")[0]);
+			//ko.applyBindings(web, $("#web")[0]);
 			ko.applyBindings(tagger, $("#tagger")[0]);
 			ko.applyBindings(tags, $("#tags")[0]);
 			ko.applyBindings(overlays, $("#overlays")[0]);

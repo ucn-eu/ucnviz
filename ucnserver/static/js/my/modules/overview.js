@@ -13,6 +13,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		selectedhost  = ko.observable().publishOn("host"),
 		
 		timerange	  = ko.observable().syncWith("range"),
+		
+		calendardate  = ko.observable().syncWith("calendardate"),
 			
 		selectedquery = ko.observable().publishOn("query"),
 		
@@ -28,9 +30,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				maxto   		= (x2.domain()[1]).getTime();
 				selectedfrom 	= range.fromts * 1000;
 				selectedto		= range.tots * 1000;
-				 
+				
 				if (minfrom < selectedfrom && maxto > selectedto){
 					zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
+					brushed();
 				}
 			}
 		}),
@@ -51,7 +54,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		}),
 		
 		_appListener = ko.postbox.subscribe("apps", function(apps) {
-			console.log("AM IN APPS!");
+			
 			if (apps){
 				_apps = apps;
 				overlayapps();
@@ -65,8 +68,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		margin    = {top:10, right:0, bottom:80,left:50},
 		margin2   = {top:20, right:0, bottom:53,left:50},
 		
-		width 	  = 1000 - margin.left - margin.right,
-		height    = 250 - margin.top - margin.bottom,
+		width 	  = 900 - margin.left - margin.right,
+		height    = 350 - margin.top - margin.bottom,
 		height2   = 140 - margin2.top - margin2.bottom,
 	
 		x  = d3.time.scale.utc().range([0,width]),
@@ -136,8 +139,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			}
 			
 		},
-		
-		
 		
 		brushed = function(){
 			
@@ -209,6 +210,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			if (filters().length == 1){
 				triggerupdate(filters()[0]);
 			}
+			calendardate(null);
 		},
 		
 		subtitle = ko.computed(function(){
@@ -651,7 +653,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 					.append("text")
 					.style("fill", "#000")
 					.attr("dy", ".3em")
-	  				.attr("font-size", "35px")
+	  				.attr("font-size", "14px")
 					.attr("y", function(d,i){return height + (margin.bottom/2)})
 					.text(function(d){return d})
 					.attr("x", function(d,i){
