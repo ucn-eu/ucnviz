@@ -1,13 +1,67 @@
-from flask import current_app, Blueprint, render_template, jsonify, request
+from flask import current_app, Blueprint, render_template, jsonify, request, redirect
 import json
 import time
 import logging
+import urllib
+import redis
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 logger = logging.getLogger( "ucn_logger" )
 
 viz_api = Blueprint('viz_api', __name__)
+
+rserver 	= redis.Redis('127.0.0.1')
+
+base_url 	= "https://horizab4.memset.net"
+mongohost 	= "127.0.0.1"
+mongoport 	= 27017
+mongodb 	= "ucnexp"
+userc 		= "users"
+devicec		= "devices"
+
+mongoc 		= MongoClient(mongohost, mongoport)	
+
+def loggedin(fn):
+	""" decorator to check if user is logged in and redirect if not """
+	def wrapped(*args, **kwargs):
+		if 'connect.sid' not in request.cookies:
+			return redirect("%s/ucn" % base_url)
+
+		cookie = urllib.unquote(request.cookies['connect.sid'])
+	
+		sessionid = "sess:%s" % cookie[2:].split(".")[0]
+	
+		user = json.loads(rserver.get(sessionid))
+	
+		if "passport" not in user:
+			return redirect("%s/ucn" % base_url)
+		
+		if "user" not in user['passport']:
+			return redirect("%s/ucn" % base_url)
+	
+		db = mongoc[mongodb]
+		myuser = db[userc].find_one({"_id": ObjectId(user['passport']['user'])})
+
+		if myuser is None:
+			return redirect("%s/ucn", base_url)
+	
+		return fn(*args, **kwargs)
+	
+	return wrapped
+
+def hostsforuser():
+	cookie = urllib.unquote(request.cookies['connect.sid'])
+	sessionid = "sess:%s" % cookie[2:].split(".")[0]
+	user = json.loads(rserver.get(sessionid))
+	db = mongoc[mongodb]
+	myuser = db[userc].find_one({"_id": ObjectId(user['passport']['user'])})
+	
+	hosts = [device['vpn_udp_ip'] for device in db[devicec].find({"username":myuser['username']})]
+	return hosts
 		
 @viz_api.route("/web")
+@loggedin
 def web():
 	return render_template('browsing.html')
 
@@ -20,7 +74,9 @@ def devices():
 
 @viz_api.route("/overview/activity")
 def overview():
-	home = request.args.get('home') or "lodges"
+	hosts = hostsforuser()
+	#home = request.args.get('home') or "lodges"
+	
 	bin 	= request.args.get('bin') or None
 	fromts = request.args.get('fromts') or None
  	tots   = request.args.get('tots') or None
@@ -37,7 +93,7 @@ def overview():
  		
  	#if time range is not provided, set it to the last 24 hours of recorded data
  	if tots is None or fromts is None:
- 		tots 	= current_app.config["datadb"].fetch_latest_ts_for_home(home)
+ 		tots 	= current_app.config["datadb"].fetch_latest_ts_for_hosts(hosts)
  		if tots is None:
  			return jsonify({"keys":[], "hosts":[]})
  			
@@ -50,9 +106,9 @@ def overview():
  		bin = 60 * 60
  	
  	
-	zones  = current_app.config["datadb"].fetch_zones_for_home(home,fromts, tots)
-	apps   = current_app.config["datadb"].fetch_apps_for_home(home,fromts, tots)
-	values = current_app.config["datadb"].fetchtimebins_for_home(bin,home,fromts, tots)
+	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
+	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
+	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
 	values['zones'] = zones
 	values['apps'] = apps
 	return jsonify(values)
@@ -149,12 +205,11 @@ def summary():
 
 @viz_api.route("/web/bootstrap")
 def hosts():
-	home = request.args.get('home') or "lodges"
-	#current_app.config["datadb"].connect()
-	hosts = current_app.config["datadb"].fetch_hosts_for_home(home)	
-	#tags  = current_app.config["datadb"].fetch_tags_for_host()
+	#home = request.args.get('home') or "lodges"
+	hosts = hostsforuser()
+	#hosts = current_app.config["datadb"].fetch_hosts_for_home(home)	
 	return jsonify(hosts=hosts)
-	#, tags=tags)
+
 	
 @viz_api.route("/web/domainsummary")
 def domainsummary():
@@ -228,3 +283,5 @@ def activity():
 	activity = current_app.config["datadb"].fetch_tagged_for_host(host,fromts,tots)
 	tags  = current_app.config["datadb"].fetch_tags_for_host(host)
 	return jsonify(activity=activity, tags=tags)
+
+ 

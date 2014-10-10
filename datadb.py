@@ -45,6 +45,54 @@ class NetDB( object ):
 		range = [{"from":row[0], "to":row[1]} for row in result]
 		return range
 	
+	
+	@reconnect
+	def fetchtimebins_for_hosts(self, binsize,hosts,fromts=None, tots=None):
+	
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		whereclause = ""
+	
+		if fromts is not None and tots is not None:
+			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
+		
+		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s" % (hlist,whereclause)
+		result = self.conn.execute(minmaxsql)
+		row = result.fetchone()
+		mints = row[0]
+		maxts = row[1]
+		
+		sql = "SELECT u.ts, u.domain, u.host from URLS u, HOUSE h WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
+		
+		try:
+			result = self.conn.execute(sql)
+		except Exception, e:
+			logger.error("error fetching timebins for home %s" % home)
+			return None
+			 
+		hosts = {}
+		ts = mints
+		keys = []
+		
+		while ts < maxts+binsize:
+			keys.append(self.binlabel(binsize, ts))
+			ts = ts + binsize
+		
+		for row in result:
+			
+			host = row[2]
+			ts   = row[0]
+			idx = keys.index(self.binlabel(binsize, ts))
+			
+			if host not in hosts:
+				hosts[host] = [0]*len(keys)
+				hosts[host][idx] = hosts[host][idx] + 1
+			else:
+				hosts[host][idx] = hosts[host][idx] + 1
+		
+		
+		return {"keys":keys, "hosts":hosts}
+	
+	#deprecated use fetchtimebins_for_hosts
 	@reconnect
 	def fetchtimebins_for_home(self, binsize,home,fromts=None, tots=None):
 		whereclause = ""
@@ -341,8 +389,45 @@ class NetDB( object ):
 		return urls
 	
 	
+	@reconnect
+	def fetch_apps_for_hosts(self, hosts,fromts=None, tots=None):
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		
+		delta = 60*60*1000
+		result = self.conn.execute("SELECT p.name, p.ts, p.host FROM PROCESSES p WHERE  p.foreground = 1 AND p.host IN (%s) ORDER BY p.host, p.name, p.ts ASC" % (hlist))
+		
+		apps = {}
+		currentapp= None
+		app = None
+		host = None
+		lasthost = None
+		
+		for row in result:
+			host = row[2]
+			if host not in apps:
+				apps[host] = []
+				if lasthost:
+					apps[lasthost].append(app)	
+					app = None
+						
+			lasthost = host
+			if currentapp != row[0]:
+				if app is not None:
+					apps[host].append(app)
+				app = {"name":row[0], "start":row[1], "end":row[1]} 	
+				currentapp = row[0]
+			else:
+				if (app["end"] + delta) >= row[1]:
+					app["end"] = row[1]
+				else:
+					apps[host].append(app)
+					app = {"name":row[0], "start":row[1], "end":row[1]} 		
+		if app:
+			apps[host].append(app)
+		
+		return apps
 	
-	
+	#deprecated, use fetch_apps_for_hosts
 	@reconnect
 	def fetch_apps_for_home(self, home,fromts=None, tots=None):
 		delta = 60*60*1000
@@ -486,13 +571,20 @@ class NetDB( object ):
 		hosts = [row[0] for row in result]
 		return hosts
 	
+	#deprecated, use fetch_latest_ts_for_hosts
 	@reconnect	
 	def fetch_latest_ts_for_home(self, home):
-	
 		result = self.conn.execute("SELECT max(u.ts) FROM URLS u, HOUSE h WHERE u.host = h.host AND h.name = (?)",(home,))
 		ts = result.fetchone()
 		return ts[0]
 	
+	@reconnect	
+	def fetch_latest_ts_for_hosts(self, hosts):
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		result = self.conn.execute("SELECT max(u.ts) FROM URLS u WHERE u.host IN (%s)" % (hlist))
+		ts = result.fetchone()
+		return ts[0]
+		
 	@reconnect
 	def fetch_latest_ts_for_host(self, host):
 		result = self.conn.execute("SELECT max(u.ts) FROM URLS u WHERE u.host = ?", (host,))
@@ -664,6 +756,19 @@ class NetDB( object ):
 	@reconnect
 	def fetch_zones_for_home(self, home,fromts=None, tots=None):
 		result = self.conn.execute("SELECT z.name,z.enter,z.exit, z.host FROM ZONES z, HOUSE h WHERE h.name= ? AND h.host = z.host ORDER BY z.host, z.enter DESC", (home,))
+		#zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
+		zones = {}
+		for row in result:
+			if row[3] not in zones:
+				zones[row[3]] = []
+			zones[row[3]].append({"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]})
+			
+		return zones	
+	
+	@reconnect
+	def fetch_zones_for_hosts(self, hosts,fromts=None, tots=None):
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		result = self.conn.execute("SELECT z.name,z.enter,z.exit, z.host FROM ZONES z WHERE z.host IN (%s) ORDER BY z.host, z.enter DESC" % (hlist))
 		#zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
 		zones = {}
 		for row in result:
