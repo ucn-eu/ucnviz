@@ -11,40 +11,31 @@ logger = logging.getLogger( "ucn_logger" )
 
 viz_api = Blueprint('viz_api', __name__)
 
-rserver 	= redis.Redis('127.0.0.1')
-
-base_url 	= "https://horizab4.memset.net"
-mongohost 	= "127.0.0.1"
-mongoport 	= 27017
-mongodb 	= "ucnexp"
-userc 		= "users"
-devicec		= "devices"
-
-mongoc 		= MongoClient(mongohost, mongoport)	
 
 def loggedin(fn):
 	""" decorator to check if user is logged in and redirect if not """
 	def wrapped(*args, **kwargs):
 		if 'connect.sid' not in request.cookies:
-			return redirect("%s/ucn" % base_url)
+			return redirect("%s/ucn" % current_app.config["BASEURL"])
 
 		cookie = urllib.unquote(request.cookies['connect.sid'])
 	
 		sessionid = "sess:%s" % cookie[2:].split(".")[0]
 	
-		user = json.loads(rserver.get(sessionid))
+		user = json.loads(current_app.config["redis"].get(sessionid))
 	
 		if "passport" not in user:
-			return redirect("%s/ucn" % base_url)
+			return redirect("%s/ucn" %  current_app.config["BASEURL"])
 		
 		if "user" not in user['passport']:
-			return redirect("%s/ucn" % base_url)
+			return redirect("%s/ucn" %  current_app.config["BASEURL"])
 	
-		db = mongoc[mongodb]
-		myuser = db[userc].find_one({"_id": ObjectId(user['passport']['user'])})
+		db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
+
+		myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
 
 		if myuser is None:
-			return redirect("%s/ucn", base_url)
+			return redirect("%s/ucn" %  current_app.config["BASEURL"])
 	
 		return fn(*args, **kwargs)
 	
@@ -53,11 +44,11 @@ def loggedin(fn):
 def hostsforuser():
 	cookie = urllib.unquote(request.cookies['connect.sid'])
 	sessionid = "sess:%s" % cookie[2:].split(".")[0]
-	user = json.loads(rserver.get(sessionid))
-	db = mongoc[mongodb]
-	myuser = db[userc].find_one({"_id": ObjectId(user['passport']['user'])})
+	user = json.loads(current_app.config["redis"].get(sessionid))
+	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
+	myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
 	
-	hosts = [device['vpn_udp_ip'] for device in db[devicec].find({"username":myuser['username']})]
+	hosts = [device['vpn_udp_ip'] for device in db[current_app.config["DEVICECOLLECTION"]].find({"username":myuser['username']})]
 	return hosts
 		
 @viz_api.route("/web")

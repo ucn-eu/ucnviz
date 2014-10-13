@@ -1,14 +1,16 @@
 from flask import Flask, render_template, jsonify, request
-
+from pymongo import MongoClient
 from datadb import NetDB
 from collectdb import CollectDB
 
 import config
 import logging
+import redis
 
 from viz import viz_api
 from moves import moves_api
 from ios import ios_api
+from admin import admin_api
 
 app = Flask(__name__)
 app.config.from_object(config.TestingConfig)
@@ -25,6 +27,7 @@ logger.setLevel(logging.DEBUG)
 app.register_blueprint(viz_api)
 app.register_blueprint(moves_api)
 app.register_blueprint(ios_api)
+app.register_blueprint(admin_api)
 
 blocked = []
 background = []
@@ -42,7 +45,11 @@ collectdb.createTables()
 datadb = NetDB(name=app.config["DATADB"])
 datadb.createTables()	
 
-app.config["datadb"]     = datadb 
-app.config["collectdb"]  = collectdb 
-app.config["blocked"]    = blocked	
-app.config["background"] = background
+	
+app.config["datadb"]     	= datadb 
+app.config["collectdb"]  	= collectdb 
+app.config["blocked"]    	= blocked	
+app.config["background"] 	= background
+app.config["mongoclient"]	= MongoClient(app.config["MONGOHOST"], int(app.config["MONGOPORT"]))	
+app.config["base_url"]		= app.config["BASEURL"]
+app.config["redis"]			= redis.Redis('127.0.0.1')

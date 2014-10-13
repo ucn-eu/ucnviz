@@ -301,6 +301,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				  .attr("class", "y axis")
 				  .call(yAxis);
 			  
+			
+			 svg.append("text")
+				  .attr("class", "y label")
+				  .attr("transform", "rotate(-90)")
+				  .attr("text-anchor", "middle")
+				  .attr("y", 0-margin.left)
+				  .attr("x", 0 - (height/2))
+				  .attr("dy", ".75em")
+				  
+				  .text("total web requests")
+				  	
 			renderzoomer(browsers);	
 			renderkey();
 			

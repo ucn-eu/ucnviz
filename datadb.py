@@ -61,7 +61,7 @@ class NetDB( object ):
 		mints = row[0]
 		maxts = row[1]
 		
-		sql = "SELECT u.ts, u.domain, u.host from URLS u, HOUSE h WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
+		sql = "SELECT u.ts, u.domain, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
 		
 		try:
 			result = self.conn.execute(sql)
@@ -284,8 +284,8 @@ class NetDB( object ):
 			 		lastquery = term 
 			 		lastts = url['ts']
 				except Exception, e:
-					print "couldn't encode %s" % term
-		
+					logger.error("couldn't encode %s" % term)
+	
 		if lastquery and not appended:
 			queries.append({'query':lastquery, 'ts':lastts})
 			
