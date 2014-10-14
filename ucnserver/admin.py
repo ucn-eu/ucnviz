@@ -1,4 +1,4 @@
-from flask import current_app, Blueprint, render_template, request, redirect
+from flask import current_app, Blueprint, render_template, request, redirect,jsonify
 import logging
 import urllib
 import json
@@ -6,12 +6,13 @@ import redis
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from bson.code import Code
+from functools import wraps
 
 admin_api = Blueprint('admin_api', __name__)
 logger = logging.getLogger( "ucn_logger" )
 
 def adminloggedin(fn):
-	""" decorator to check if user is logged in and redirect if not """
+	@wraps(fn)
 	def wrapped(*args, **kwargs):
 		if 'connect.sid' not in request.cookies:
 			return redirect("%s/ucn" % current_app.config["BASEURL"])
@@ -63,27 +64,65 @@ def admin():
 				devices.append(device['vpn_udp_ip'])
 		familylist.append({'name':family, 'devices':devices, 'users':users})	
 			
-	# mapper = Code("""
-# 					function(){
-# 						emit(this.familyname, this.username)	
-# 					}
-# 					""")
-# 	
-# 	reducer = Code("""
-# 					function(key, values){
-# 						hlist = "";
-# 						for (var i = 0; i < values.length; i++){
-# 							hlist = hlist + " " + values[i]
-# 						}
-# 						return hlist
-# 					}
-# 					""")
-# 	
-# 	result = db[current_app.config["USERCOLLECTION"]].map_reduce(mapper, reducer, "myresults")
-# 	
-# 	for doc in result.find():
-# 		print doc
-		
 	return render_template('admin.html', families=familylist)
 	
+
+@admin_api.route("/admin/web", methods=['GET'])
+@adminloggedin
+def adminoverview():	
+	family = request.args.get('family') or None
+	return render_template('browsing.html', family=family)
 	
+@admin_api.route("/admin/overview/activity", methods=['GET'])
+@adminloggedin
+def overview():
+	family  = request.args.get('family') or None
+	bin 	= request.args.get('bin') or None
+	fromts  = request.args.get('fromts') or None
+ 	tots    = request.args.get('tots') or None
+ 	
+ 	hosts = hostsforfamily(family)
+ 	
+ 	activitybins = []
+ 	
+ 	if fromts is not None:
+ 		fromts = int(fromts)
+ 		
+ 	if tots is not None:
+ 		tots = int(tots)
+ 		
+ 	#if time range is not provided, set it to the last 24 hours of recorded data
+ 	if tots is None or fromts is None:
+ 		tots 	= current_app.config["datadb"].fetch_latest_ts_for_hosts(hosts)
+ 		if tots is None:
+ 			return jsonify({"keys":[], "hosts":[]})
+ 			
+ 		fromts 	= tots - 7 * 24*60*60
+ 		
+ 	if bin is not None:
+ 		bin = int(bin)
+ 	else:
+ 		#set bin to hourly
+ 		bin = 60 * 60
+ 	
+ 	
+ 	
+	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
+	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
+	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
+	values['zones'] = zones
+	values['apps'] = apps
+	return jsonify(values)
+	
+def hostsforfamily(family):
+	print "looking up family %s" % family
+	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
+	devices = []
+	usernames = db[current_app.config["USERCOLLECTION"]].find({"familyname":family})
+	print "user names are"
+	for user in usernames:
+		print user['username']
+		dresult = db[current_app.config["DEVICECOLLECTION"]].find({"username":user['username']})
+		for device in dresult:
+			devices.append(device['vpn_udp_ip'])
+	return devices

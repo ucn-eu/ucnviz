@@ -13,7 +13,7 @@
 				</thead>
 				{% for family in families %}
 				<tr>
-					<td>{{family.name}}</td>
+					<td><a href="admin/web?family={{family.name}}">{{family.name}}</a></td>
 					<td> 	
 						{% for user in family.users %}
 							{{user}}
@@ -28,6 +28,5 @@
 				{% endfor %}
 			</table>
 		</div>
-	
 	</div>
 {% endblock %}

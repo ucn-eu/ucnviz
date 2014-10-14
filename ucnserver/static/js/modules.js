@@ -36,8 +36,11 @@ require.config({
 })
 
 //'async!https://maps.google.com/maps/api/js?v=3&libraries=drawing&sensor=false'
-require(['jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function($, calendar,cf,overlays, overview,web, tagger, tags, ko, ajaxservice) {
-  
+require(['modules/bootstrap','jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function(bootstrap, $, calendar,cf,overlays, overview,web, tagger, tags, ko, ajaxservice) {
+  	//console.log(requirejs.s.contexts._.config);
+  	
+  	bootstrap.init();
+  	
   	ajaxservice.ajaxGetJson('overview/activity', {home:'lodges'}, function(data){
 		
 		cf.init(data.hosts);

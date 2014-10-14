@@ -362,5 +362,12 @@
 	</div>
 </script>
 				
+<script>
+var require = {
+    config: {
+        'modules/bootstrap': {family:'{{family}}'}
+    }
+};
+</script>
 <script data-main="{{url_for('static', filename='js/modules.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
 {% endblock %}

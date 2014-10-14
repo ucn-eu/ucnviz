@@ -6,6 +6,7 @@ import urllib
 import redis
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from functools import wraps
 
 logger = logging.getLogger( "ucn_logger" )
 
@@ -13,7 +14,7 @@ viz_api = Blueprint('viz_api', __name__)
 
 
 def loggedin(fn):
-	""" decorator to check if user is logged in and redirect if not """
+	@wraps(fn)
 	def wrapped(*args, **kwargs):
 		if 'connect.sid' not in request.cookies:
 			return redirect("%s/ucn" % current_app.config["BASEURL"])
@@ -66,7 +67,7 @@ def devices():
 @viz_api.route("/overview/activity")
 def overview():
 	hosts = hostsforuser()
-	#home = request.args.get('home') or "lodges"
+	#family = request.args.get('family') or None
 	
 	bin 	= request.args.get('bin') or None
 	fromts = request.args.get('fromts') or None
