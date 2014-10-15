@@ -1,4 +1,4 @@
-define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/web', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function(module, $, calendar,cf,overlays, overview,web, tagger, tags, ko, ajaxservice) {
+define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function(module, $, calendar,cf,overlays, overview, tagger, tags, ko, ajaxservice) {
    
     var 
     	init = function(){
@@ -7,8 +7,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
     		ajaxservice.ajaxGetJson('overview/activity', {family:family}, function(data){
 		
 				cf.init(data.hosts);
-				web.init(cf);
-		
+				
 				if (data.keys){
 					calendar.init(new Date(data.keys.reduce(function(a,b){return Math.max(a,b)}) * 1000));
 				}else{

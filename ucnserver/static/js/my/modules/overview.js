@@ -35,10 +35,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 					zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
 					brushed();
 				}else{
-					console.log("unsetting brush");
+					//zoom out!
 					d3.select(".brush").call(brush.clear());
-					//zoomout
-					
 				}
 			}
 		}),
@@ -426,6 +424,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			if (filters().length == 1){
 				selectedhost(filters()[0]);
 				triggerupdate(filters()[0]);
+			}else{
+				selectedhost(null);
 			}
 			
 			redraw();

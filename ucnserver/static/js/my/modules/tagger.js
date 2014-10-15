@@ -14,6 +14,12 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			return "tag activity <small>" + timetext() + "<small>";
 		}),
 		
+		_hostListener = ko.postbox.subscribe("host", function(data){
+			if (!data){
+				urlsfortagging([]);
+			}
+		}),
+		
 		_tagListener = ko.postbox.subscribe("tags", function(data) {
 			
 			if (data){
@@ -30,7 +36,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		}),
 		
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
-				
+				console.log("tagger - seen range change!!")
 				if (!data)
 					return;
 				
