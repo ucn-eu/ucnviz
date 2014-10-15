@@ -127,7 +127,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				.attr("width", width + margin.left + margin.right)
 				.attr("height",50)
 				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+				.attr("transform", "translate(" + margin.left + "," + (margin.top + 10) + ")")
 				.attr("class", "activitykey"),
 		
 				

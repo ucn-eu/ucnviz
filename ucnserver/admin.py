@@ -3,6 +3,7 @@ import logging
 import urllib
 import json
 import redis
+import viz
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from bson.code import Code
@@ -104,24 +105,44 @@ def overview():
  	else:
  		#set bin to hourly
  		bin = 60 * 60
- 	
- 	
- 	
+ 
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
 	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
 	values['zones'] = zones
 	values['apps'] = apps
 	return jsonify(values)
+
+
+@admin_api.route("/admin/web/bootstrap")
+@adminloggedin
+def hosts():
+	family = request.args.get('familiy') or None
+	hosts = hostsforfamily(family)
+	return jsonify(hosts=hosts)
+
+
+#-------- non admin dependent routes, so pass through to standard user routes ------------#
+
+#@admin_api.route("/admin/tag/urlsfortagging")
+#def urlsfortagging():
+#	return viz.urlsfortagging();
+
+#@admin_api.route("/admin/tag/activity")
+#def activity():
+#	return viz.activity();
+
+#@admin_api.route("/admin/web/queries")
+#def queries():
+#	return viz.queries();
+
+
 	
 def hostsforfamily(family):
-	print "looking up family %s" % family
 	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 	devices = []
 	usernames = db[current_app.config["USERCOLLECTION"]].find({"familyname":family})
-	print "user names are"
 	for user in usernames:
-		print user['username']
 		dresult = db[current_app.config["DEVICECOLLECTION"]].find({"username":user['username']})
 		for device in dresult:
 			devices.append(device['vpn_udp_ip'])

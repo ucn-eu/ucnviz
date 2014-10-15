@@ -57,6 +57,18 @@ def hostsforuser():
 def web():
 	return render_template('browsing.html')
 
+@viz_api.route("/web/logout")
+def logout():
+	if 'connect.sid' not in request.cookies:
+			return redirect("%s/ucn" % current_app.config["BASEURL"])
+	
+	cookie = urllib.unquote(request.cookies['connect.sid'])
+	
+	sessionid = "sess:%s" % cookie[2:].split(".")[0]
+	current_app.config["redis"].delete(sessionid)	
+	return redirect("%s/ucn" %  current_app.config["BASEURL"])
+	
+	
 @viz_api.route("/devices")
 def devices():
 	return render_template('devices.html')
@@ -67,13 +79,9 @@ def devices():
 @viz_api.route("/overview/activity")
 def overview():
 	hosts = hostsforuser()
-	#family = request.args.get('family') or None
-	
 	bin 	= request.args.get('bin') or None
 	fromts = request.args.get('fromts') or None
  	tots   = request.args.get('tots') or None
- 	#current_app.config["datadb"].connect()
- 	#hosts = current_app.config["datadb"].fetch_hosts_for_home(home)	
  	
  	activitybins = []
  	
@@ -107,12 +115,13 @@ def overview():
 		
 #return all devices that have associated phone data (i.e running processes data)
 @viz_api.route("/devices/hosts")
+@viz_api.route("/admin/devices/hosts")
 def devicehosts():
-	#current_app.config["datadb"].connect()
 	hosts = current_app.config["datadb"].fetch_device_hosts()
 	return jsonify(hosts=hosts)
 
 @viz_api.route("/devices/processes")
+@viz_api.route("/admin/devices/processes")
 def processes():
 	host = request.args.get('host')
 	filter = request.args.get('filtered')
@@ -130,18 +139,18 @@ def processes():
 	return jsonify(processes=processes, min=minmax[0], max=minmax[1])
 
 @viz_api.route("/devices/process")
+@viz_api.route("/admin/devices/process")
 def process():
 	processname = request.args.get('process')
 	host = request.args.get('host')
-	#current_app.config["datadb"].connect()
 	details = current_app.config["datadb"].fetch_details_for_process(host, processname)
 	max = current_app.config["datadb"].fetch_device_max_process_ts(host)
 	return jsonify(details=details, max=max)
 
 @viz_api.route("/devices/netdata")
+@viz_api.route("/admin/devices/netdata")
 def netdata():
 	host 	= request.args.get('host')
-	#current_app.config["datadb"].connect()
 	netdata =  current_app.config["datadb"].fetch_netdata_for_host(host)
 	return jsonify(netdata=netdata)
 	
@@ -150,11 +159,11 @@ def browsing():
  	host = request.args.get('host')
  	fromts = request.args.get('fromts')
  	tots   = request.args.get('tots')
- 	#current_app.config["datadb"].connect()
 	traffic = current_app.config["datadb"].fetch_urls_for_host(host=host, fromts=fromts, tots=tots, filters=current_app.config["blocked"])
 	return jsonify(traffic=traffic)
 	
 @viz_api.route("/web/queries")
+@viz_api.route("/admin/web/queries")
 def queries():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
@@ -163,6 +172,7 @@ def queries():
 	return jsonify(queries=queries)
 
 @viz_api.route("/web/summary")
+@viz_api.route("/admin/web/summary")
 def summary():
 	host 	= request.args.get('host')
 	bin 	= request.args.get('bin')
@@ -197,13 +207,11 @@ def summary():
 
 @viz_api.route("/web/bootstrap")
 def hosts():
-	#home = request.args.get('home') or "lodges"
 	hosts = hostsforuser()
-	#hosts = current_app.config["datadb"].fetch_hosts_for_home(home)	
 	return jsonify(hosts=hosts)
 
-	
 @viz_api.route("/web/domainsummary")
+@viz_api.route("/admin/web/domainsummary")
 def domainsummary():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
@@ -215,6 +223,7 @@ def domainsummary():
 	return jsonify(requests=requests, zones=zones)
 
 @viz_api.route("/tag/urlsfortagging")
+@viz_api.route("/admin/tag/urlsfortagging")
 def urlsfortagging():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
@@ -224,6 +233,7 @@ def urlsfortagging():
 	return jsonify(urls=urls)
 
 @viz_api.route("/tag/urlsfortag")
+@viz_api.route("/admin/tag/urlsfortag")
 def urlsfortag():
 	host 	= request.args.get('host')
 	tag		= request.args.get('tag')
@@ -232,6 +242,7 @@ def urlsfortag():
 	return jsonify(urls=urls)
 	
 @viz_api.route("/tag/tagurls")
+@viz_api.route("/admin/tag/tagurls")
 def tagurls():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
@@ -242,6 +253,7 @@ def tagurls():
 	return jsonify(success=True)
 
 @viz_api.route("/tag/add")
+@viz_api.route("/admin/tag/add")
 def addtag():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
@@ -249,6 +261,7 @@ def addtag():
 	return jsonify(success=result)
 
 @viz_api.route("/tag/removetag")
+@viz_api.route("/admin/tag/removetag")
 def removetag():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
@@ -257,6 +270,7 @@ def removetag():
 
 
 @viz_api.route("/tag/removeassociation")
+@viz_api.route("/admin/tag/removeassociation")
 def removeassociation():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
@@ -264,6 +278,7 @@ def removeassociation():
 	return jsonify(success=True)
 
 @viz_api.route("/tag/activity")
+@viz_api.route("/admin/tag/activity")
 def activity():
 	host 	= request.args.get('host') or None
 	fromts 	= request.args.get('fromts') or None

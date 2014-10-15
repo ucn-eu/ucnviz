@@ -5,6 +5,10 @@
 	 padding-top: 25px;
 }
 
+a{
+	color: #fff;
+}
+
 .querybox{
 	height: 60px;
 	overflow-y:scroll;
