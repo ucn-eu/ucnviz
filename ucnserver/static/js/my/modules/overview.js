@@ -1,5 +1,7 @@
 define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstrap'], function($,ajaxservice,ko,d3,moment){
 	
+	"use strict";
+	
 	var 
 	
 		svg,
@@ -26,10 +28,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
 			
 			if (range){
-				minfrom 		= (x2.domain()[0]).getTime();
-				maxto   		= (x2.domain()[1]).getTime();
-				selectedfrom 	= range.fromts * 1000;
-				selectedto		= range.tots * 1000;
+				var minfrom 		= (x2.domain()[0]).getTime();
+				var maxto   		= (x2.domain()[1]).getTime();
+				var selectedfrom 	= range.fromts * 1000;
+				var selectedto		= range.tots * 1000;
 				
 				if (minfrom < selectedfrom && maxto > selectedto){
 					zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
@@ -65,7 +67,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		}),
 		
 		data 	  = [],
-		
+		tsdata	  = [],
 		filters   = ko.observableArray([]),
 		
 		margin    = {top:10, right:0, bottom:80,left:50},
@@ -132,7 +134,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		init = function(data, cf){
 			
 			if (data && data.hosts && Object.keys(data.hosts).length > 0){
-				hosts = Object.keys(data.hosts);
+				var hosts = Object.keys(data.hosts);
 				color = cf.colourfor;
 				renderactivity(data);
 				
@@ -145,10 +147,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		
 		brushed = function(){
 			
-			xrange = brush.empty() ? x2.domain() : brush.extent();
-			from = xrange[0].getTime(); 
-			to   = xrange[1].getTime(); 
-			
+			var xrange = brush.empty() ? x2.domain() : brush.extent();
+			var from = xrange[0].getTime(); 
+			var to   = xrange[1].getTime(); 
 			var filtered;
 			
 			//recalculate stack values
@@ -159,7 +160,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 						return {
 							name:name,
 							values: data.hosts[name].map(function(d, i){
-								return {date:cdata[i], y:+d};
+								return {date:tsdata[i], y:+d};
 							})
 						};
 				}));	
@@ -248,22 +249,22 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 					
 			data = d;
 			
-			cdata = [];
+			tsdata = [];
 			
 			data.keys.forEach(function(d){
-				cdata.push(d*1000);//parseDate(d));
+				tsdata.push(d*1000);
 			});
 			
 			browsers = stack(Object.keys(data.hosts).map(function(name){
 				return {
 					name:name,
 					values: data.hosts[name].map(function(d, i){
-						return {date:cdata[i], y:+d};
+						return {date:tsdata[i], y:+d};
 					})
 				};
 			}));
 			
-			x.domain(d3.extent(cdata, function(d){return d}));
+			x.domain(d3.extent(tsdata, function(d){return d}));
 			fromto(x.domain());
 			
 			y.domain([0, d3.max(browsers, function(c){
@@ -274,9 +275,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
   			y2.domain(y.domain());
 			yAxis2.tickValues(y2.domain());
 			
-			mychart = svg.selectAll("g.topg");
+			//var mychart = ;
 			
-			browser = mychart.selectAll("browser")
+			browser = svg.selectAll("g.topg").selectAll("browser")
 					.data(browsers)
 					.enter().append("g")
 					.attr("class", "browser")
@@ -412,7 +413,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		},
 
 		updatefilters = function(host){
-		
+			var hosts = Object.keys(data.hosts);
 			var idx = filters().indexOf(host);
 			
 			if (idx == -1){
@@ -445,9 +446,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		 
 		triggerupdate = function(host){
 		
-			xrange = brush.empty() ? x2.domain() : brush.extent();
-			from = xrange[0].getTime(); 
-			to   = xrange[1].getTime();
+			var xrange = brush.empty() ? x2.domain() : brush.extent();
+			var from = xrange[0].getTime(); 
+			var to   = xrange[1].getTime();
 			fromto(xrange);
 		
 			if (filters().length == 1){
@@ -459,11 +460,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			
 			svg.selectAll("g.apps").remove();
 			
-			padding =  {top:25, bottom: 5};
-			labelpadding = 5;
-			labelheight  = 15;
+			var padding =  {top:25, bottom: 5};
+			var labelpadding = 5;
+			var labelheight  = 15;
+			var selected = [];
 			
-			selected = [];
 			if (filters().length == 0){
 				selected = Object.keys(data.hosts);
 				//color.domain(Object.keys(data.hosts));
@@ -472,7 +473,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				//color.domain(filters);
 			}
 			
-			apps = Object.keys(_apps).map(function(app){
+			var apps = Object.keys(_apps).map(function(app){
 				return {
 					name:app,
 					values: _apps[app].map(function(d, i){
@@ -554,7 +555,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 					.style("stroke", "#000")
 					.style("shape-rendering", "crispEdges")		  
 				
-		}
+		},
 		
 		
 		overlaylocations = function(){
@@ -563,8 +564,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			svg.selectAll("g.locations").remove();
 			svg.selectAll("g.locationkey").remove();
 			
-			if (_locations.length <= 0)
+			if (Object.keys(_locations).length <= 0)
 				return;
+			
 			
 			var distinctlocations = Object.keys(_locations).map(function(item){	
 				return _locations[item].map(function(loc){
@@ -705,11 +707,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			/* first must build the lines, then must ovelay! */
 			
 			
-			l = svg.selectAll(".queries")
-						
-						
-			lines 	= l.selectAll("line").data(_queries, function(d,i){return i});
-			circles = l.selectAll("circle").data(_queries, function(d,i){return i});		
+			var l = svg.selectAll(".queries")		
+			var lines 	= l.selectAll("line").data(_queries, function(d,i){return i});
+			var circles = l.selectAll("circle").data(_queries, function(d,i){return i});		
 			
 			lines
 				.transition()	
@@ -761,18 +761,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				
 		redraw = function(){
 			
-			xrange = brush.empty() ? x2.domain() : brush.extent();
-			from = xrange[0].getTime(); 
-			to   = xrange[1].getTime(); 
+			var xrange = brush.empty() ? x2.domain() : brush.extent();
+			var from = xrange[0].getTime(); 
+			var to   = xrange[1].getTime(); 
 			
 			//selected should be a computed observable based on filters...
-			selected = [];
+			var selected = [];
+			
 			if (filters().length == 0){
 				selected = Object.keys(data.hosts);
-				//color.domain(Object.keys(data.hosts));
 			}else{
 				selected = filters();
-				//color.domain(filters);
 			}
 			
 			//regenerate the stack values based on the hosts that are currently selected.
@@ -780,7 +779,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				return {
 					name:name,
 					values: data.hosts[name].map(function(d, i){
-						return {date:cdata[i], y:+d};
+						return {date:tsdata[i], y:+d};
 					})
 				};
 			}));

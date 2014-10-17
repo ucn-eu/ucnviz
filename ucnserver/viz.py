@@ -17,7 +17,7 @@ def loggedin(fn):
 	@wraps(fn)
 	def wrapped(*args, **kwargs):
 		if 'connect.sid' not in request.cookies:
-			return redirect("%s/ucn" % current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" % current_app.config["BASEURL"])
 
 		cookie = urllib.unquote(request.cookies['connect.sid'])
 	
@@ -26,17 +26,17 @@ def loggedin(fn):
 		user = json.loads(current_app.config["redis"].get(sessionid))
 	
 		if "passport" not in user:
-			return redirect("%s/ucn" %  current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 		
 		if "user" not in user['passport']:
-			return redirect("%s/ucn" %  current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 	
 		db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 
 		myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
 
 		if myuser is None:
-			return redirect("%s/ucn" %  current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 	
 		return fn(*args, **kwargs)
 	
@@ -66,7 +66,7 @@ def logout():
 	
 	sessionid = "sess:%s" % cookie[2:].split(".")[0]
 	current_app.config["redis"].delete(sessionid)	
-	return redirect("%s/ucn" %  current_app.config["BASEURL"])
+	return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 	
 	
 @viz_api.route("/devices")

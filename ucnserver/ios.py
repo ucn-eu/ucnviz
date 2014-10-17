@@ -3,16 +3,19 @@ from vpnresolve import VPNResolve
 import json
 import logging
 
-ios_api = Blueprint('ios_api', __name__)
-
 logger = logging.getLogger( "ucn_logger" )
 
-@ios_api.route("/log", methods=['POST'])
+ios_api = Blueprint('ios_api', __name__)
+
+
+
+@ios_api.route("/ios/log", methods=['POST'])
 def log():
 	
-	vpnres = VPNResolve(current_app.config["CIDR"], current_app.config["OPENVPN_STATUS"])
+	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
+	
 	host = vpnres.clientip(request)
-	logger.debug("saving ios data for host %s", host)
+	logger.error("saving ios data for host %s", host)
 	
 	data = request.get_json(force=False)
 	

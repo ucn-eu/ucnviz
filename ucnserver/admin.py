@@ -16,7 +16,7 @@ def adminloggedin(fn):
 	@wraps(fn)
 	def wrapped(*args, **kwargs):
 		if 'connect.sid' not in request.cookies:
-			return redirect("%s/ucn" % current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" % current_app.config["BASEURL"])
 
 		cookie = urllib.unquote(request.cookies['connect.sid'])
 	
@@ -25,10 +25,10 @@ def adminloggedin(fn):
 		user = json.loads(current_app.config["redis"].get(sessionid))
 	
 		if "passport" not in user:
-			return redirect("%s/ucn" %  current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 		
 		if "user" not in user['passport']:
-			return redirect("%s/ucn" %  current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 	
 		db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 
@@ -36,7 +36,7 @@ def adminloggedin(fn):
 		print myuser
 		
 		if myuser is None:
-			return redirect("%s/ucn" %  current_app.config["BASEURL"])
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 		if myuser['isadmin'] is False:
 			return redirect("%s/web" % current_app.config["BASEURL"])
 			

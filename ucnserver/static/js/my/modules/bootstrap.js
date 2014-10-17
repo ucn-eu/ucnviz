@@ -8,7 +8,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
 		
 				cf.init(data.hosts);
 				
-				if (data.keys){
+				if (data.keys && data.keys.length > 0){
 					calendar.init(new Date(data.keys.reduce(function(a,b){return Math.max(a,b)}) * 1000));
 				}else{
 					calendar.init(null);

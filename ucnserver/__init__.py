@@ -53,3 +53,4 @@ app.config["background"] 	= background
 app.config["mongoclient"]	= MongoClient(app.config["MONGOHOST"], int(app.config["MONGOPORT"]))	
 app.config["base_url"]		= app.config["BASEURL"]
 app.config["redis"]			= redis.Redis('127.0.0.1')
+app.config["logger"]		= logger

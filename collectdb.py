@@ -14,13 +14,19 @@ class CollectDB(object):
 		if self.connected is False:
 			self.conn = sqlite3.connect("%s" % self.name, check_same_thread = False)
 			self.connected = True
-	
+			
+			
 	def insert_token_for_host(self, host, token):
+		
 		if self.connected is not True:
 			self.connect()
-		self.conn.execute("INSERT INTO TOKENS(host, token) VALUES(?,?)", (host, token))
-		self.conn.commit()
-	
+		
+		try:
+			self.conn.execute("INSERT INTO TOKENS(host, token) VALUES(?,?)", (host, token))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error saving token!!")
+			
 	def fetch_tokens(self):
 		if self.connected is not True:
 			self.connect()
