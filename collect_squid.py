@@ -9,19 +9,21 @@ from config import TestingConfig
 logger = logging.getLogger( "collect_logger" )
 
 def insert_urls(datafile):
-	
+        logger.debug("adding data from squid logs")	
 	fpos = collectdb.fetch_filepos_for('squid')
 	
 	if fpos > path.getsize(datafile):
 		logger.debug("resetting fpos to 0 (%d > %d)" % ((fpos+1), path.getsize(datafile)))
 		fpos = 0
 
+	logger.debug("reading from file position %d, squid file size is %d" % (fpos,path.getsize(datafile)))
 		
 	if fpos < path.getsize(datafile):
 		with open(datafile) as f:
 			f.seek(fpos)
 			content = f.readlines()
 			logger.debug("adding %d new entries" % len(content))
+			logger.debug("%s" % content)
 			datadb.bulk_insert_urls(content)
 			collectdb.update_squid(int(time.mktime(datetime.now().timetuple())), f.tell())	
 			logger.debug("written %d bytes of squid log to db" % (f.tell() - fpos))	
@@ -36,5 +38,6 @@ if __name__ == "__main__":
 
 	collectdb = CollectDB(name=cfg.COLLECTDB)
 	collectdb.createTables()
+        logger.debug("using dbase %s" % cfg.DATADB)
 	datadb = NetDB(name=cfg.DATADB)
 	insert_urls(cfg.SQUIDLOG)

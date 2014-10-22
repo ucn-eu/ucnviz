@@ -695,32 +695,40 @@ class NetDB( object ):
 			self.conn.commit()
 		except Exception, e:
 			logger.error("error inserting url %s" % str(url))
+	
 			
 	@reconnect
 	def bulk_insert_urls(self, content):
+		logger.debug("in bulk insert urls")	
 		
 		for line in content:
-		
-			items = line.split()
-		
-			if ("http" in items[6]  and "//" in items[6]):
-				parts  = items[6].split("//")[1].split("/")
-				domain = parts[0]
-				res = get_tld(items[6], as_object=True, fail_silently=True)
 			
-				if res is not None:	
-					tld = "%s.%s" % (res.domain, res.suffix)
-				else:
-					tld = parts[0]
-				path = ""
-				if len(parts) > 0:
-					path = "".join(parts[1:])
+			items = line.split()
+			
+			if len(items) < 9:
+				logger.error("error parsing line")
+				logger.error(line)
+			else:	
+				if ("http" in items[8]  and "//" in items[8]):
+					parts  = items[8].split("//")[1].split("/")
 				
-				url = {'ts':items[0].split(".")[0], 'host':items[2], 'tld':tld, 'domain':domain, 'path': path}
-				try:
-					self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
-				except Exception, e:
-					logger.error("error inserting url %s" % str(url))
+					domain = parts[0]
+					res = get_tld(items[8], as_object=True, fail_silently=True)
+			
+					if res is not None:	
+						tld = "%s.%s" % (res.domain, res.suffix)
+					else:
+						tld = parts[0]
+					path = ""
+					if len(parts) > 0:
+						path = "".join(parts[1:])
+				
+					url = {'ts':items[2].split(".")[0], 'host':items[4], 'tld':tld, 'domain':domain, 'path': path}
+					try:
+						logger.debug("inserting %s %s %s" % (url['ts'], url['host'], url['tld']))
+						self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
+					except Exception, e:
+						logger.error("error inserting url %s" % str(url))
 					
 		#commit now..
 		try:	

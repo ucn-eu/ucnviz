@@ -19,7 +19,11 @@
 .container{
 	padding-left: 0px;
 }
- 
+
+.chartcontainer{
+	height:340px;
+} 
+
 .stations, .stations svg {
 	 position: absolute;
 }

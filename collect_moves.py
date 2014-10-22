@@ -50,12 +50,7 @@ def fetchlocations():
 		for segments in result:
 		
 				if segments['segments'] is not None:
-					print segments['date']
-					print "----"
 					for segment in segments['segments']:
-						
-						print segment
-						
 						lastUpdate = dateutil.parser.parse(segments['lastUpdate'])
 					
 						if latestUpdate is None:
@@ -73,7 +68,6 @@ def fetchlocations():
 							name = ""
 						 
 						zone = {'date':segments['date'], 'host':token['host'], 'locationid':place['id'], 'name':name, 'lat':place['location']['lat'], 'lng':place['location']['lon'], 'enter':enter, 'exit':exit}
-						logger.debug("inserting: %s" % str(zone))
 						zones.append(zone)
 		
 					datadb.remove_zones(token['host'], segments['date'])

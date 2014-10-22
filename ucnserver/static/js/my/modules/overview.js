@@ -70,7 +70,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		tsdata	  = [],
 		filters   = ko.observableArray([]),
 		
-		margin    = {top:10, right:0, bottom:80,left:50},
+		margin    = {top:10, right:0, bottom:40,left:50},
 		margin2   = {top:20, right:0, bottom:53,left:50},
 		
 		width 	  = 900 - margin.left - margin.right,
@@ -142,6 +142,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 					updatefilters(hosts[0]);
 				}			
 			}
+			
+			d3.select(".chartcontainer")
+					.style("height", (height+margin.top+margin.bottom) + "px");
 			
 		},
 		
@@ -559,14 +562,30 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		
 		
 		overlaylocations = function(){
-		
+			
 			//pull out all distinct locations for generating the key
 			svg.selectAll("g.locations").remove();
 			svg.selectAll("g.locationkey").remove();
 			
-			if (Object.keys(_locations).length <= 0)
-				return;
 			
+				
+			if (Object.keys(_locations).length <= 0){
+				
+				d3.select("#context").select("svg").attr("height", height+margin.top+margin.bottom);
+				
+				d3.select(".chartcontainer")
+					.transition()
+					.duration(1000)
+					.style("height", (height+margin.top+margin.bottom) + "px");
+			
+				d3.select(".leftchart")
+					.transition()
+					.duration(1000)
+					.style("height", "530px");
+						
+					
+				return;
+			}
 			
 			var distinctlocations = Object.keys(_locations).map(function(item){	
 				return _locations[item].map(function(loc){
@@ -580,9 +599,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			
 			
 			
-			rectpadding = 5;
+			var rectpadding = 5;
 			
-			selected = [];
+			var selected = [];
 			if (filters().length == 0){
 				selected = Object.keys(data.hosts);
 				//color.domain(Object.keys(data.hosts));
@@ -591,7 +610,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				//color.domain(filters);
 			}
 			
-			locations = Object.keys(_locations).map(function(zone){
+		
+			var locations = Object.keys(_locations).map(function(zone){
 				return {
 					name:zone,
 					values: _locations[zone].map(function(d, i){
@@ -600,24 +620,32 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				};
 			}).filter(function(item){
 				return selected.indexOf(item.name) != -1;
-			});	
+			});
+			
+			
+			
+		
+			//.filter(function(item){
+				
+			//	return item.enter >= fromto().x
+			//});	
 			
 			var loc = svg.append("g")
 						  .attr("class", "locations")
 						  .attr("width", width)
 						   .attr("height", height)
+			
+			
+			console.log(locations);
 							
 			var hostloc = loc.selectAll("host")
 							.data(locations)
 							
-			
 			hostloc
 					.enter()
 					.append("g")
 					.attr("class", "host")
 						    
-						
-							
 			var line = hostloc.selectAll("locations")
 							  .data(function(d,i){return d.values;})
 							  
@@ -664,42 +692,64 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				 			  .selectAll("locationkey")
 				 			  .data(distinctlocations);
 				
-				var offsets = [0];
+				var _offsets= [0];
 				var padding = 16 + 10;
+				var lineno = 0;
+				
+				var linenos = {};
+				var offsets = {};
+				
+				var axispadding = 40;
+				var lineheight = 15;
 				
 				key.enter()
 					.append("text")
 					.style("fill", "#000")
 					.attr("dy", ".3em")
-	  				.attr("font-size", "14px")
-					.attr("y", function(d,i){return height + (margin.bottom/2)})
+	  				.attr("font-size", "12px")
 					.text(function(d){return d})
 					.attr("x", function(d,i){
 									
-									offset = offsets.reduce(function(a,b){
+									var offset = _offsets.reduce(function(a,b){
 										return a+b;
 									});
 									
-									offsets.push(this.getComputedTextLength()+padding);
-									
-									
+									if ( (offset + this.getComputedTextLength()+padding) > width){
+										++lineno;
+										_offsets = []
+										offset = 0;
+									}
+									_offsets.push(this.getComputedTextLength()+padding);
+									linenos[d] = lineno;
+									offsets[d] = offset;
 									return offset;
-									
 								}
-					)
-					
+					).attr("y", function(d,i){
+						return height + axispadding + linenos[d]*lineheight;
+					})	
+				
 				key.enter()
 					.append("circle")
 					.attr("cx", function(d,i){
-							return offsets.slice(0,i+1).reduce(function(a,b){
-								return a+b;
-							}) - 10;
+							var offset = offsets[d] - 10;
+							return offset;
 						}
 					)
-					.attr("cy", function(d,i){return height + (margin.bottom/2)})
-					.attr("r", 8)
+					.attr("cy", function(d,i){return height + axispadding + linenos[d]*lineheight})
+					.attr("r", 4)
 					.style("fill", function(d){return color(d)});
+				
+				d3.select("#context").select("svg").attr("height", height+margin.top+margin.bottom+ axispadding + (lineno*lineheight));
+				
+				d3.select(".chartcontainer")
+					.transition()
+					.duration(1000)
+					.style("height", height + axispadding + (lineno*lineheight) + margin.bottom + "px");	
 					
+				d3.select(".leftchart")
+					.transition()
+					.duration(1000)
+					.style("height", (530 + (lineno*lineheight) + 30) + "px");
 		},
 		
 		overlayqueries = function(){

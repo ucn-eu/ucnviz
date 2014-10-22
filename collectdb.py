@@ -1,8 +1,7 @@
 import sqlite3
 import logging
 
-log = logging.getLogger( "console_log" )
-
+log = logging.getLogger( "collect_logger" )
 class CollectDB(object):
 	
 	def __init__( self, name):
@@ -31,7 +30,6 @@ class CollectDB(object):
 		if self.connected is not True:
 			self.connect()
 		sql = "SELECT token, host, lastUpdate FROM TOKENS"
-		print sql
 		result = self.conn.execute(sql)
 		
 		return [{"token":row[0], "host":row[1], "lastUpdate":row[2]} for row in result]
