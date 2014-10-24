@@ -461,6 +461,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		
 		overlayapps= function(){
 			
+			
 			svg.selectAll("g.apps").remove();
 			
 			var padding =  {top:25, bottom: 5};
@@ -468,6 +469,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			var labelheight  = 15;
 			var selected = [];
 			
+			if (!data || !data.hosts)
+				return;
+				
 			if (filters().length == 0){
 				selected = Object.keys(data.hosts);
 				//color.domain(Object.keys(data.hosts));
