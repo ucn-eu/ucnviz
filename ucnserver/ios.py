@@ -15,7 +15,11 @@ def log():
 	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
 	
 	host = vpnres.clientip(request)
-	logger.error("saving ios data for host %s", host)
+	
+	if host is None:
+		return jsonify(success="False")
+		
+	logger.debug("saving ios data for host %s", host)
 	
 	data = request.get_json(force=False)
 	
@@ -41,4 +45,4 @@ def log():
 			logger.error("failed to save ios network data")
 			logger.error(data['network'])
 		
-	return jsonify(success=success)
+	return jsonify(success= "True" if success else "False")

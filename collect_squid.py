@@ -23,7 +23,7 @@ def insert_urls(datafile):
 			f.seek(fpos)
 			content = f.readlines()
 			logger.debug("adding %d new entries" % len(content))
-			logger.debug("%s" % content)
+			#logger.debug("%s" % content)
 			datadb.bulk_insert_urls(content)
 			collectdb.update_squid(int(time.mktime(datetime.now().timetuple())), f.tell())	
 			logger.debug("written %d bytes of squid log to db" % (f.tell() - fpos))	

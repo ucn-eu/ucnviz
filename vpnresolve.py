@@ -22,9 +22,10 @@ class VPNResolve(object):
 		
 		if IPAddress(host) not in IPNetwork(self.cidr):
 			logger.debug("is not local, looking up in openvpn status")
-			host = self.findlocal(host) or host
-	
-		return host
+			return self.findlocal(host)
+		else:
+			return host
+		
 
 	def findlocal(self, host):
 		db = self.mc[self.db]

@@ -36,6 +36,10 @@ def root():
 	myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
 	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
 	host = vpnres.clientip(request)
+	
+	if host is None:
+		return render_template('vpn_connect.html')
+		
 	logger.debug("GET / from %s" % host)
 	u =  '%s/authorize?response_type=code' % current_app.config["OAUTH_URL"]
 	c = '&client_id=' + current_app.config["CLIENT_ID"]

@@ -42,40 +42,44 @@ def fetchlocations():
  		payload['pastDays'] = 31
 		r =  requests.get(url, params=payload)
 		logger.debug("called url %s" % r.url)
- 		result = r.json()
  		
- 		latestUpdate = None
-		zones = []
+ 		try:
+			result = r.json()
 		
-		for segments in result:
+			latestUpdate = None
+			zones = []
 		
-				if segments['segments'] is not None:
-					for segment in segments['segments']:
-						lastUpdate = dateutil.parser.parse(segments['lastUpdate'])
+			for segments in result:
+		
+					if segments['segments'] is not None:
+						for segment in segments['segments']:
+							lastUpdate = dateutil.parser.parse(segments['lastUpdate'])
 					
-						if latestUpdate is None:
-							latestUpdate = lastUpdate
-						else:
-							if time.mktime(lastUpdate.timetuple()) > time.mktime(latestUpdate.timetuple()):
+							if latestUpdate is None:
 								latestUpdate = lastUpdate
+							else:
+								if time.mktime(lastUpdate.timetuple()) > time.mktime(latestUpdate.timetuple()):
+									latestUpdate = lastUpdate
 							
-						place = segment['place']
-						enter = int(time.mktime(dateutil.parser.parse(segment['startTime']).timetuple()))
-						exit  = int(time.mktime(dateutil.parser.parse(segment['endTime']).timetuple()))
-						if 'name' in place:
-							name = place['name']
-						else:
-							name = ""
+							place = segment['place']
+							enter = int(time.mktime(dateutil.parser.parse(segment['startTime']).timetuple()))
+							exit  = int(time.mktime(dateutil.parser.parse(segment['endTime']).timetuple()))
+							if 'name' in place:
+								name = place['name']
+							else:
+								name = ""
 						 
-						zone = {'date':segments['date'], 'host':token['host'], 'locationid':place['id'], 'name':name, 'lat':place['location']['lat'], 'lng':place['location']['lon'], 'enter':enter, 'exit':exit}
-						zones.append(zone)
+							zone = {'date':segments['date'], 'host':token['host'], 'locationid':place['id'], 'name':name, 'lat':place['location']['lat'], 'lng':place['location']['lon'], 'enter':enter, 'exit':exit}
+							zones.append(zone)
 		
-					datadb.remove_zones(token['host'], segments['date'])
-					logger.debug("adding zones ")
-					logger.debug(zones)
-					datadb.insert_zones(zones)
-					zones=[]
-					
+						datadb.remove_zones(token['host'], segments['date'])
+						logger.debug("adding zones ")
+						#logger.debug(zones)
+						datadb.insert_zones(zones)
+						zones=[]
+		except:
+			logger.error("failed to get update for %s %s" % (r.url, token['token']))
+						
 		if latestUpdate is not None:
 			logger.debug("set latest update for host %s to %s" %  (token['host'],lastUpdate.strftime("%Y%m%dT%H%M%S%z")))
 			collectdb.update_ts(token['host'], lastUpdate.strftime("%Y%m%dT%H%M%S%z"))
