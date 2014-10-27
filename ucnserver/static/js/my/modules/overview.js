@@ -1,4 +1,4 @@
-define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstrap'], function($,ajaxservice,ko,d3,moment){
+define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb', 'bootstrap'], function($,ajaxservice,ko,d3,moment,d3tip){
 	
 	"use strict";
 	
@@ -148,6 +148,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			
 		},
 		
+		tip		= d3tip()
+					.attr('class', 'd3-tip')
+					.offset([-10,0])
+					.html(function(d){
+						return "<strong>" + d['name'] + "</strong>";
+					}),
+					
 		brushed = function(){
 			
 			var xrange = brush.empty() ? x2.domain() : brush.extent();
@@ -181,6 +188,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 			if (max){
 				y.domain([0, max]);
 			}
+			
+			
 			
 			x.domain(xrange);
 			fromto(x.domain());
@@ -567,6 +576,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 		
 		overlaylocations = function(){
 			
+			var xrange = brush.empty() ? x2.domain() : brush.extent();
+			var from = xrange[0].getTime()/1000; 
+			var to   = xrange[1].getTime()/1000; 
+			
 			//pull out all distinct locations for generating the key
 			svg.selectAll("g.locations").remove();
 			svg.selectAll("g.locationkey").remove();
@@ -591,7 +604,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				return;
 			}
 			
-			var distinctlocations = Object.keys(_locations).map(function(item){	
+			/*var distinctlocations = Object.keys(_locations).map(function(item){	
 				return _locations[item].map(function(loc){
 					 return loc.name;
 				});
@@ -599,9 +612,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				return a.concat(b);
 			}).filter(function(item, index, self){
 				return self.indexOf(item) === index;
-			});
+			});*/
 			
-			
+			var distinctlocations = [];
 			
 			var rectpadding = 5;
 			
@@ -614,33 +627,34 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 				//color.domain(filters);
 			}
 			
-		
+			
+			
 			var locations = Object.keys(_locations).map(function(zone){
 				return {
 					name:zone,
 					values: _locations[zone].map(function(d, i){
+						//only add key items for locations that are currently shown in chart
+						//ie fall within the from to range
+							
+						if (d['enter'] > from && d['exit'] <= to){
+							if (distinctlocations.indexOf(d['name']) == -1){
+								distinctlocations.push(d['name']);
+							
+							}
+						}
 						return {enter:d['enter'], exit:d['exit'], name:d['name']};
 					})
 				};
 			}).filter(function(item){
 				return selected.indexOf(item.name) != -1;
-			});
-			
-			
-			
+			})
 		
-			//.filter(function(item){
-				
-			//	return item.enter >= fromto().x
-			//});	
 			
 			var loc = svg.append("g")
 						  .attr("class", "locations")
 						  .attr("width", width)
 						   .attr("height", height)
 			
-			
-			console.log(locations);
 							
 			var hostloc = loc.selectAll("host")
 							.data(locations)
@@ -649,12 +663,12 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 					.enter()
 					.append("g")
 					.attr("class", "host")
-						    
+			
+			hostloc.call(tip);
+					    
 			var line = hostloc.selectAll("locations")
 							  .data(function(d,i){return d.values;})
-							  
-							  
-								  
+											  	  
 				line
 							  .enter()
 							  .append("rect")
@@ -679,6 +693,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment','knockoutpb', 'bootstr
 							  .style("fill", function(d,i,j){return color(d.name)})	
 							  .style("fill-opacity", function(d){return 0.2})	
 					 		  .style("stroke", "none")
+					 		  .on('mouseover', function(d){tip.show(d)})
+					 		  .on('mouseout', tip.hide)
 				
 				line 	
 							 .enter()

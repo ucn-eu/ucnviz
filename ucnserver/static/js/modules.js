@@ -10,6 +10,7 @@ require.config({
 	  	  "modernizr" : "../modernizr/modernizr.min",
 	  	  "bootstrap":'../../bootstrap/js/bootstrap.min',
 	  	  "d3":"../d3/d3.min",
+	  	  "d3.tip":"../d3/d3.tip",
 	  	  "async": '../require/lib/async',
 	  	  'moment': '../moment/moment.min',
 		  'underscore': '../underscore/underscore.min',
