@@ -2,6 +2,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
    
     var 
     	init = function(){
+    	 	//this is passed in through require.js (see browsing.html)
     	 	var family = module.config().family;
     		
     		ajaxservice.ajaxGetJson('overview/activity', {family:family}, function(data){

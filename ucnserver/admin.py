@@ -82,7 +82,8 @@ def overview():
 	fromts  = request.args.get('fromts') or None
  	tots    = request.args.get('tots') or None
  	
- 	hosts = hostsforfamily(family)
+  	devices  =  hostsforfamily(family)
+ 	hosts	 = devices.keys()
  	
  	activitybins = []
  	
@@ -111,6 +112,7 @@ def overview():
 	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
 	values['zones'] = zones
 	values['apps'] = apps
+	values['devices'] = devices
 	return jsonify(values)
 
 
@@ -118,7 +120,7 @@ def overview():
 @adminloggedin
 def hosts():
 	family = request.args.get('familiy') or None
-	hosts = hostsforfamily(family)
+	hosts = hostsforfamily(family).keys()
 	return jsonify(hosts=hosts)
 
 
@@ -140,10 +142,13 @@ def hosts():
 	
 def hostsforfamily(family):
 	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
-	devices = []
+	devices = {}
 	usernames = db[current_app.config["USERCOLLECTION"]].find({"familyname":family})
 	for user in usernames:
 		dresult = db[current_app.config["DEVICECOLLECTION"]].find({"username":user['username']})
 		for device in dresult:
-			devices.append(device['vpn_udp_ip'])
+			devices[device['vpn_udp_ip']] = {'name':device['login'], 'type':device['type']}
+			devices[device['vpn_tcp_ip']] = {'name':device['login'], 'type':device['type']}
+			#devices.append(device['vpn_udp_ip'])
+			
 	return devices

@@ -36,7 +36,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		}),
 		
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
-				console.log("tagger - seen range change!!")
+
 				if (!data)
 					return;
 				

@@ -24,6 +24,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		_queries   = [],
 		_locations = [],
 		_apps = [],
+		_device_lookup = {},
 		
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
 			
@@ -123,7 +124,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.append("g")
 				.attr("transform", "translate(" + margin2.left + "," + margin2.top + ")"),
 		
-		key = d3.select("#activitykey").append("svg")
+		hostkey = d3.select("#activitykey").append("svg")
 				.attr("width", width + margin.left + margin.right)
 				.attr("height",50)
 				.append("g")
@@ -135,17 +136,24 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			
 			if (data && data.hosts && Object.keys(data.hosts).length > 0){
 				var hosts = Object.keys(data.hosts);
+				_device_lookup = data.devices;
 				color = cf.colourfor;
 				renderactivity(data);
 				
 				if (hosts.length == 1){
 					updatefilters(hosts[0]);
-				}			
+				}		
+					
 			}
 			
 			d3.select(".chartcontainer")
 					.style("height", (height+margin.top+margin.bottom) + "px");
 			
+		},
+		
+		
+		deviceforhost = function(host){
+			return _device_lookup[host].name || host;
 		},
 		
 		tip		= d3tip()
@@ -188,8 +196,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			if (max){
 				y.domain([0, max]);
 			}
-			
-			
 			
 			x.domain(xrange);
 			fromto(x.domain());
@@ -254,10 +260,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.attr("class", "topg")
 				.attr("width", width)
 				.attr("height", height)
-				//.append("rect")
-				//.attr("class", "cback")
-				///.attr("width", width)
-				//.attr("height", height);
 					
 			data = d;
 			
@@ -334,7 +336,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		updatekey = function(){
 				
-			var circles = key.selectAll("circle")
+			var circles = hostkey.selectAll("circle")
 				.data(Object.keys(data.hosts))
 					
 			circles
@@ -345,7 +347,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 			var padding = 100;
 			
-			var keys = key.selectAll("g")
+			var keys = hostkey.selectAll("g")
 				.data(Object.keys(data.hosts))
 			
 			//add new	
@@ -365,7 +367,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.attr("class", "key")
 				.attr("transform", function(d,i) {return "translate(" + ((padding*i) + 10) + "," + 0 + ")"; })
 				.attr("dy", ".35em")
-				.text(function(d) { return d; })
+				.text(function(d) { return deviceforhost(d)})
 				.on("click", keyclicked);
 		},
 		

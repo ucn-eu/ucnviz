@@ -48,8 +48,13 @@ def hostsforuser():
 	user = json.loads(current_app.config["redis"].get(sessionid))
 	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 	myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
+	hosts = {}
+	for device in db[current_app.config["DEVICECOLLECTION"]].find({"username":myuser['username']}):
+		hosts[device['vpn_udp_ip']] = {'name':device['login'], 'type':device['type']}
+		hosts[device['vpn_tcp_ip']] = {'name':device['login'], 'type':device['type']}
+		
+	#hosts = [device['vpn_udp_ip'] for device in db[current_app.config["DEVICECOLLECTION"]].find({"username":myuser['username']})]
 	
-	hosts = [device['vpn_udp_ip'] for device in db[current_app.config["DEVICECOLLECTION"]].find({"username":myuser['username']})]
 	return hosts
 		
 @viz_api.route("/web")
@@ -78,10 +83,11 @@ def devices():
 
 @viz_api.route("/overview/activity")
 def overview():
-	hosts = hostsforuser()
+	hosts   = hostsforuser().keys()
+	devices = hostsforuser()
 	bin 	= request.args.get('bin') or None
-	fromts = request.args.get('fromts') or None
- 	tots   = request.args.get('tots') or None
+	fromts  = request.args.get('fromts') or None
+ 	tots    = request.args.get('tots') or None
  	
  	activitybins = []
  	
@@ -111,6 +117,7 @@ def overview():
 	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
 	values['zones'] = zones
 	values['apps'] = apps
+	values['devices'] = devices
 	return jsonify(values)
 		
 #return all devices that have associated phone data (i.e running processes data)
@@ -207,7 +214,7 @@ def summary():
 
 @viz_api.route("/web/bootstrap")
 def hosts():
-	hosts = hostsforuser()
+	hosts = hostsforuser().keys()
 	return jsonify(hosts=hosts)
 
 @viz_api.route("/web/domainsummary")
