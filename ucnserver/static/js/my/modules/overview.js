@@ -156,13 +156,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			return _device_lookup[host].name || host;
 		},
 		
-		tip		= d3tip()
+		locationtip		= d3tip()
 					.attr('class', 'd3-tip')
 					.offset([-10,0])
 					.html(function(d){
 						return "<strong>" + d['name'] + "</strong>";
 					}),
-					
+		
 		brushed = function(){
 			
 			var xrange = brush.empty() ? x2.domain() : brush.extent();
@@ -233,6 +233,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				triggerupdate(filters()[0]);
 			}
 			calendardate(null);
+			updatelocationkey();
 		},
 		
 		subtitle = ko.computed(function(){
@@ -333,6 +334,25 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		},
 		
+		updatelocationkey = function(){	
+			var xrange = brush.empty() ? x2.domain() : brush.extent();
+			var from = xrange[0].getTime()/1000; 
+			var to   = xrange[1].getTime()/1000; 
+			
+			//hostloc.call(locationtip);
+			var distinctlocations = [];
+			Object.keys(_locations).forEach(function(zone){
+				_locations[zone].forEach(function(d){
+					if ((d['enter'] > from || d['exit'] > from) && (d['exit'] <= to || d['enter'] <=to)){
+						if (distinctlocations.indexOf(d['name']) == -1){
+							distinctlocations.push(d['name']);	
+						}
+					}
+				});
+			});
+			
+			renderlocationkey(distinctlocations);
+		},
 		
 		updatekey = function(){
 				
@@ -346,11 +366,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		renderkey = function(){
 		
 			var padding = 100;
-			
+		
 			var keys = hostkey.selectAll("g")
-				.data(Object.keys(data.hosts))
-			
-			//add new	
+				.data(Object.keys(data.hosts));	
 				
 			keys.enter()
 				.append("circle")
@@ -360,16 +378,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.style("fill-opacity", function(d){return filters().indexOf(d) == -1 ? 0.2 : 1.0})	
 				.style("stroke", function(d){return color(d)})	
 				.style("stroke-opacity", 1.0)
-				.on("click", keyclicked);
-				  
+				.on("click", keyclicked)
+				
+					 		   
 			keys.enter()
 				.append("text")
 				.attr("class", "key")
 				.attr("transform", function(d,i) {return "translate(" + ((padding*i) + 10) + "," + 0 + ")"; })
 				.attr("dy", ".35em")
 				.text(function(d) { return deviceforhost(d)})
-				.on("click", keyclicked);
-		},
+				.on("click", keyclicked)
+			},
 		
 		renderzoomer = function(data){
 			
@@ -583,10 +602,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			var to   = xrange[1].getTime()/1000; 
 			
 			//pull out all distinct locations for generating the key
-			svg.selectAll("g.locations").remove();
+			svg.selectAll("g.locations").remove();			
 			svg.selectAll("g.locationkey").remove();
-			
-			
 				
 			if (Object.keys(_locations).length <= 0){
 				
@@ -638,10 +655,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 						//only add key items for locations that are currently shown in chart
 						//ie fall within the from to range
 							
-						if (d['enter'] > from && d['exit'] <= to){
+						if ((d['enter'] > from || d['exit'] > from) && (d['exit'] <= to || d['enter'] <=to)){
 							if (distinctlocations.indexOf(d['name']) == -1){
 								distinctlocations.push(d['name']);
-							
 							}
 						}
 						return {enter:d['enter'], exit:d['exit'], name:d['name']};
@@ -666,7 +682,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 					.append("g")
 					.attr("class", "host")
 			
-			hostloc.call(tip);
+			hostloc.call(locationtip);
 					    
 			var line = hostloc.selectAll("locations")
 							  .data(function(d,i){return d.values;})
@@ -695,8 +711,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 							  .style("fill", function(d,i,j){return color(d.name)})	
 							  .style("fill-opacity", function(d){return 0.2})	
 					 		  .style("stroke", "none")
-					 		  .on('mouseover', function(d){tip.show(d)})
-					 		  .on('mouseout', tip.hide)
+					 		  .on('mouseover', function(d){locationtip.show(d)})
+					 		  .on('mouseout', locationtip.hide)
 				
 				line 	
 							 .enter()
@@ -708,7 +724,15 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 							 .attr("x2", width)
 				 			 .style("stroke-dasharray", "4,4")
 									
+				renderlocationkey(distinctlocations);
 				
+		},
+		
+		
+		renderlocationkey = function(distinctlocations){
+				
+				svg.selectAll("g.locationkey").remove();
+			
 				var key =  svg.append("g")
 							  .attr("class", "locationkey")
 				 			  .selectAll("locationkey")
