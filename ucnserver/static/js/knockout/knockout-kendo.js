@@ -20,7 +20,6 @@
         factory(require('knockout'), require('jquery'), require('kendo'));
         // AMD
     } else if (typeof define === 'function' && define.amd) {
-    	console.log("am here..");
         define(['knockout', 'jquery', 'kendo'], factory);
         // Normal script tag
     } else {

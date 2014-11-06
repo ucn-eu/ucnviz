@@ -6,7 +6,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
     	 	var family = module.config().family;
     		
     		ajaxservice.ajaxGetJson('overview/activity', {family:family}, function(data){
-		
+				
 				cf.init(data.hosts);
 				
 				if (data.keys && data.keys.length > 0){
@@ -27,7 +27,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
 					ko.applyBindings(tagger, $("#tagger")[0]);
 					ko.applyBindings(tags, $("#tags")[0]);
 					ko.applyBindings(overlays, $("#overlays")[0]);
-					$('.main').css('display','block');
+					$('.hideonload').css('display','block');
 				});
 			});
     	}

@@ -337,7 +337,7 @@ class NetDB( object ):
 			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
 			
 
-		result = self.conn.execute("SELECT t.tag, u.ts FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange))
+		result = self.conn.execute("SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange))
 		
 		currenttag = None
 		reading = None
@@ -348,14 +348,14 @@ class NetDB( object ):
 			if currenttag != row[0]:
 				if reading is not None:
 					readings.append(reading)
-				reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 	
+				reading = {"tag":row[0], "fromts":row[1], "tots":row[1], "domain":row[2]} 	
 				currenttag = row[0]
 			else:
 				if (reading["tots"] + delta) >= row[1]:
 					reading["tots"] = row[1]
 				else:
 					readings.append(reading)
-					reading = {"tag":row[0], "fromts":row[1], "tots":row[1]} 
+					reading = {"tag":row[0], "fromts":row[1], "tots":row[1],"domain":row[2]} 
 		
 		if reading:
 			readings.append(reading)
@@ -372,6 +372,7 @@ class NetDB( object ):
 			
 	@reconnect	
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
+		print "in fetch urls for tagginG!"
 		whereclause = ""
 		
 		if fromts and tots:
@@ -380,12 +381,13 @@ class NetDB( object ):
 		if filters is not None:
 			whereclause = "%s %s " % (whereclause, "AND u.tld NOT IN (%s)" % ",".join("'{0}'".format(w) for w in filters))
 				
-		sql = "SELECT DISTINCT(u.domain), COUNT(u.domain) as requests, t.tag FROM URLS u LEFT JOIN TAGS t ON u.domain = t.domain AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.domain ORDER BY requests DESC" % (host, whereclause)
+		sql = "SELECT DISTINCT(u.domain), COUNT(u.domain) as requests, GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON u.domain = t.domain AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.domain ORDER BY requests DESC" % (host, whereclause)
 		
 		
 		result = self.conn.execute(sql)
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
-		
+		print "urls are"
+		print urls
 		return urls
 	
 	
@@ -606,8 +608,8 @@ class NetDB( object ):
 			return False
 	
 	@reconnect		
-	def remove_tag_association_for_host(self,host,tag):
-		self.conn.execute("DELETE FROM TAGS WHERE host=? AND domain = ?", (host,tag))
+	def remove_tag_association_for_host(self,host,domain,tag):
+		self.conn.execute("DELETE FROM TAGS WHERE host=? AND domain = ? AND tag = ?", (host,domain,tag))
 		self.conn.commit()
 	
 	@reconnect		
@@ -860,7 +862,8 @@ class NetDB( object ):
 			(host CHAR(16),
 			domain CHAR(128),
 			tag  CHAR(128),
-			UNIQUE(host, domain) ON CONFLICT REPLACE);''')		
+			fromts INTEGER,
+			tots INTEGER);''')		
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS TAG
 			(tag CHAR(128),

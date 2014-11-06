@@ -9,7 +9,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		browser,
 	
 		browsers,
-		
+			
 		fromto = ko.observableArray([]).publishOn("fromto"),
 				
 		selectedhost  = ko.observable().publishOn("host"),
@@ -142,8 +142,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				
 				if (hosts.length == 1){
 					updatefilters(hosts[0]);
-				}		
-					
+				}			
 			}
 			
 			d3.select(".chartcontainer")
@@ -483,8 +482,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			var from = xrange[0].getTime(); 
 			var to   = xrange[1].getTime();
 			fromto(xrange);
-		
-			if (filters().length == 1){
+			
+			if (filters().length == 1){		
 				timerange({host:host, fromts:parseInt(from/1000), tots:parseInt(to/1000)});
 			}
 		},

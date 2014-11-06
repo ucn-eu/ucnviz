@@ -71,6 +71,8 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 				tags.push(newtag());
 				tagcreated({"tag":newtag(), ts:(new Date()).getTime()});
 				//update our list of tags!
+				chosentag(newtag());
+				tagurls();
 				newtag("");
 			}
 		},

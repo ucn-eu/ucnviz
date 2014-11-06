@@ -280,8 +280,10 @@ def removetag():
 @viz_api.route("/admin/tag/removeassociation")
 def removeassociation():
 	host = request.args.get('host')
-	tag	 = request.args.get('tag')
-	current_app.config["datadb"].remove_tag_association_for_host(host,tag)
+	domain	 = request.args.get('domain')
+	tag	= request.args.get('tag')
+	print "host,domain,tag is %s %s %s" % (host, domain, tag)
+	current_app.config["datadb"].remove_tag_association_for_host(host,domain,tag)
 	return jsonify(success=True)
 
 @viz_api.route("/tag/activity")

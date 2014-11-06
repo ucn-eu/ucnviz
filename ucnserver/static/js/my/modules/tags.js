@@ -1,13 +1,23 @@
 define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'knockout-bootstrap'], function($,ajaxservice,ko,moment){
 	
+	"use strict";
+	
 	var
 		colourfactory,
 		
 		fromts,tots,bin,
 		
-		timerange	  = ko.observable().syncWith("range"),
+		mints = Number.MAX_VALUE, //used to record the fromts for fully zoomed out
+		
+		maxts = -1, //used to record the tots for fully zoomed out
+		
+		timerange	  = ko.observable().syncWith("range", false),
+		
 		newtag 		  = ko.observable("").syncWith("newtag", true),
 		
+		showtagdetails = ko.observable(false),
+		
+		selectedtag = ko.observable(),
 		
 		/* set up the listeners -- listen to other modules on events of interest */
 			
@@ -26,12 +36,16 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		/* listen to a change in the overview chart */
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
+			
 			if (!data)
 				return;
+		
+			
 			selectedhost(data.host);
 			fromts = data.fromts;
 			tots = data.tots;
-			
+			mints = Math.min(mints, fromts);
+			maxts = Math.max(maxts, tots);
 			bin = calculatebin(tots-fromts);	
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 			
@@ -43,6 +57,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		calculatebin = function(difference){
 		
+			var b;
 			
 			if (difference < 60 * 60){ // if range < 1 hour, minute by minute bins
 				b = 1;
@@ -74,6 +89,11 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			}
 			return reversed;
 		}),
+		
+		toggletagdetails = function(){
+			showtagdetails(true);
+			showtagdetails.notifySubscribers();
+		},
 		
 		tagheight = ko.computed(function(){
 			return ((tags().length+1)*20)/tags().length + "px"
@@ -111,7 +131,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		removeassociation = function(tag, domain){	
-			ajaxservice.ajaxGetJson('tag/removeassociation',{host: selectedhost(), tag:domain}, curry(tagupdated, tag));
+			ajaxservice.ajaxGetJson('tag/removeassociation',{host: selectedhost(), tag:tag, domain:domain}, curry(tagupdated, tag));
 		},
 		
 		removetag = function(tag){
@@ -137,21 +157,32 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 	
+		intimerange = function(ts, trange){
+			
+			var ranges = trange.filter(function(item){
+				if ((ts >=  item[0])  && (ts <= item[0] + item[2]))
+					return item;
+			});
+			
+			if (ranges.length > 0){
+				selectedtag(ranges[0][3]);
+			}
+			return ranges.length > 0;
 		
+		},
 		
 		renderactivity = function(data){
 			
-			
-			container = document.getElementById("activitygraph");
-			timeline  = { show : true, barWidth : .8 };
+			var container = document.getElementById("activitygraph");
+			var timeline  = {show:true, barWidth: .8 };
 			 
-			activity = data.activity;	
+			var activity = data.activity;	
 			tags(data.tags);		
 				
-    		start 	= Number.MAX_VALUE;
-			end 	= 0;
-    		data 	= [];
-    		readings = [];
+    		var start 	= Number.MAX_VALUE;
+			var end 	= 0;
+    		var data 	= [];
+    		var readings = [];
     
     		
     		for (i = 0; i < tags().length; i++){
@@ -162,8 +193,8 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			for(i = 0; i < activity.length; i++){
 				start = Math.min(start, activity[i].fromts);
 				end = Math.max(end, activity[i].tots);
-				timespan = Math.max(1000, (activity[i].tots - activity[i].fromts) * 1000);
-				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan ]);
+				var timespan = Math.max(1000, (activity[i].tots - activity[i].fromts) * 1000);
+				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan, activity[i].domain ]);
 			}
 				
 			var tickFormatter = function(x){
@@ -188,7 +219,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				});
 			});
 			
-			options = {
+			var options = {
 				  xaxis : {
 					mode : 'time',
 					labelsAngle : 90,
@@ -210,17 +241,60 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				  selection : {
 					mode : 'x'
 				  },
+				  mouse: {
+				  			track: true, 
+							trackall: true,
+							trackY: true,
+							relative: true,
+							fillOpacity: 1,
+							position: 'cw',
+				   		    trackFormatter: function (val) { 
+                              var y = parseInt(Math.ceil(val.y));
+                              var ts = Math.floor(val.x);
+                              
+                              var idx = val.series.data.map(function(item){
+                              	return item[0]
+                              }).indexOf(ts);
+                              
+                              return val.series.data[idx][3];
+                              
+                        
+                              //var rowno = row - Math.floor(val.y) - 2;
+                              //return Object.keys(data[label[rowno]][ts]['hst']).toString();
+                        }},
 				  HtmlText : false,
 			};
 			
 			
 			$(container).height( ((tags().length+1) * 20) + 70 );
 			
+		
 			
 			//lhs info
 			$(".tagchartbar").height(((tags().length+1) * 20) + 150 );
+			
 			Flotr.draw(container, data, options);
+			
+			
+			Flotr.EventAdapter.observe(container, 'flotr:click', function(position){
+				//do we need to pass specific url into activity data?
+				
+				var y = parseInt(Math.ceil(position.y));
+				console.log(readings);
+				console.log(tags()[y]);
+				var index = tags().indexOf(tags()[y]);
+			
+				if (intimerange(Math.floor(position.x), readings[index])){
+					toggletagdetails(true);
+				}
+				else{
+					timerange({host:selectedhost(), fromts:mints, tots:maxts});
+				}
+			});
 		
+			Flotr.EventAdapter.observe(container, 'flotr:select', function(area){
+				timerange({host:selectedhost(), fromts:parseInt(area.x1/1000), tots:parseInt(area.x2/1000)});
+			});
 		}	
 	
 	return{
@@ -234,5 +308,8 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		addtag:addtag,
 		removeassociation: removeassociation,
 		removetag: removetag,
+		toggletagdetails: toggletagdetails,
+		showtagdetails:showtagdetails,
+		selectedtag:selectedtag
 	}
 });

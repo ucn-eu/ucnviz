@@ -67,9 +67,9 @@
  	</div>
 </nav>
 
-<div id="tagger" class="main">
+<div id="tagger" class="hideonload">
 	<div data-bind="bootstrapModal:showtagger" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
+		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
@@ -105,7 +105,7 @@
 									 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
 								</div>
 								<div class="col-md-3">
-									<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">ADD TAG</a>
+									<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">TAG!</a>
 								</div>
 							</div>
 						</div>			
@@ -215,81 +215,27 @@
 		</div>
 	</div>
 	
-	
-	<!--<div class="row">
-		<div class="col-md-2" style="background:#30363c">
-			<div class="row" style="background:#3b5998;">
-				<div class="col-md-12">
-					<div class="title">
-						<strong>tag</strong> activity
+	<div id="tags">
+		
+		<div class="hideonload">
+		<div data-bind="bootstrapModal:showtagdetails" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title" id="myModalLabel" data-bind="text:selectedtag"></h4>
 					</div>
-				</div>
-			</div>
-				
-			<div class="row" style="min-height:282px">
-				<div class="col-md-12">
-					<div class="row">
-						<div class="col-md-12" style="padding:0px">
-							<div class="helptext">
-					 			Use this chart to drill down further into the users browsing
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12" style="text-align:center; padding-bottom: 10px">
-					
-				</div>
-			</div>
-		
-		</div> 
-		
-		
-		<div id="web" class="col-md-10">
-			<div class="row" style="min-height: 282px; padding: 20px; border-bottom: 1px solid #30363c">
-				
-				<div data-bind="if:showkey()" class="col-md-2">
-					<div id="zoomkey"></div> 
-				</div>
-				<div data-bind="attr:{class:squidclass}">
-					<div id="squidgraph" class="render" style="width:100%"></div>
-				</div>
-				
-				<div data-bind="visible:overlaylocation">
-					<ul class="list-inline" style="margin-left: 45px" data-bind="foreach:zonekey">
-						<li class="location">
-							<div class="locationkeyitem" data-bind="style:{background:zcolor}"></div>
-							<div class="locationkeytxt" data-bind="text:name"></div> 
-						</li>
-					</ul>
-				</div>
-				<div data-bind="visible:overlayapps">
-					<ul class="list-inline" style="margin-left: 45px" data-bind="foreach:appkey">
-						<li class="location">
-							<div class="locationkeyitem" data-bind="style:{background:zcolor}"></div>
-							<div class="locationkeytxt" data-bind="text:name"></div> 
-						</li>
-					</ul>
-				</div>
-			</div>
-			
-			<div class="row">
-				<div class="col-md-12" style="padding-left:0px">
-					<div class="controlbar">
-						<div class="row">
-							<div class="col-md-3 col-md-offset-9">
-								<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){toggleappoverlay();}">overlay apps</button>
-								<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglelocationoverlay();}">overlay location</button>
-							</div>
-						</div>
+					<div class="modal-body">
+						<h1 data-bind="text:selectedtag"></h1>
+					</div> <!-- end of modal body! -->
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>-->
-	
-	<div id="tags">
+		</div>
+		
 		<div class="row">
 			<div class="col-md-3 tagchartbar" style="background:#30363c;">
 				<div class="row" style="background:#3b5998;">
@@ -358,8 +304,6 @@
 					</tr>
 				</tbody>
 			</table>
-			<!-- MUST ADD OPTION TO DELETE ENTIRE TAG -->
-			<!--<a href="#" data-bind="click:function(){$root.removetag($parent)}">delete this tag!</a>-->
 		</div>
 	</div>	
 	<div class="row">

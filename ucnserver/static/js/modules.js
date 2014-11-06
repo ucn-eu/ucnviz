@@ -24,6 +24,7 @@ require.config({
         
         shim: {
         	"knockout"	: ['jquery'],
+        	"knockout-bootstrap": ["jquery"],
         	"bootstrap" : ['jquery'],
         	"kendo"		: ['jquery'],
         	'knockout-kendo':['kendo'],

@@ -2,7 +2,9 @@ define(['jquery','knockout','knockout-kendo','knockoutpb'], function($,ko){
 	
 	var 
 		
-		calendardate  = ko.observable().syncWith("calendardate"),
+		_currentdate, //init flag, to ensure rangechange is triggered only when date changes, not when first inited
+		
+		calendardate  = ko.observable(),//.syncWith("calendardate", false),
 		
 		timerange	  = ko.observable().syncWith("range"),
 		
@@ -16,7 +18,7 @@ define(['jquery','knockout','knockout-kendo','knockoutpb'], function($,ko){
 		
 		
 		_dateListener = calendardate.subscribe(function(date){
-		
+			
 			if (date){
 				var day 	=  date.getDate();
 				var month 	=  date.getMonth();
@@ -24,12 +26,17 @@ define(['jquery','knockout','knockout-kendo','knockoutpb'], function($,ko){
 			 
 				var fromts  = new Date(Date.UTC(year,month,day,0,0,0,0)).getTime()/1000;
 				var tots	= new Date(Date.UTC(year,month,day,23,59,59,0)).getTime()/1000;
-			
-				timerange({host:selectedhost(), fromts:parseInt(fromts), tots:parseInt(tots)});
+				
+				if (_currentdate){
+					console.log("calendar - triggering update");
+					timerange({host:selectedhost(), fromts:parseInt(fromts), tots:parseInt(tots)});
+				}
+				_currentdate = date;
 			}
 		}),
 		
 		init = function(date){
+			console.log("initing calendar date...");
 			calendardate(date);
 		}
 		
