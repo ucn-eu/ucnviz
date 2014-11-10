@@ -77,7 +77,7 @@
 				</div>
 				<div class="modal-body">
 					<div class="row">
-						<div class="col-md-7">
+						<div class="col-md-8">
 							
 							<div class="row">
 								<div class="col-md-12">
@@ -92,26 +92,23 @@
 						</div>
 						<div class="col-md-3">
 							<div class="row">
-								<div class="col-md-9">
+								<div class="col-md-12">
 									<select class="form-control" data-bind="options:tags, value:chosentag"></select>
 								</div>
-								<div class="col-md-3">
-									<a href="#" data-bind="click:function(){tagurls()}" class="btn btn-sm btn-primary">TAG!</a>
-								</div>
+								
 							</div>
 							<hr>
 							<div class="row">
-								<div class="col-md-9">
+								<div class="col-md-12">
 									 <input type="text" class="form-control" data-bind="value: newtag" placeholder="new tag" />
-								</div>
-								<div class="col-md-3">
-									<a href="#" data-bind="click:function(){addtag()}" class="btn btn-sm btn-primary">TAG!</a>
 								</div>
 							</div>
 						</div>			
 					</div>
 				</div> <!-- end of modal body! -->
 				<div class="modal-footer">
+					<a href="#" data-bind="click:function(){tagurls(true)}" class="btn btn-sm btn-primary">TAG just for this time range </a>
+					<a href="#" data-bind="click:function(){tagurls(false)}" class="btn btn-sm btn-primary">TAG!</a>
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				</div>
 			</div>
@@ -223,10 +220,11 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-						<h4 class="modal-title" id="myModalLabel" data-bind="text:selectedtag"></h4>
+						<strong class="modal-title" id="myModalLabel" data-bind="text: 'tag: ' + selectedtag()"></strong>
 					</div>
 					<div class="modal-body">
-						<h1 data-bind="text:selectedtag"></h1>
+						<strong data-bind="text:selecteddomain"></strong>
+					    <a href="#" data-bind="click:function(){$root.removeassociation(selectedtag,selecteddomain)}">remove</a>
 					</div> <!-- end of modal body! -->
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

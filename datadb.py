@@ -325,9 +325,9 @@ class NetDB( object ):
 # 		tags.sort()
 # 		return tags
 	
-	@reconnect
-	def fetch_tagged_for_host(self, host, fromts=None, tots=None):
-		
+	
+	def fetch_tagged_for_hosts(self, hosts, fromts=None, tots=None):
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		#milliseconds
 		delta = 10000
 		
@@ -337,7 +337,59 @@ class NetDB( object ):
 			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
 			
 
-		result = self.conn.execute("SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE t.host='%s' %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (host, timerange))
+		result = self.conn.execute("SELECT t.tag, u.ts, u.domain, t.host FROM TAGS t, URLS u WHERE t.host IN(%s) %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (hlist, timerange))
+		
+		currenttag = None
+		reading = None
+		readings = []
+		host = None
+		lasthost = None
+		tags = {}
+		
+		for row in result:
+			host = row[3]
+			if host not in tags:
+				tags[host] = []
+				if lasthost:
+					tags[lasthost].append(reading)	
+					reading = None
+						
+			lasthost = host
+			
+			if currenttag != row[0]:
+				if reading is not None:
+					tags[host].append(reading)
+				reading = {"tag":row[0], "fromts":row[1], "tots":row[1], "domain":row[2]} 	
+				currenttag = row[0]
+			else:
+				if (reading["tots"] + delta) >= row[1]:
+					reading["tots"] = row[1]
+				else:
+					tags[host].append(reading)
+					reading = {"tag":row[0], "fromts":row[1], "tots":row[1],"domain":row[2]} 
+		
+		if reading:
+			tags[host].append(reading)
+		
+		return tags
+	
+	@reconnect
+	def fetch_tagged_for_host(self, host, fromts=None, tots=None):
+		
+		#IF FROMTS AND TOTS ARE NONE, SET THEM TO MAX, MIN OF TIMEFRAME
+		
+		#milliseconds
+		delta = 10000
+		
+		timerange=""
+		
+		if fromts and tots:
+			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
+		
+		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
+			
+		
+		result = self.conn.execute(sql)
 		
 		currenttag = None
 		reading = None
@@ -372,7 +424,7 @@ class NetDB( object ):
 			
 	@reconnect	
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
-		print "in fetch urls for tagginG!"
+
 		whereclause = ""
 		
 		if fromts and tots:
@@ -386,8 +438,7 @@ class NetDB( object ):
 		
 		result = self.conn.execute(sql)
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
-		print "urls are"
-		print urls
+		
 		return urls
 	
 	
@@ -593,11 +644,14 @@ class NetDB( object ):
 		return result.fetchone()[0]
 	
 	@reconnect		
-	def insert_tag_for_host(self, host,domain,tag):
-		
-		self.conn.execute("INSERT INTO TAGS(host,domain,tag) VALUES (?,?,?)", (host,domain,tag))
-		self.conn.commit()
-	
+	def insert_tag_for_host(self, host,domain,tag,fromts,tots):
+		try:
+			self.conn.execute("INSERT INTO TAGS(host,domain,tag,fromts,tots) VALUES (?,?,?,?,?)", (host,domain,tag,fromts,tots))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("failed to insert tag %s for host %s %s %s %s %s" % (tag, host, domain, fromts, tots))
+			return False
+			
 	@reconnect
 	def insert_tag(self,tag, host):
 		try:

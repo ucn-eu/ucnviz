@@ -47,6 +47,12 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
     			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);	
 		}),
 		
+		/*
+		 * Listen on updates on associations between tags and domains.  If an association is changes, reload the urls for tagging
+		 */
+		_domainListener = ko.postbox.subscribe("association", function(data){
+			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);
+		}),
 		
 		domainsfortag = ko.observableArray([]),
 		
@@ -65,21 +71,22 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			
 		showtagger 		= ko.observable(false),
 		
-		tagadded = function(data){
+		tagadded = function(withincurrentrange, data){
+		
 			if (data.success){
 				//let the activity chart know..
 				tags.push(newtag());
 				tagcreated({"tag":newtag(), ts:(new Date()).getTime()});
 				//update our list of tags!
 				chosentag(newtag());
-				tagurls();
 				newtag("");
+				tagurls(withincurrentrange);
 			}
 		},
 		
-		addtag 	= function(){
+		addtag 	= function(withincurrentrange){
 			if (newtag() && newtag() != ""){
-				ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, tagadded);
+				ajaxservice.ajaxGetJson('tag/add', {tag:newtag(), host:selectedhost()}, curry(tagadded,withincurrentrange));
 			}
 		},
 		
@@ -105,13 +112,26 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		/*
 		 * send the tagged data to server
 		 */
-		tagurls = function(){
-			domains = [];
+		tagurls = function(withincurrentrange){
+		
+			if (newtag() && newtag()!=""){
+				addtag(withincurrentrange);
+			}else{
 			
-			for (i = 0; i < chosenurlstotag().length; i++)
-				domains.push(chosenurlstotag()[i].domain);
+				domains = [];
 			
-			ajaxservice.ajaxGetJson('tag/tagurls', {host:selectedhost(), domains:domains, tag:chosentag()}, curry(urlstagged,chosentag()));
+				for (i = 0; i < chosenurlstotag().length; i++)
+					domains.push(chosenurlstotag()[i].domain);
+			
+				var params = {host:selectedhost(), domains:domains, tag:chosentag()};
+				
+				
+				if (withincurrentrange){
+					params['fromts'] = fromts;
+					params['tots'] = tots;
+				}
+				ajaxservice.ajaxGetJson('tag/tagurls', params , curry(urlstagged,chosentag()));
+			}
 		},
 		
 		curry = function(fn){

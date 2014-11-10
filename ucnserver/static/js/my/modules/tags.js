@@ -11,14 +11,18 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		maxts = -1, //used to record the tots for fully zoomed out
 		
-		timerange	  = ko.observable().syncWith("range", false),
+		timerange	  	= ko.observable().syncWith("range", false),
 		
-		newtag 		  = ko.observable("").syncWith("newtag", true),
+		newtag 		  	= ko.observable("").syncWith("newtag", true),
+		
+		domainsfortag 	= ko.observableArray([]).publishOn("association"),
+		
+		tags			= ko.observableArray([]).publishOn("tags"),
 		
 		showtagdetails = ko.observable(false),
 		
-		selectedtag = ko.observable(),
-		
+		selectedtag 	= ko.observable(),
+		selecteddomain = ko.observable(),
 		/* set up the listeners -- listen to other modules on events of interest */
 			
 		/*  listen to a tag being added to a new domain */
@@ -73,12 +77,10 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			return b;
 		},
 		
-		domainsfortag = ko.observableArray([]),
 		
 		hosts	= ko.observableArray([]),
 		
-		tags	= ko.observableArray([]).publishOn("tags"),
-		
+	
 		subtitle = ko.observable(""),
 	
 		
@@ -124,6 +126,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		updatedomainsfortag = function(data){
 			domainsfortag(data.urls);
+			domainsfortag.notifySubscribers();
 		},
 		
 		getdomainsfortag	 = function(tag){
@@ -153,6 +156,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			//ajaxservice.ajaxGetJson('tag/urlsfortagging',tagparameters[0], updatetagdata);
 			
 			//need to pass in tag, NOT data, which is the domain that was deleted!
+			
 			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
 		},
 		
@@ -165,7 +169,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			});
 			
 			if (ranges.length > 0){
-				selectedtag(ranges[0][3]);
+				selecteddomain(ranges[0][3]);
 			}
 			return ranges.length > 0;
 		
@@ -283,7 +287,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				console.log(readings);
 				console.log(tags()[y]);
 				var index = tags().indexOf(tags()[y]);
-			
+				selectedtag(tags()[y]);
 				if (intimerange(Math.floor(position.x), readings[index])){
 					toggletagdetails(true);
 				}
@@ -310,6 +314,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		removetag: removetag,
 		toggletagdetails: toggletagdetails,
 		showtagdetails:showtagdetails,
-		selectedtag:selectedtag
+		selectedtag:selectedtag,
+		selecteddomain:selecteddomain
 	}
 });

@@ -110,9 +110,13 @@ def overview():
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
 	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
+	tags  = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
+	
 	values['zones'] = zones
 	values['apps'] = apps
 	values['devices'] = devices
+	values['tags'] = tags
+	
 	return jsonify(values)
 
 

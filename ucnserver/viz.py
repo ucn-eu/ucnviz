@@ -4,6 +4,7 @@ import time
 import logging
 import urllib
 import redis
+import sys
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from functools import wraps
@@ -81,6 +82,13 @@ def devices():
 #fetch time binned activity data from fromts to tots for all devices in home
 #defaults to the last 24 hours
 
+def defaulttimerange(hosts):
+	tots 	= current_app.config["datadb"].fetch_latest_ts_for_hosts(hosts)
+ 	if tots is None:
+ 		None
+ 	fromts 	= tots - 7 * 24*60*60
+	return {'fromts':fromts,'tots':tots}
+	
 @viz_api.route("/overview/activity")
 def overview():
 	hosts   = hostsforuser().keys()
@@ -99,11 +107,12 @@ def overview():
  		
  	#if time range is not provided, set it to the last 24 hours of recorded data
  	if tots is None or fromts is None:
- 		tots 	= current_app.config["datadb"].fetch_latest_ts_for_hosts(hosts)
- 		if tots is None:
+ 		tr = defaulttimerange(hosts)
+ 		if tr is None:
  			return jsonify({"keys":[], "hosts":[]})
- 			
- 		fromts 	= tots - 7 * 24*60*60
+ 		else:
+ 			fromts = tr['fromts']
+ 			tots = tr['tots']	
  		
  	if bin is not None:
  		bin = int(bin)
@@ -115,9 +124,13 @@ def overview():
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
 	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
+	tags  = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
+	
 	values['zones'] = zones
 	values['apps'] = apps
 	values['devices'] = devices
+	values['tags'] = tags
+	
 	return jsonify(values)
 		
 #return all devices that have associated phone data (i.e running processes data)
@@ -236,6 +249,7 @@ def urlsfortagging():
 	fromts 	= request.args.get('fromts') or None
  	tots	= request.args.get('tots') or None
  	#current_app.config["datadb"].connect()
+ 
 	urls = current_app.config["datadb"].fetch_urls_for_tagging(host, fromts, tots, filters=current_app.config["blocked"])
 	return jsonify(urls=urls)
 
@@ -253,9 +267,13 @@ def urlsfortag():
 def tagurls():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
+	fromts 	= request.args.get('fromts') or 0
+ 	tots	= request.args.get('tots') or 99999999999
+
+ 		
 	domains = request.args.getlist('domains[]')
 	for domain in domains:
-		current_app.config["datadb"].insert_tag_for_host(host,domain,tag)
+		current_app.config["datadb"].insert_tag_for_host(host,domain,tag,fromts,tots)
 		
 	return jsonify(success=True)
 
@@ -282,7 +300,7 @@ def removeassociation():
 	host = request.args.get('host')
 	domain	 = request.args.get('domain')
 	tag	= request.args.get('tag')
-	print "host,domain,tag is %s %s %s" % (host, domain, tag)
+	
 	current_app.config["datadb"].remove_tag_association_for_host(host,domain,tag)
 	return jsonify(success=True)
 
@@ -292,9 +310,17 @@ def activity():
 	host 	= request.args.get('host') or None
 	fromts 	= request.args.get('fromts') or None
 	tots	= request.args.get('tots') or None
+	
 	if host is None:
 		return jsonify(activity=[], tags=[])
 
+	if fromts is None or tots is None:
+		tr = defaulttimerange([host])
+		if tr is None:
+			return jsonify(activity=[], tags=[])
+		fromts = tr['fromts']
+		tots   = tr['tots']
+		
 	#current_app.config["datadb"].connect()
 	activity = current_app.config["datadb"].fetch_tagged_for_host(host,fromts,tots)
 	tags  = current_app.config["datadb"].fetch_tags_for_host(host)
