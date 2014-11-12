@@ -337,7 +337,7 @@ class NetDB( object ):
 			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
 			
 
-		result = self.conn.execute("SELECT t.tag, u.ts, u.domain, t.host FROM TAGS t, URLS u WHERE t.host IN(%s) %s AND t.domain = u.domain ORDER BY t.tag, u.ts ASC" % (hlist, timerange))
+		result = self.conn.execute("SELECT t.tag, u.ts, u.domain, t.host FROM TAGS t, URLS u WHERE t.host IN(%s) %s AND (t.domain = u.domain OR t.domain = u.tld) ORDER BY t.tag, u.ts ASC" % (hlist, timerange))
 		
 		currenttag = None
 		reading = None
@@ -387,7 +387,7 @@ class NetDB( object ):
 			timerange = "AND (u.ts >= %s AND u.ts <= %s)" % (fromts, tots)
 		
 		#sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
-		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s) ORDER BY u.domain" % (timerange)
+		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE (((u.domain = t.domain OR u.tld = t.domain) AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s) ORDER BY u.domain" % (timerange)
 		
 		result = self.conn.execute(sql)
 		
@@ -437,9 +437,9 @@ class NetDB( object ):
 		#this will multiple tld count by number of entries in tags table, so doesn't now work when support multiple tags
 		#sql = "SELECT DISTINCT(u.tld), COUNT(u.tld) as requests, GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
 		
-		sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
+		sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain OR u.domain = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
 		
-		print sql
+		
 		result = self.conn.execute(sql)
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
 		
