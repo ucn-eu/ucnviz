@@ -176,7 +176,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		},
 		
 		renderactivity = function(data){
-			
+			var m1,m2;
 			var container = document.getElementById("activitygraph");
 			var timeline  = {show:true, barWidth: .8 };
 			 
@@ -189,18 +189,20 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
     		var readings = [];
     
     		
-    		for (i = 0; i < tags().length; i++){
+    		for (var i = 0; i < tags().length; i++){
     			readings[i] = [];
     		}
     		
     	
-			for(i = 0; i < activity.length; i++){
+			for(var i = 0; i < activity.length; i++){
+				
 				start = Math.min(start, activity[i].fromts);
 				end = Math.max(end, activity[i].tots);
 				var timespan = Math.max(1000, (activity[i].tots - activity[i].fromts) * 1000);
 				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan, activity[i].domain ]);
 			}
 				
+			
 			var tickFormatter = function(x){
 				m1 = moment.unix(x/1000);
 				
@@ -223,6 +225,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				});
 			});
 			
+		
 			var options = {
 				  xaxis : {
 					mode : 'time',
@@ -284,8 +287,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				//do we need to pass specific url into activity data?
 				
 				var y = parseInt(Math.ceil(position.y));
-				console.log(readings);
-				console.log(tags()[y]);
+				
 				var index = tags().indexOf(tags()[y]);
 				selectedtag(tags()[y]);
 				if (intimerange(Math.floor(position.x), readings[index])){

@@ -270,10 +270,9 @@ def tagurls():
 	fromts 	= request.args.get('fromts') or 0
  	tots	= request.args.get('tots') or 99999999999
 
- 		
 	domains = request.args.getlist('domains[]')
-	for domain in domains:
-		current_app.config["datadb"].insert_tag_for_host(host,domain,tag,fromts,tots)
+	for tld in domains:
+		current_app.config["datadb"].insert_tag_for_host(host,tld,tag,fromts,tots)
 		
 	return jsonify(success=True)
 

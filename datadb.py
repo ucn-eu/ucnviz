@@ -384,10 +384,10 @@ class NetDB( object ):
 		timerange=""
 		
 		if fromts and tots:
-			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
+			timerange = "AND (u.ts >= %s AND u.ts <= %s)" % (fromts, tots)
 		
-		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
-			
+		#sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
+		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s) ORDER BY u.domain" % (timerange)
 		
 		result = self.conn.execute(sql)
 		
@@ -426,16 +426,20 @@ class NetDB( object ):
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
 
 		whereclause = ""
-		
+		filters = None
 		if fromts and tots:
 			whereclause = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
 		
 		if filters is not None:
 			whereclause = "%s %s " % (whereclause, "AND u.tld NOT IN (%s)" % ",".join("'{0}'".format(w) for w in filters))
 				
-		sql = "SELECT DISTINCT(u.domain), COUNT(u.domain) as requests, GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON u.domain = t.domain AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.domain ORDER BY requests DESC" % (host, whereclause)
 		
+		#this will multiple tld count by number of entries in tags table, so doesn't now work when support multiple tags
+		#sql = "SELECT DISTINCT(u.tld), COUNT(u.tld) as requests, GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
 		
+		sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
+		
+		print sql
 		result = self.conn.execute(sql)
 		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
 		
@@ -644,9 +648,9 @@ class NetDB( object ):
 		return result.fetchone()[0]
 	
 	@reconnect		
-	def insert_tag_for_host(self, host,domain,tag,fromts,tots):
+	def insert_tag_for_host(self, host,tld,tag,fromts,tots):
 		try:
-			self.conn.execute("INSERT INTO TAGS(host,domain,tag,fromts,tots) VALUES (?,?,?,?,?)", (host,domain,tag,fromts,tots))
+			self.conn.execute("INSERT INTO TAGS(host,domain,tag,fromts,tots) VALUES (?,?,?,?,?)", (host,tld,tag,fromts,tots))
 			self.conn.commit()
 		except Exception, e:
 			logger.error("failed to insert tag %s for host %s %s %s %s %s" % (tag, host, domain, fromts, tots))
