@@ -1,6 +1,6 @@
-This is the repo for the ucn visualisation code
+## This is the repo for the ucn visualisation code
 
-The code is responsible for gathering data from squid logs,tcpdumps and the moves app (location data)  and writing it to a relational (sqlite3) database
+The code is responsible for gathering data from squid logs,tcpdumps and the moves app (location data)  and writing it to a relational (sqlite3) database. It presents a tagging visualistion of urls visited, principally using d3.js (but also some legacy flotr2 stuff)
 
 There are three scripts that collect data
 
