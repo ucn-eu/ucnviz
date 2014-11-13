@@ -16,6 +16,13 @@ collect_squid will read the latest entries from the squid log file and write the
 logformat custom [%tl] %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un HTTP/%rv %Sh/%<A %mt "%{Referer}>h" "%{User-Agent}>h"
 ```
 
+to ensure that no data is lost when the squid log is rotated, add the following line to the /etc/logrotate/squid file
+
+```
+prerotate
+                cd /home/txl/ucnviz && venv/bin/python collect_squid.py
+```
+
 collect_dns will read the latest dns queries and write them to the DNS table.  The latest DNS queries are pulled out from tcpdump pcap files (tcpdump is started automatically when openvpn starts).  To accomplish this, root privilege script must be run periodically, the following needs to be put in the crontab (crontab -e) for the root user:
 
 ```
