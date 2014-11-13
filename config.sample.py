@@ -1,5 +1,8 @@
 class Config(object):
 
+	#tld that ucn is serving from
+	BASEURL	="https://horizab4.memset.net"
+	
 	#--------------- moves config -----------------
 	
 	#the moves app client id
@@ -9,7 +12,7 @@ class Config(object):
 	CLIENT_SECRET 	= "A CLIENT SECRET"
 	
 	#the moves oauth callback url
-	REDIRECT_URL  	= "http://54.195.252.247/moves/callback"
+	REDIRECT_URL  	= "/moves/callback"
 	
 	#the moves oauth url
 	OAUTH_URL		=  "https://api.moves-app.com/oauth/v1"
@@ -34,6 +37,18 @@ class Config(object):
 	#the db for the viz - process data, squid data, hosts
 	DATADB			= "netdata.db"
 
+	#the mongodb that contains user and device details
+	MONGOHOST 	= "127.0.0.1"
+	MONGOPORT 	= 27017
+	MONGODB 	= "ucnexp"
+	
+	#mongodb collections (db tables)
+	USERCOLLECTION 		= "users"
+	DEVICECOLLECTION	= "devices"
+	VPNLOGSCOLLECTION	= "vpn_server_logs"
+	
+	#the redis server that contains the session details
+	REDISHOST	= "127.0.0.1"
 	
 	#---------------- logging stuff ----------------------
 	#the collector (squid/moves) log file
@@ -45,6 +60,7 @@ class Config(object):
 	#---------------- data files ----------------------
 	
 	SQUIDLOG		= "/usr/local/squid/var/logs/access.log"
+	DNSLOG			= "/var/tmp/dns.log"
 	
 class TestingConfig(Config):
 	pass

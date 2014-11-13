@@ -52,16 +52,16 @@ class CollectDB(object):
 		self.conn.commit()
 		return result
 	
-	def update_squid(self, ts, fpos):
+	def update_filepos(self, ts, fpos, type):
 		if self.connected is not True:
 			self.connect()	
 		
-		result = self.conn.execute("INSERT OR REPLACE INTO LOGACCESS(name, ts, filepos) VALUES (?,?,?)", ('squid', ts, fpos))
+		result = self.conn.execute("INSERT OR REPLACE INTO LOGACCESS(name, ts, filepos) VALUES (?,?,?)", (type, ts, fpos))
 		self.conn.commit()
 		return result
 	
 	def fetch_filepos_for(self, type):
-		result = self.conn.execute("SELECT filepos FROM LOGACCESS WHERE name=(?)", ("squid",))
+		result = self.conn.execute("SELECT filepos FROM LOGACCESS WHERE name=(?)", (type,))
 		fpos = result.fetchone()
 		if fpos is not None:
 			return fpos[0]

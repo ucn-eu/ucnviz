@@ -755,7 +755,31 @@ class NetDB( object ):
 			self.conn.commit()
 		except Exception, e:
 			logger.error("error inserting url %s" % str(url))
-	
+		
+			
+	@reconnect
+	def bulk_insert_dns(self, content):
+		logger.debug("in bulk insert dns")	
+		for line in content:
+			
+			try:
+				
+				res = get_tld("http://%s"%line['domain'], as_object=True, fail_silently=True)
+			
+				if res is not None:	
+					tld = "%s.%s" % (res.domain, res.suffix)
+				else:
+					tld = line['domain']
+					
+				logger.debug("inserting dns %s %s %s %s" % (line['ts'], line['host'], tld, line['domain']))
+				self.conn.execute("INSERT INTO DNS(ts, host, tld, domain) VALUES(?,?,?,?)", (line['ts'], line['host'], tld, line['domain']))
+			except Exception, e:
+				logger.error("error inserting dns entry %s" % str(line))
+		
+		try:	
+			self.conn.commit()
+		except Exception, e:
+			logger.error("error bulk committing dns")
 			
 	@reconnect
 	def bulk_insert_urls(self, content):
@@ -794,7 +818,7 @@ class NetDB( object ):
 		try:	
 			self.conn.commit()
 		except Exception, e:
-			logger.error("error bulk commiting urls")
+			logger.error("error bulk committing urls")
 			
 	@reconnect	
 	def insert_zone(self,zone):
@@ -885,6 +909,14 @@ class NetDB( object ):
 			domain CHAR(255),
 			path TEXT);''')
 		
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS DNS
+			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			ts INTEGER,
+			host CHAR(16),
+			tld CHAR(255),
+			domain CHAR(255),
+			UNIQUE(ts, host, tld, domain) ON CONFLICT IGNORE);''')
+			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS ZONES
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
 			date CHAR(16),
@@ -921,7 +953,9 @@ class NetDB( object ):
 			domain CHAR(128),
 			tag  CHAR(128),
 			fromts INTEGER,
-			tots INTEGER);''')		
+			tots INTEGER,
+			UNIQUE(host, domain, tag, fromts, tots) ON CONFLICT IGNORE);''')		
+		
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS TAG
 			(tag CHAR(128),
