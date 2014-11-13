@@ -20,7 +20,7 @@ to ensure that no data is lost when the squid log is rotated, add the following 
 
 ```
 prerotate
-                cd /home/txl/ucnviz && venv/bin/python collect_squid.py
+                cd [repo dir] && venv/bin/python collect_squid.py
 ```
 
 collect_dns will read the latest dns queries and write them to the DNS table.  The latest DNS queries are pulled out from tcpdump pcap files (tcpdump is started automatically when openvpn starts).  To accomplish this, root privilege script must be run periodically, the following needs to be put in the crontab (crontab -e) for the root user:
