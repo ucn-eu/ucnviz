@@ -46,22 +46,30 @@ class NetDB( object ):
 		return range
 	
 	
+	#could perhaps simplify to return count UNIQUE top level domains seen within timerange rather than count of all
+	#not too crucial as the purpose here is just to give an indication of activity levels. 
 	@reconnect
 	def fetchtimebins_for_hosts(self, binsize,hosts,fromts=None, tots=None):
 	
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		whereclause = ""
-	
+		#dnswhereclause  = ""
+		
 		if fromts is not None and tots is not None:
 			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
+			#dnswhereclause = "AND (d.ts >= %d AND d.ts < %d)" % (fromts, tots)
 		
 		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s" % (hlist,whereclause)
+			
+		#minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s UNION SELECT  min(d.ts), max(d.ts) from DNS d WHERE d.host IN(%s) %s" % (hlist,whereclause,hlist,dnswhereclause)
 		result = self.conn.execute(minmaxsql)
 		row = result.fetchone()
 		mints = row[0]
 		maxts = row[1]
 		
-		sql = "SELECT u.ts, u.domain, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
+		sql = "SELECT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
+		
+		#sql = "SELECT u.ts, u.domain, u.host from URLS u WHERE u.host IN (%s) %s UNION SELECT d.ts, d.domain, d.host from DNS d WHERE d.host IN (%s) %s ORDER BY u.host,d.host, u.ts, d.ts ASC" % (hlist,whereclause,hlist,dnswhereclause)
 		
 		try:
 			result = self.conn.execute(sql)
@@ -70,6 +78,9 @@ class NetDB( object ):
 			return None
 			 
 		hosts = {}
+		
+		seen = {} #for filtering out duplicate tlds within timebin
+		
 		ts = mints
 		keys = []
 		
@@ -85,61 +96,68 @@ class NetDB( object ):
 			
 			if host not in hosts:
 				hosts[host] = [0]*len(keys)
+				seen[host] = {}
+				seen[host][idx] = [row[1]]
 				hosts[host][idx] = hosts[host][idx] + 1
 			else:
-				hosts[host][idx] = hosts[host][idx] + 1
+				if idx not in seen[host]:
+					seen[host][idx] = []
+				if row[1] not in seen[host][idx]:
+					seen[host][idx].append(row[1])
+					hosts[host][idx] = hosts[host][idx] + 1
 		
 		
 		return {"keys":keys, "hosts":hosts}
 	
-	#deprecated use fetchtimebins_for_hosts
-	@reconnect
-	def fetchtimebins_for_home(self, binsize,home,fromts=None, tots=None):
-		whereclause = ""
-	
-		if fromts is not None and tots is not None:
-			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
-		
-		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s" % (home,whereclause)
-		result = self.conn.execute(minmaxsql)
-		row = result.fetchone()
-		mints = row[0]
-		maxts = row[1]
-		
-		sql = "SELECT u.ts, u.domain,  u.host from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s ORDER BY u.host, u.ts ASC" % (home,whereclause)
-		
-		try:
-			result = self.conn.execute(sql)
-		except Exception, e:
-			logger.error("error fetching timebins for home %s" % home)
-			return None
-			 
-		hosts = {}
-		ts = mints
-		keys = []
-		
-		while ts < maxts+binsize:
-			keys.append(self.binlabel(binsize, ts))
-			ts = ts + binsize
-		
-		for row in result:
-			
-			host = row[2]
-			ts   = row[0]
-			idx = keys.index(self.binlabel(binsize, ts))
-			
-			if host not in hosts:
-				hosts[host] = [0]*len(keys)
-				hosts[host][idx] = hosts[host][idx] + 1
-			else:
-				hosts[host][idx] = hosts[host][idx] + 1
-		
-		
-		return {"keys":keys, "hosts":hosts}
+# 	#deprecated use fetchtimebins_for_hosts
+# 	@reconnect
+# 	def fetchtimebins_for_home(self, binsize,home,fromts=None, tots=None):
+# 		whereclause = ""
+# 	
+# 		if fromts is not None and tots is not None:
+# 			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
+# 		
+# 		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s" % (home,whereclause)
+# 		result = self.conn.execute(minmaxsql)
+# 		row = result.fetchone()
+# 		mints = row[0]
+# 		maxts = row[1]
+# 		
+# 		sql = "SELECT u.ts, u.domain,  u.host from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s ORDER BY u.host, u.ts ASC" % (home,whereclause)
+# 		
+# 		try:
+# 			result = self.conn.execute(sql)
+# 		except Exception, e:
+# 			logger.error("error fetching timebins for home %s" % home)
+# 			return None
+# 			 
+# 		hosts = {}
+# 		ts = mints
+# 		keys = []
+# 		
+# 		while ts < maxts+binsize:
+# 			keys.append(self.binlabel(binsize, ts))
+# 			ts = ts + binsize
+# 		
+# 		for row in result:
+# 			
+# 			host = row[2]
+# 			ts   = row[0]
+# 			idx = keys.index(self.binlabel(binsize, ts))
+# 			
+# 			if host not in hosts:
+# 				hosts[host] = [0]*len(keys)
+# 				hosts[host][idx] = hosts[host][idx] + 1
+# 			else:
+# 				hosts[host][idx] = hosts[host][idx] + 1
+# 		
+# 		
+# 		return {"keys":keys, "hosts":hosts}
 		
 	@reconnect		
 	def fetch_timebins_for_host(self, binsize, host, fromts=None, tots=None, filters=None):
 		whereclause = ""
+		dnswhereclause = ""
 		if fromts is not None and tots is not None:
 			whereclause = "AND (ts >= %d AND ts < %d)" % (fromts, tots)
 		
@@ -772,7 +790,7 @@ class NetDB( object ):
 					tld = line['domain']
 					
 				logger.debug("inserting dns %s %s %s %s" % (line['ts'], line['host'], tld, line['domain']))
-				self.conn.execute("INSERT INTO DNS(ts, host, tld, domain) VALUES(?,?,?,?)", (line['ts'], line['host'], tld, line['domain']))
+				self.conn.execute("INSERT INTO URLS(ts, host, tld, domain,datasource) VALUES(?,?,?,?,?)", (line['ts'], line['host'], tld, line['domain'], 'dns'))
 			except Exception, e:
 				logger.error("error inserting dns entry %s" % str(line))
 		
@@ -810,7 +828,7 @@ class NetDB( object ):
 					url = {'ts':items[2].split(".")[0], 'host':items[4], 'tld':tld, 'domain':domain, 'path': path}
 					try:
 						logger.debug("inserting %s %s %s" % (url['ts'], url['host'], url['tld']))
-						self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path) VALUES(?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path']))
+						self.conn.execute("INSERT INTO URLS(ts, host, tld, domain, path, datasource) VALUES(?,?,?,?,?,?)", (url['ts'], url['host'],url['tld'], url['domain'], url['path'], 'squid'))
 					except Exception, e:
 						logger.error("error inserting url %s" % str(url))
 					
@@ -907,15 +925,17 @@ class NetDB( object ):
 			host CHAR(16),
 			tld CHAR(255),
 			domain CHAR(255),
-			path TEXT);''')
-		
-		self.conn.execute('''CREATE TABLE IF NOT EXISTS DNS
-			(id INTEGER PRIMARY KEY AUTOINCREMENT,
-			ts INTEGER,
-			host CHAR(16),
-			tld CHAR(255),
-			domain CHAR(255),
+			datasource CHAR(16),
+			path TEXT,
 			UNIQUE(ts, host, tld, domain) ON CONFLICT IGNORE);''')
+		
+# 		self.conn.execute('''CREATE TABLE IF NOT EXISTS DNS
+# 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+# 			ts INTEGER,
+# 			host CHAR(16),
+# 			tld CHAR(255),
+# 			domain CHAR(255),
+# 			UNIQUE(ts, host, tld, domain) ON CONFLICT IGNORE);''')
 			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS ZONES
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -323,7 +323,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				  .attr("x", 0 - (height/2))
 				  .attr("dy", ".75em")
 				  
-				  .text("total web requests")
+				  .text("total unique domains requested")
 				  	
 			renderzoomer(browsers);	
 			renderkey();
