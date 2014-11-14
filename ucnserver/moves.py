@@ -10,8 +10,8 @@ moves_api = Blueprint('moves_api', __name__)
 logger = logging.getLogger( "ucn_logger" )
 
 #clicks on this url and is then prompted to enter pin in moves app.
-@moves_api.route("/moves", methods=['GET'])
-@moves_api.route("/moves/", methods=['GET'])
+@moves_api.route("/viz/moves", methods=['GET'])
+@moves_api.route("/viz/moves/", methods=['GET'])
 def root():	
 
 	
@@ -49,14 +49,14 @@ def root():
 	return render_template('moves.html', url=url)
 
 #user is redirected here with the authcode
-@moves_api.route("/moves/callback")
+@moves_api.route("/viz/moves/callback")
 def authcallback():
 	host = request.args.get('device')
 	
 	#vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
 	#host = vpnres.clientip(request)
 	
-	logger.debug("GET /moves/callback from %s" % host)
+	logger.debug("GET /viz/moves/callback from %s" % host)
 	code = request.args.get('code')
 	#now swap the code for a token?
 	c = '&client_id=' +  current_app.config["CLIENT_ID"]

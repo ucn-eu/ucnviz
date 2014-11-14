@@ -9,7 +9,7 @@ ios_api = Blueprint('ios_api', __name__)
 
 
 
-@ios_api.route("/ios/log", methods=['POST'])
+@ios_api.route("/viz/ios/log", methods=['POST'])
 def log():
 	
 	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})

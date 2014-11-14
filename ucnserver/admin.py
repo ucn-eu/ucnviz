@@ -44,7 +44,7 @@ def adminloggedin(fn):
 	
 	return wrapped
 
-@admin_api.route("/admin", methods=['GET'])
+@admin_api.route("/viz/admin", methods=['GET'])
 @adminloggedin
 def admin():	
 
@@ -68,13 +68,13 @@ def admin():
 	return render_template('admin.html', families=familylist)
 	
 
-@admin_api.route("/admin/web", methods=['GET'])
+@admin_api.route("/viz/admin/web", methods=['GET'])
 @adminloggedin
 def adminoverview():	
 	family = request.args.get('family') or None
 	return render_template('browsing.html', family=family)
 	
-@admin_api.route("/admin/overview/activity", methods=['GET'])
+@admin_api.route("/viz/admin/overview/activity", methods=['GET'])
 @adminloggedin
 def overview():
 	family  = request.args.get('family') or None
@@ -120,7 +120,7 @@ def overview():
 	return jsonify(values)
 
 
-@admin_api.route("/admin/web/bootstrap")
+@admin_api.route("/viz/admin/web/bootstrap")
 @adminloggedin
 def hosts():
 	family = request.args.get('familiy') or None
