@@ -87,11 +87,13 @@ path {
 	font-size: 11px;
 }
 
-.brush .extent {
+.brush .extent,  .brushnote .extent{
 	stroke: #fff;
 	fill-opacity: .125;
 	shape-rendering: crispEdges;
 }	
+
+
 	
 .divide{
 	shape-rendering: crispEdges;    

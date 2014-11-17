@@ -20,6 +20,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			
 		selectedquery = ko.observable().publishOn("query"),
 		
+		shownote	= ko.observable(false),
+		
+		noterange   = [],
+		note       =  ko.observable(""),
+		
 		
 		_queries   = [],
 		_locations = [],
@@ -227,6 +232,14 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			
 		},
 		
+		notebrushend = function(d){
+			if (notebrush.empty() || !selectedhost())
+				return;
+			
+			noterange = notebrush.extent();
+			shownote(true);
+		},
+		
 		brushend = function(){
 			if (filters().length == 1){
 				triggerupdate(filters()[0]);
@@ -247,7 +260,25 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
     			.x(x2)
     			.on("brush", brushed)
     			.on("brushend", brushend),
-    			
+    	
+    	notebrush = d3.svg.brush()
+    			.x(x)
+    			.on("brushend", notebrushend),
+    	
+    	recordnote = function(){
+    		shownote(false);
+    		var fromts = parseInt(noterange[0].getTime()/1000);
+			var tots   = parseInt(noterange[1].getTime()/1000);		
+    		var params = {fromts:fromts, tots:tots, host:selectedhost(), note:note()}
+    		ajaxservice.ajaxPostJson('note/add', params, noteadded);
+    	},
+		
+		noteadded = function(data){
+			if (data.success){
+				note("");
+				d3.select(".brushnote").call(notebrush.clear());
+			}
+		},
 		
 		renderactivity = function(d){
 			svg.append("defs").append("clipPath")
@@ -314,6 +345,12 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				  .attr("class", "y axis")
 				  .call(yAxis);
 			  
+			 svg.append("g")
+				.attr("class", "x brushnote")
+				.call(notebrush)
+				.selectAll("rect")
+				.attr("y", -6)
+				.attr("height", height+7);
 			
 			 svg.append("text")
 				  .attr("class", "y label")
@@ -980,7 +1017,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 	return {
 		init: init,
 		subtitle: subtitle,
-		
+		shownote: shownote,
+		note: note,
+		recordnote:recordnote,
 	}
 	
 });

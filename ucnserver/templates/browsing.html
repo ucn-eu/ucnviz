@@ -128,7 +128,12 @@
 	</nav>
 </div>
 
+
+
+
 <div id="visualisation">
+
+	
 	
 	<div class="row" style="border-bottom: 1px solid #30363c">
 		<div class="col-md-3 leftchart" style="height:530px; background:#30363c">
@@ -153,6 +158,27 @@
 		</div>
 		<div class="col-md-9">
 			<div id="overall"> 
+			
+				<div class="hideonload">
+					<div data-bind="bootstrapModal:shownote" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-sm">
+							<div class="modal-content">
+								<div class="modal-header">
+									<strong class="modal-title" id="myModalLabel"> add a note </strong>
+									<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>		
+								</div>
+								<div class="modal-body">
+									<textarea class="form-control" rows="3" data-bind="value:note"></textarea>
+								</div> <!-- end of modal body! -->
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click:function(){recordnote()}">Add</button>
+									<button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click:function(){shownote(false)}">Close</button>
+								</div>
+							</div> <!-- end of modal content -->
+						</div> <!-- end of modal dialog -->
+					</div> <!-- end of databind -->
+				</div> <!-- end of hideonload -->
+				
 				
 				<div class="row">		
 					<div class="col-md-12" style="height:140px">
@@ -166,13 +192,6 @@
 				</div>
 			</div>
 			<div id="overlays">
-				<!--<div class="row">
-					<div class="col-md-12 querybox">
-						<div  data-bind="foreach:queries, visible:showqueries">
-							<span data-bind="text:query, css:{queryactive: $parent.queryisselected($data)}"></span>
-						</div>
-					</div>
-				</div>-->
 				<div class="row">
 					<div class="col-md-12" style="padding-left:0px">
 						<div class="controlbar">
@@ -183,26 +202,23 @@
 								<div class="col-md-6">
 									<form class="form-inline" role="form">
 										
-										<div class="checkbox">
+										<!--<div class="checkbox">
 											<label>
 											<input type="checkbox" data-bind="checked: showqueries">overlay searches
 											</label>
-										</div>
-											<div class="checkbox">
+										</div>-->
+										<div class="checkbox">
 											<label>
 											<input type="checkbox" data-bind="checked: showlocations">overlay locations
 											</label>
 										</div>
-											<div class="checkbox">
+										<div class="checkbox">
 											<label>
 											<input type="checkbox" data-bind="checked: showapps">overlay apps
 											</label>
 										</div>
 									
 									</form>
-									<!--<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglequeries();}">overlay searches</button>
-									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){togglelocations();}">overlay locations</button>
-									<button class="btn btn-sm btn-primary pull-right" data-bind="click:function(){toggleapps();}">overlay apps</button>-->
 								</div>	
 							</div>
 						</div>

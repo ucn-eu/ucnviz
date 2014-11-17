@@ -455,14 +455,14 @@ class NetDB( object ):
 		#this will multiple tld count by number of entries in tags table, so doesn't now work when support multiple tags
 		#sql = "SELECT DISTINCT(u.tld), COUNT(u.tld) as requests, GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
 		
-		#following correct query is too slow, TODO rewrite!
-		#sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain OR u.domain = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
+		#following  query is too slow, TODO rewrite!
+		#sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls WHERE ts >= %s AND ts <= %s GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain OR u.domain = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (fromts, tots, host, whereclause)
 		
-		#just don't count requests for now..
+		#..just don't count requests for now..
 		sql = "SELECT DISTINCT(u.tld), GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld  ORDER BY u.tld" % (host, whereclause)
 		
 		result = self.conn.execute(sql)
-		urls = [{"domain":row[0], "requests":1, "tag":row[1]} for row in result]
+		urls = [{"domain":row[0], "requests":0, "tag":row[1]} for row in result]
 		
 		return urls
 	
@@ -548,7 +548,6 @@ class NetDB( object ):
 	def fetch_apps_for_host(self, host, fromts=None, tots=None):
 		delta = 60*60*1000
 		result = self.conn.execute("SELECT name, ts FROM PROCESSES WHERE host = ? AND foreground = 1 ORDER BY name,ts ASC", (host,))
-		
 		
 		currentapp= None
 		app = None
@@ -668,6 +667,17 @@ class NetDB( object ):
 		result = self.conn.execute("SELECT max(u.ts) FROM URLS u WHERE u.host = ?", (host,))
 		return result.fetchone()[0]
 	
+	
+	@reconnect
+	def insert_note(self,note,host,fromts,tots):
+		try:
+			self.conn.execute("INSERT INTO NOTES(note,host,fromts,tots) VALUES (?,?,?,?)", (note,host,fromts,tots))
+			self.conn.commit()
+		except Exception, e:
+			logger.error("failed to insert note %s for host %s %s %s" % (note, host, fromts, tots))
+			return False
+		return True
+		
 	@reconnect		
 	def insert_tag_for_host(self, host,tld,tag,fromts,tots):
 		try:
@@ -979,12 +989,16 @@ class NetDB( object ):
 			tots INTEGER,
 			UNIQUE(host, domain, tag, fromts, tots) ON CONFLICT IGNORE);''')		
 		
-		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS TAG
 			(tag CHAR(128),
 			 host CHAR(16),
 			 UNIQUE(tag,host) ON CONFLICT REPLACE);''')
 			
-		
+			
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS NOTES
+			(host CHAR(16),
+			fromts INTEGER,
+			tots INTEGER,
+			note TEXT)''')		
 		
 	
