@@ -160,9 +160,10 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		rendertagselectionitem = function(item){
 			tag = "";
 			if (item.tag)
-				tag = "| " + item.tag;
-				 
-			return item.domain + ' | ' + item.requests + tag;
+				tag = " | " + item.tag;
+			
+			//' | ' + item.requests	 
+			return item.domain + tag;
 		}
 			
 	return{

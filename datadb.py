@@ -455,11 +455,14 @@ class NetDB( object ):
 		#this will multiple tld count by number of entries in tags table, so doesn't now work when support multiple tags
 		#sql = "SELECT DISTINCT(u.tld), COUNT(u.tld) as requests, GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
 		
-		sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain OR u.domain = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
+		#following correct query is too slow, TODO rewrite!
+		#sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain OR u.domain = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (host, whereclause)
 		
+		#just don't count requests for now..
+		sql = "SELECT DISTINCT(u.tld), GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld  ORDER BY u.tld" % (host, whereclause)
 		
 		result = self.conn.execute(sql)
-		urls = [{"domain":row[0], "requests":row[1], "tag":row[2]} for row in result]
+		urls = [{"domain":row[0], "requests":1, "tag":row[1]} for row in result]
 		
 		return urls
 	
