@@ -53,11 +53,9 @@ class NetDB( object ):
 	
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		whereclause = ""
-		#dnswhereclause  = ""
 		
 		if fromts is not None and tots is not None:
 			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
-			#dnswhereclause = "AND (d.ts >= %d AND d.ts < %d)" % (fromts, tots)
 		
 		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s" % (hlist,whereclause)
 			
@@ -68,8 +66,6 @@ class NetDB( object ):
 		maxts = row[1]
 		
 		sql = "SELECT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
-		
-		#sql = "SELECT u.ts, u.domain, u.host from URLS u WHERE u.host IN (%s) %s UNION SELECT d.ts, d.domain, d.host from DNS d WHERE d.host IN (%s) %s ORDER BY u.host,d.host, u.ts, d.ts ASC" % (hlist,whereclause,hlist,dnswhereclause)
 		
 		try:
 			result = self.conn.execute(sql)
@@ -83,77 +79,37 @@ class NetDB( object ):
 		
 		ts = mints
 		keys = []
+		t0 = time.time()
+		indexes = {}
 		
+		c = 0
 		while ts < maxts+binsize:
 			keys.append(self.binlabel(binsize, ts))
+			indexes[self.binlabel(binsize, ts)] = c
+			c = c + 1
 			ts = ts + binsize
+		
 		
 		for row in result:
 			
 			host = row[2]
-			ts   = row[0]
-			idx = keys.index(self.binlabel(binsize, ts))
-			
-			if host not in hosts:
-				hosts[host] = [0]*len(keys)
-				seen[host] = {}
-				seen[host][idx] = [row[1]]
-				hosts[host][idx] = hosts[host][idx] + 1
-			else:
-				if idx not in seen[host]:
-					seen[host][idx] = []
-				if row[1] not in seen[host][idx]:
-					seen[host][idx].append(row[1])
-					hosts[host][idx] = hosts[host][idx] + 1
-		
-		
+ 			ts   = row[0]
+ 			idx = indexes[self.binlabel(binsize, ts)]
+# 			idx = keys.index(self.binlabel(binsize, ts))
+ 			
+ 			if host not in hosts:
+ 				hosts[host] = [0]*len(keys)
+ 				seen[host] = {}
+ 				seen[host][idx] = [row[1]]
+ 				hosts[host][idx] = hosts[host][idx] + 1
+ 			else:
+ 				if idx not in seen[host]:
+ 					seen[host][idx] = []
+ 				if row[1] not in seen[host][idx]:
+ 					seen[host][idx].append(row[1])
+ 					hosts[host][idx] = hosts[host][idx] + 1
 		return {"keys":keys, "hosts":hosts}
 	
-# 	#deprecated use fetchtimebins_for_hosts
-# 	@reconnect
-# 	def fetchtimebins_for_home(self, binsize,home,fromts=None, tots=None):
-# 		whereclause = ""
-# 	
-# 		if fromts is not None and tots is not None:
-# 			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
-# 		
-# 		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s" % (home,whereclause)
-# 		result = self.conn.execute(minmaxsql)
-# 		row = result.fetchone()
-# 		mints = row[0]
-# 		maxts = row[1]
-# 		
-# 		sql = "SELECT u.ts, u.domain,  u.host from URLS u, HOUSE h WHERE u.host = h.host AND h.name = '%s' %s ORDER BY u.host, u.ts ASC" % (home,whereclause)
-# 		
-# 		try:
-# 			result = self.conn.execute(sql)
-# 		except Exception, e:
-# 			logger.error("error fetching timebins for home %s" % home)
-# 			return None
-# 			 
-# 		hosts = {}
-# 		ts = mints
-# 		keys = []
-# 		
-# 		while ts < maxts+binsize:
-# 			keys.append(self.binlabel(binsize, ts))
-# 			ts = ts + binsize
-# 		
-# 		for row in result:
-# 			
-# 			host = row[2]
-# 			ts   = row[0]
-# 			idx = keys.index(self.binlabel(binsize, ts))
-# 			
-# 			if host not in hosts:
-# 				hosts[host] = [0]*len(keys)
-# 				hosts[host][idx] = hosts[host][idx] + 1
-# 			else:
-# 				hosts[host][idx] = hosts[host][idx] + 1
-# 		
-# 		
-# 		return {"keys":keys, "hosts":hosts}
-		
 	@reconnect		
 	def fetch_timebins_for_host(self, binsize, host, fromts=None, tots=None, filters=None):
 		whereclause = ""
@@ -444,7 +400,7 @@ class NetDB( object ):
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
 
 		whereclause = ""
-		filters = None
+		
 		if fromts and tots:
 			whereclause = "AND (ts >= %s AND ts < %s)" % (fromts, tots)
 		
@@ -505,42 +461,48 @@ class NetDB( object ):
 		
 		return apps
 	
-	#deprecated, use fetch_apps_for_hosts
-	@reconnect
-	def fetch_apps_for_home(self, home,fromts=None, tots=None):
-		delta = 60*60*1000
-		result = self.conn.execute("SELECT p.name, p.ts, p.host FROM PROCESSES p, HOUSE h  WHERE  p.foreground = 1 AND p.host = h.host AND h.name = ? ORDER BY p.host, p.name, p.ts ASC", (home,))
-		
-		apps = {}
-		currentapp= None
-		app = None
-		host = None
-		lasthost = None
-		
-		for row in result:
-			host = row[2]
-			if host not in apps:
-				apps[host] = []
-				if lasthost:
-					apps[lasthost].append(app)	
-					app = None
-						
-			lasthost = host
-			if currentapp != row[0]:
-				if app is not None:
-					apps[host].append(app)
-				app = {"name":row[0], "start":row[1], "end":row[1]} 	
-				currentapp = row[0]
-			else:
-				if (app["end"] + delta) >= row[1]:
-					app["end"] = row[1]
-				else:
-					apps[host].append(app)
-					app = {"name":row[0], "start":row[1], "end":row[1]} 		
-		if app:
-			apps[host].append(app)
-		
-		return apps
+	def fetch_notes_for_hosts(self,hosts,fromts,tots):
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		result = self.conn.execute("SELECT host, fromts, tots, note  FROM notes WHERE host in(%s) AND fromts >= %s AND tots <= %s ORDER BY host" % (hlist,fromts,tots))
+		notes = [{'host': row[0], 'fromts': row[1], 'tots': row[2], 'note': row[3]} for row in result]
+		return notes
+	
+# 	#deprecated, use fetch_apps_for_hosts
+# 	@reconnect
+# 	def fetch_apps_for_home(self, home,fromts=None, tots=None):
+# 		delta = 60*60*1000
+# 		result = self.conn.execute("SELECT p.name, p.ts, p.host FROM PROCESSES p, HOUSE h  WHERE  p.foreground = 1 AND p.host = h.host AND h.name = ? ORDER BY p.host, p.name, p.ts ASC", (home,))
+# 		
+# 		apps = {}
+# 		currentapp= None
+# 		app = None
+# 		host = None
+# 		lasthost = None
+# 		
+# 		for row in result:
+# 			host = row[2]
+# 			if host not in apps:
+# 				apps[host] = []
+# 				if lasthost:
+# 					apps[lasthost].append(app)	
+# 					app = None
+# 						
+# 			lasthost = host
+# 			if currentapp != row[0]:
+# 				if app is not None:
+# 					apps[host].append(app)
+# 				app = {"name":row[0], "start":row[1], "end":row[1]} 	
+# 				currentapp = row[0]
+# 			else:
+# 				if (app["end"] + delta) >= row[1]:
+# 					app["end"] = row[1]
+# 				else:
+# 					apps[host].append(app)
+# 					app = {"name":row[0], "start":row[1], "end":row[1]} 		
+# 		if app:
+# 			apps[host].append(app)
+# 		
+# 		return apps
 				
 
 	#return foregrounded apps along with timerange that have been in foreground
@@ -940,7 +902,7 @@ class NetDB( object ):
 			domain CHAR(255),
 			datasource CHAR(16),
 			path TEXT,
-			UNIQUE(ts, host, tld, domain) ON CONFLICT IGNORE);''')
+			UNIQUE(ts, host, tld, domain,datasource) ON CONFLICT IGNORE);''')
 		
 # 		self.conn.execute('''CREATE TABLE IF NOT EXISTS DNS
 # 			(id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -4,6 +4,7 @@ import urllib
 import json
 import redis
 import viz
+import time
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from bson.code import Code
@@ -33,7 +34,7 @@ def adminloggedin(fn):
 		db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 
 		myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
-		print myuser
+		#print myuser
 		
 		if myuser is None:
 			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
@@ -107,15 +108,32 @@ def overview():
  		#set bin to hourly
  		bin = 60 * 60
  
+ 
+ 	t0 = time.time()
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
+	t1 = time.time()
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
+	t2 = time.time()
 	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
-	tags  = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
+	t3 = time.time()
+	tags   = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
+	t4 = time.time()
+	notes  = current_app.config["datadb"].fetch_notes_for_hosts(hosts,fromts,tots)
+	t5 = time.time()
+	
+
+	#print "zones for hosts %s" %(t1-t0)
+	#print "apps for hosts %s" %(t2-t1)
+	#print "timebins for hosts %s" %(t3-t2)
+	#print "tagged for hosts %s" %(t4-t3)
+	#print "notes for hosts %s" %(t5-t4)
+	
 	
 	values['zones'] = zones
 	values['apps'] = apps
 	values['devices'] = devices
 	values['tags'] = tags
+	values['notes'] = notes
 	
 	return jsonify(values)
 

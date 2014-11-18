@@ -8,6 +8,11 @@ from config import TestingConfig
 
 logger = logging.getLogger( "collect_logger" )
 
+def duplicate(ts,host, domain, lastline):
+	if lastline is None:
+		return False
+	return ts == lastline['ts'] and host == lastline['host'] and domain == lastline['domain']
+	
 def insert_dns(datafile):
 	
 	logger.debug("adding data from dns logs")	
@@ -18,7 +23,9 @@ def insert_dns(datafile):
 		fpos = 0
 
 	logger.debug("reading from file position %d, dns file size is %d" % (fpos,path.getsize(datafile)))
-		
+	
+	lastline = None
+	
 	if fpos < path.getsize(datafile):
 		with open(datafile) as f:
 			f.seek(fpos)
@@ -29,8 +36,10 @@ def insert_dns(datafile):
 				ts = tokens[0].split(".")[0]
 				host = ".".join(tokens[1].split(".")[:4])
 				domain = tokens[2][:-1]
-				lines.append({'ts':ts,'host':host,"domain":domain})
-		
+				if not duplicate(ts,host,domain, lastline):
+					lines.append({'ts':ts,'host':host,"domain":domain})
+				lastline = {'ts':ts,'host':host,"domain":domain}
+				
 			logger.debug("adding %d new entries" % len(lines))
 			
 			datadb.bulk_insert_dns(lines)

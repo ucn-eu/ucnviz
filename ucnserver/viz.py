@@ -121,16 +121,29 @@ def overview():
  		bin = 60 * 60
  	
  	
+ 	t0 = time.time()
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
+	t1 = time.time()
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
+	t2 = time.time()
 	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
-	tags  = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
+	t3 = time.time()
+	tags   = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
+	t4 = time.time()
+	notes  = current_app.config["datadb"].fetch_notes_for_hosts(hosts,fromts,tots)
+	t5 = time.time()
+	
+	# print "zones for hosts %d" %(t1-t0)
+# 	print "apps for hosts %d" %(t2-t1)
+# 	print "timebins for hosts %d" %(t3-t2)
+# 	print "tagged for hosts %d" %(t4-t3)
+# 	print "notes for hosts %d" %(t5-t4)
 	
 	values['zones'] = zones
 	values['apps'] = apps
 	values['devices'] = devices
 	values['tags'] = tags
-	
+	values['notes'] = notes
 	return jsonify(values)
 		
 #return all devices that have associated phone data (i.e running processes data)

@@ -23,9 +23,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		shownote	= ko.observable(false),
 		
 		noterange   = [],
+		
 		note       =  ko.observable(""),
 		
 		
+		_notes	   = [],
 		_queries   = [],
 		_locations = [],
 		_apps = [],
@@ -147,7 +149,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				
 				if (hosts.length == 1){
 					updatefilters(hosts[0]);
-				}			
+				}
+				
+				console.log("data notes is")
+				 console.log(data.notes);
+				_notes = data.notes			
+				
+				overlaynotes();
 			}
 			
 			d3.select(".chartcontainer")
@@ -173,7 +181,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			var from = xrange[0].getTime(); 
 			var to   = xrange[1].getTime(); 
 			var filtered;
-			
+			var labelpadding = 5;
+			var labelheight  = 15;
 			//recalculate stack values
 			if (filters().length > 0){
 				filtered = stack(Object.keys(data.hosts).filter(function(value){
@@ -226,7 +235,21 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 	  		 				.attr("x1", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)})
 							.attr("x2", function(d){return x(d.start*1000) + ((x(d.end*1000) - x(d.start*1000))/2)});
 	  		 			 
-						  
+			
+			
+			
+			svg.selectAll("line.noteline")
+				.attr("x1", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2)})
+				.attr("x2", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2)})	
+		
+			svg.selectAll("text.notetext")
+				.attr("x", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2)})
+				.attr("y", function(d,i,j){return labelheight/2})
+			
+			svg.selectAll("rect.notelabel")
+				.attr("x", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2) - (d.width/2) - labelpadding})
+				
+							  
 			svg.select(".x.axis").call(xAxis);
 			svg.select(".y.axis").call(yAxis);
 			
@@ -659,16 +682,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				return;
 			}
 			
-			/*var distinctlocations = Object.keys(_locations).map(function(item){	
-				return _locations[item].map(function(loc){
-					 return loc.name;
-				});
-			}).reduce(function(a,b){
-				return a.concat(b);
-			}).filter(function(item, index, self){
-				return self.indexOf(item) === index;
-			});*/
-			
+		
 			var distinctlocations = [];
 			
 			var rectpadding = 5;
@@ -764,6 +778,55 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				
 		},
 		
+		overlaynotes = function(){
+			var labelpadding = 5;
+			var labelheight  = 15;
+			console.log("overlaying notes!");
+			console.log(_notes);
+			var notes = svg.append("g")
+						  .attr("class", "notes")
+						  .attr("width", width)
+						  .attr("height", height)
+							
+			var note = notes.selectAll("note")
+							.data(_notes)
+							
+			note
+				.enter()
+				.append("line")
+				.attr("class", "noteline")
+				.attr("x1", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2)})
+				.attr("x2", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2)})
+				.attr("y1", function(d){return labelheight})
+				.attr("y2", function(d){return height})
+				.style("stroke", "#000")	
+		
+			note	
+				.enter()
+				.append("text")
+				.attr("class", "notetext")
+				.attr("text-anchor", "middle")
+				.attr("dy", ".3em")
+				.attr("x", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2)})
+				.attr("y", function(d,i,j){return labelheight/2})
+				.style("fill", "#000")	
+				.text(function(d){return "note"})
+				.each(function(d){
+					d.width = this.getComputedTextLength();
+				})
+			
+			note	
+				.enter()
+				.insert("rect", ":first-child")
+				.attr("class", "notelabel")
+				.attr("x", function(d){return x(d.fromts*1000) + ((x(d.tots*1000) - x(d.fromts*1000))/2) - (d.width/2) - labelpadding})
+				.attr("y", function(d){return 0 + 1})
+				.attr("width", function(d){return d.width + (2*labelpadding)})
+				.attr("height", labelheight)
+				.style("fill", "#fff")	
+				.style("stroke", "#000")
+				.style("shape-rendering", "crispEdges")		
+		},
 		
 		renderlocationkey = function(distinctlocations){
 				
