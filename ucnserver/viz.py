@@ -338,6 +338,15 @@ def activity():
 	tags  = current_app.config["datadb"].fetch_tags_for_host(host)
 	return jsonify(activity=activity, tags=tags)
 
+
+@viz_api.route("/viz/note/delete",  methods=['POST'])
+@viz_api.route("/viz/admin/note/delete",  methods=['POST'])
+def deletenote():
+	success = False
+	noteid = request.form.get("id")
+	success = current_app.config["datadb"].delete_note(noteid)
+	return jsonify({"success":success})
+
 @viz_api.route("/viz/note/add",  methods=['POST'])
 @viz_api.route("/viz/admin/note/add",  methods=['POST'])
 def addnote():
@@ -347,5 +356,7 @@ def addnote():
 	fromts = request.form.get("fromts")
 	tots = request.form.get("tots")
 	host = request.form.get("host")
-	success = current_app.config["datadb"].insert_note(note,host,fromts,tots)
-	return jsonify({"success":success})
+	noteid = current_app.config["datadb"].insert_note(note,host,fromts,tots)
+	if noteid is not None:
+		return jsonify({"success":True, "note":{"id":noteid, "note":note, "host":host, "fromts":fromts, "tots":tots}})	
+	return jsonify({"success":False})

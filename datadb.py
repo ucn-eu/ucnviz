@@ -630,14 +630,30 @@ class NetDB( object ):
 	
 	
 	@reconnect
-	def insert_note(self,note,host,fromts,tots):
+	def delete_note(self,noteid):
 		try:
-			self.conn.execute("INSERT INTO NOTES(note,host,fromts,tots) VALUES (?,?,?,?)", (note,host,fromts,tots))
+			self.conn.execute("DELETE FROM NOTES WHERE id = ?", (noteid,))
 			self.conn.commit()
 		except Exception, e:
-			logger.error("failed to insert note %s for host %s %s %s" % (note, host, fromts, tots))
+			logger.error("failed to delete note %s" % (note))
 			return False
+			
 		return True
+		
+	@reconnect
+	def insert_note(self,note,host,fromts,tots):
+		noteid = None
+		
+		try:
+			result = self.conn.execute("INSERT INTO NOTES(note,host,fromts,tots) VALUES (?,?,?,?)", (note,host,fromts,tots))
+			noteid = result.lastrowid
+			self.conn.commit()
+			
+		except Exception, e:
+			logger.error("failed to insert note %s for host %s %s %s" % (note, host, fromts, tots))
+			return None
+		
+		return noteid
 		
 	@reconnect		
 	def insert_tag_for_host(self, host,tld,tag,fromts,tots):

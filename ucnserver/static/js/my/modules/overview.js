@@ -51,6 +51,16 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			}
 		}),
 		
+		
+		_notesListener = ko.postbox.subscribe("notes", function(value){
+			if (value)
+				overlaynotes(); 
+			else{
+				svg.selectAll("g.notes").remove();	
+				d3.select(".brushnote").call(notebrush.clear());
+			}
+		}),
+		
 		_queryListener = ko.postbox.subscribe("queries", function(queries) {
 			
 			if (queries){
@@ -151,11 +161,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 					updatefilters(hosts[0]);
 				}
 				
-				console.log("data notes is")
-				 console.log(data.notes);
 				_notes = data.notes			
 				
-				overlaynotes();
 			}
 			
 			d3.select(".chartcontainer")
@@ -303,11 +310,30 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		deletenote = function(){
 			shownote(false);
+			var params = {"id":note().id}
+			ajaxservice.ajaxPostJson('note/delete', params, notedeleted);
+		},
+		
+		notedeleted = function(data){
+			if (data.success){
+			
+				var idx = _notes.indexOf(note());
+				
+				if (idx > -1){
+					d3.select(".brushnote").call(notebrush.clear());
+					_notes.splice(idx,1)
+					note({});
+					overlaynotes();
+				}
+			}
 		},
 		
 		noteadded = function(data){
 			if (data.success){
 				note({});
+				_notes.push(data.note);
+				console.log(_notes);
+				overlaynotes();
 				d3.select(".brushnote").call(notebrush.clear());
 			}
 		},
@@ -797,9 +823,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		
 		overlaynotes = function(){
+			
+			
 			var labelpadding = 5;
 			var labelheight  = 15;
-		
+			
+			svg.selectAll("g.notes").remove();
+			
 			var notes = svg.append("g")
 						  .attr("class", "notes")
 						  .attr("width", width)
