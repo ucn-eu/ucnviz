@@ -79,7 +79,6 @@ class NetDB( object ):
 		
 		ts = mints
 		keys = []
-		t0 = time.time()
 		indexes = {}
 		
 		c = 0
@@ -463,8 +462,8 @@ class NetDB( object ):
 	
 	def fetch_notes_for_hosts(self,hosts,fromts,tots):
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
-		result = self.conn.execute("SELECT host, fromts, tots, note  FROM notes WHERE host in(%s) AND fromts >= %s AND tots <= %s ORDER BY host" % (hlist,fromts,tots))
-		notes = [{'host': row[0], 'fromts': row[1], 'tots': row[2], 'note': row[3]} for row in result]
+		result = self.conn.execute("SELECT host, fromts, tots, note, id  FROM notes WHERE host in(%s) AND fromts >= %s AND tots <= %s ORDER BY host" % (hlist,fromts,tots))
+		notes = [{'host': row[0], 'fromts': row[1], 'tots': row[2], 'note': row[3], 'id':row[4]} for row in result]
 		return notes
 	
 # 	#deprecated, use fetch_apps_for_hosts
@@ -958,9 +957,11 @@ class NetDB( object ):
 			
 			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS NOTES
-			(host CHAR(16),
+			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			host CHAR(16),
 			fromts INTEGER,
 			tots INTEGER,
-			note TEXT)''')		
+			note TEXT,
+			UNIQUE(host,fromts,tots) ON CONFLICT REPLACE);''')		
 		
 	

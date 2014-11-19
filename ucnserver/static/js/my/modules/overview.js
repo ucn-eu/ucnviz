@@ -24,7 +24,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		noterange   = [],
 		
-		note       =  ko.observable(""),
+		note       =  ko.observable({}),
 		
 		
 		_notes	   = [],
@@ -292,13 +292,22 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
     		shownote(false);
     		var fromts = parseInt(noterange[0].getTime()/1000);
 			var tots   = parseInt(noterange[1].getTime()/1000);		
-    		var params = {fromts:fromts, tots:tots, host:selectedhost(), note:note()}
+    		var params = {fromts:fromts, tots:tots, host:selectedhost(), note:note().note}
     		ajaxservice.ajaxPostJson('note/add', params, noteadded);
     	},
+    	
+    	closenote = function(){
+    		shownote(false);
+    		note({});
+    	},
+		
+		deletenote = function(){
+			shownote(false);
+		},
 		
 		noteadded = function(data){
 			if (data.success){
-				note("");
+				note({});
 				d3.select(".brushnote").call(notebrush.clear());
 			}
 		},
@@ -496,6 +505,14 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			 
 		},
 
+		noteclicked = function(d){
+			 svg.select(".brushnote").call(notebrush.extent([new Date(d.fromts*1000), new Date(d.tots*1000)]));
+			 noterange = notebrush.extent();
+			 console.log(d);
+			 shownote(true);
+			 note(d)
+		},
+		
 		keyclicked = function(d){
 			updatefilters(d);
 		},
@@ -778,11 +795,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				
 		},
 		
+		
 		overlaynotes = function(){
 			var labelpadding = 5;
 			var labelheight  = 15;
-			console.log("overlaying notes!");
-			console.log(_notes);
+		
 			var notes = svg.append("g")
 						  .attr("class", "notes")
 						  .attr("width", width)
@@ -814,7 +831,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.each(function(d){
 					d.width = this.getComputedTextLength();
 				})
-			
+				.on("click", noteclicked)	
+				
 			note	
 				.enter()
 				.insert("rect", ":first-child")
@@ -825,7 +843,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.attr("height", labelheight)
 				.style("fill", "#fff")	
 				.style("stroke", "#000")
-				.style("shape-rendering", "crispEdges")		
+				.style("shape-rendering", "crispEdges")	
+				.on("click", noteclicked)	
 		},
 		
 		renderlocationkey = function(distinctlocations){
@@ -1080,7 +1099,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 	return {
 		init: init,
 		subtitle: subtitle,
+		//note stuff should sit inside own module...(as should all other overlays)
+		deletenote:deletenote,
 		shownote: shownote,
+		closenote: closenote,
 		note: note,
 		recordnote:recordnote,
 	}

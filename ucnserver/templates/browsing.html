@@ -168,11 +168,12 @@
 									<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>		
 								</div>
 								<div class="modal-body">
-									<textarea class="form-control" rows="3" data-bind="value:note"></textarea>
+									<textarea class="form-control" rows="3" data-bind="value:note().note"></textarea>
 								</div> <!-- end of modal body! -->
 								<div class="modal-footer">
 									<button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click:function(){recordnote()}">Add</button>
-									<button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click:function(){shownote(false)}">Close</button>
+									<button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click:function(){deletenote()}">Delete</button>
+									<button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click:function(){closenote()}">Close</button>
 								</div>
 							</div> <!-- end of modal content -->
 						</div> <!-- end of modal dialog -->
