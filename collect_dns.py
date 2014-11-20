@@ -34,8 +34,17 @@ def insert_dns(datafile):
 			for line in content:
 				tokens = line.split()
 				ts = tokens[0].split(".")[0]
-				host = ".".join(tokens[1].split(".")[:4])
-				domain = tokens[2][:-1]
+				hlist = tokens[1].split(".")
+				
+				if len(hlist) >= 5:
+					hlist = hlist[:4]
+				
+				host = ".".join(hlist)
+					
+				domain = tokens[2]
+				if domain[len(domain)-1] == ".":
+					domain = domain[:-1]
+					
 				if not duplicate(ts,host,domain, lastline):
 					lines.append({'ts':ts,'host':host,"domain":domain})
 				lastline = {'ts':ts,'host':host,"domain":domain}
