@@ -360,7 +360,7 @@ class NetDB( object ):
 			timerange = "AND (u.ts >= %s AND u.ts <= %s)" % (fromts, tots)
 		
 		#sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
-		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE (((u.domain = t.domain OR u.tld = t.domain) AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s) ORDER BY u.domain" % (timerange)
+		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE t.host = '%s' AND (u.domain = t.domain OR u.tld = t.domain) AND u.ts <=  t.tots %s ORDER BY u.domain" % (host,timerange)
 		
 		result = self.conn.execute(sql)
 		
@@ -466,44 +466,6 @@ class NetDB( object ):
 		notes = [{'host': row[0], 'fromts': row[1], 'tots': row[2], 'note': row[3], 'id':row[4]} for row in result]
 		return notes
 	
-# 	#deprecated, use fetch_apps_for_hosts
-# 	@reconnect
-# 	def fetch_apps_for_home(self, home,fromts=None, tots=None):
-# 		delta = 60*60*1000
-# 		result = self.conn.execute("SELECT p.name, p.ts, p.host FROM PROCESSES p, HOUSE h  WHERE  p.foreground = 1 AND p.host = h.host AND h.name = ? ORDER BY p.host, p.name, p.ts ASC", (home,))
-# 		
-# 		apps = {}
-# 		currentapp= None
-# 		app = None
-# 		host = None
-# 		lasthost = None
-# 		
-# 		for row in result:
-# 			host = row[2]
-# 			if host not in apps:
-# 				apps[host] = []
-# 				if lasthost:
-# 					apps[lasthost].append(app)	
-# 					app = None
-# 						
-# 			lasthost = host
-# 			if currentapp != row[0]:
-# 				if app is not None:
-# 					apps[host].append(app)
-# 				app = {"name":row[0], "start":row[1], "end":row[1]} 	
-# 				currentapp = row[0]
-# 			else:
-# 				if (app["end"] + delta) >= row[1]:
-# 					app["end"] = row[1]
-# 				else:
-# 					apps[host].append(app)
-# 					app = {"name":row[0], "start":row[1], "end":row[1]} 		
-# 		if app:
-# 			apps[host].append(app)
-# 		
-# 		return apps
-				
-
 	#return foregrounded apps along with timerange that have been in foreground
 	@reconnect
 	def fetch_apps_for_host(self, host, fromts=None, tots=None):

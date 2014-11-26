@@ -44,7 +44,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			if (!data)
 				return;
 		
-			
+			console.log("setting selected hist to " + data.host);
 			selectedhost(data.host);
 			fromts = data.fromts;
 			tots = data.tots;
@@ -54,6 +54,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 			
 			// update activity too!
+			console.log("And now am updating activity!");
 			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);	
 			
 		}),
@@ -182,6 +183,8 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			 
 			var activity = data.activity;	
 			tags(data.tags);		
+			console.log("set tags to ");
+			console.log(tags());
 				
     		var start 	= Number.MAX_VALUE;
 			var end 	= 0;
@@ -192,13 +195,15 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
     		for (var i = 0; i < tags().length; i++){
     			readings[i] = [];
     		}
-    		
+    		console.log("readings are");
+    		console.log(readings);
     	
 			for(var i = 0; i < activity.length; i++){
 				
 				start = Math.min(start, activity[i].fromts);
 				end = Math.max(end, activity[i].tots);
 				var timespan = Math.max(1000, (activity[i].tots - activity[i].fromts) * 1000);
+				console.log("getting index of " + activity[i].tag);
 				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan, activity[i].domain ]);
 			}
 				
