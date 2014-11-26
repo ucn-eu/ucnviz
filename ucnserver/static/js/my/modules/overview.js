@@ -95,8 +95,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		height    = 350 - margin.top - margin.bottom,
 		height2   = 140 - margin2.top - margin2.bottom,
 	
-		x  = d3.time.scale.utc().range([0,width]),
-		x2 = d3.time.scale.utc().range([0, width]),
+		x  = d3.time.scale().range([0,width]),
+		x2 = d3.time.scale().range([0, width]),
 		 
 		y  = d3.scale.linear().range([height,0]),
 		y2 = d3.scale.linear().range([height2,0]),
@@ -109,7 +109,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		yAxis = d3.svg.axis().scale(y).orient("left"),
 		yAxis2 = d3.svg.axis().scale(y2).orient("left"),
 		
-		parseDate = d3.time.format("%Y/%m/%d %H:%M").parse,
+		//parseDate = d3.time.format("%Y/%m/%d %H:%M").parse,
 		
 		area = d3.svg.area()
 				.interpolate("basis")
@@ -282,7 +282,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			if (fromto().length > 1){
 				m1 = moment.unix((fromto()[0].getTime())/1000);
 				m2 = moment.unix((fromto()[1].getTime())/1000);
-				return (m1.utc().format('MMM Do YYYY h:mm:ss a') + " to " + m2.utc().format('MMM Do YYYY h:mm:ss a'));	
+				return (m1.format('MMM Do YYYY h:mm:ss a') + " to " + m2.format('MMM Do YYYY h:mm:ss a'));	
 			}
 		}),
 		
@@ -332,7 +332,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			if (data.success){
 				note({});
 				_notes.push(data.note);
-				console.log(_notes);
 				overlaynotes();
 				d3.select(".brushnote").call(notebrush.clear());
 			}

@@ -350,8 +350,6 @@ def deletenote():
 @viz_api.route("/viz/note/add",  methods=['POST'])
 @viz_api.route("/viz/admin/note/add",  methods=['POST'])
 def addnote():
-	
-	
 	note = request.form.get("note")
 	fromts = request.form.get("fromts")
 	tots = request.form.get("tots")

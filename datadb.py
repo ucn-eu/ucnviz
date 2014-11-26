@@ -351,7 +351,7 @@ class NetDB( object ):
 		
 		#IF FROMTS AND TOTS ARE NONE, SET THEM TO MAX, MIN OF TIMEFRAME
 		
-		#milliseconds
+		#milliseconds grouping (so two ts with a difference less than delta will be combined into one)
 		delta = 10000
 		
 		timerange=""
@@ -360,8 +360,8 @@ class NetDB( object ):
 			timerange = "AND (u.ts >= %s AND u.ts <= %s)" % (fromts, tots)
 		
 		#sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
-		sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t, URLS u WHERE t.host = '%s' AND (u.domain = t.domain OR u.tld = t.domain) AND u.ts <=  t.tots %s ORDER BY u.domain" % (host,timerange)
-		
+		sql = "SELECT t.tag, u.ts, u.tld FROM TAGS t, URLS u WHERE t.host = '%s' AND (u.domain = t.domain OR u.tld = t.domain) AND (u.ts <=  t.tots AND u.ts >= t.fromts) %s ORDER BY u.domain" % (host,timerange)
+		print sql
 		result = self.conn.execute(sql)
 		
 		currenttag = None

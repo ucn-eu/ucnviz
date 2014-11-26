@@ -195,26 +195,28 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
     		for (var i = 0; i < tags().length; i++){
     			readings[i] = [];
     		}
-    		console.log("readings are");
-    		console.log(readings);
-    	
+    		
 			for(var i = 0; i < activity.length; i++){
 				
 				start = Math.min(start, activity[i].fromts);
 				end = Math.max(end, activity[i].tots);
 				var timespan = Math.max(1000, (activity[i].tots - activity[i].fromts) * 1000);
-				console.log("getting index of " + activity[i].tag);
 				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan, activity[i].domain ]);
 			}
 				
+				
+			console.log("rendering FROM")
+			console.log(new Date(start*1000));
+			console.log("to!");
+			console.log(new Date(end*1000));
 			
 			var tickFormatter = function(x){
 				m1 = moment.unix(x/1000);
 				
 				if ((tots-fromts) > 24*60*60){
-					return m1.utc().format('DD/MM hh:mm');
+					return m1.format('DD/MM hh:mm');
 				}
-				return m1.utc().format('hh:mm:ss a');
+				return m1.format('hh:mm:ss a');
 			},
 			
 			m1 = moment.unix(fromts);
