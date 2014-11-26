@@ -76,6 +76,7 @@ def logout():
 	
 	
 @viz_api.route("/viz/devices")
+@loggedin
 def devices():
 	return render_template('devices.html')
 	
@@ -90,6 +91,7 @@ def defaulttimerange(hosts):
 	return {'fromts':fromts,'tots':tots}
 	
 @viz_api.route("/viz/overview/activity")
+@loggedin
 def overview():
 	hosts   = hostsforuser().keys()
 	devices = hostsforuser()
@@ -149,12 +151,14 @@ def overview():
 #return all devices that have associated phone data (i.e running processes data)
 @viz_api.route("/viz/devices/hosts")
 @viz_api.route("/viz/admin/devices/hosts")
+@loggedin
 def devicehosts():
 	hosts = current_app.config["datadb"].fetch_device_hosts()
 	return jsonify(hosts=hosts)
 
 @viz_api.route("/viz/devices/processes")
 @viz_api.route("/viz/admin/devices/processes")
+@loggedin
 def processes():
 	host = request.args.get('host')
 	filter = request.args.get('filtered')
@@ -173,6 +177,7 @@ def processes():
 
 @viz_api.route("/viz/devices/process")
 @viz_api.route("/viz/admin/devices/process")
+@loggedin
 def process():
 	processname = request.args.get('process')
 	host = request.args.get('host')
@@ -182,12 +187,14 @@ def process():
 
 @viz_api.route("/viz/devices/netdata")
 @viz_api.route("/viz/admin/devices/netdata")
+@loggedin
 def netdata():
 	host 	= request.args.get('host')
 	netdata =  current_app.config["datadb"].fetch_netdata_for_host(host)
 	return jsonify(netdata=netdata)
 	
 @viz_api.route("/viz/web/browsing")
+@loggedin
 def browsing():
  	host = request.args.get('host')
  	fromts = request.args.get('fromts')
@@ -197,6 +204,7 @@ def browsing():
 	
 @viz_api.route("/viz/web/queries")
 @viz_api.route("/viz/admin/web/queries")
+@loggedin
 def queries():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
@@ -206,6 +214,7 @@ def queries():
 
 @viz_api.route("/viz/web/summary")
 @viz_api.route("/viz/admin/web/summary")
+@loggedin
 def summary():
 	host 	= request.args.get('host')
 	bin 	= request.args.get('bin')
@@ -239,12 +248,14 @@ def summary():
 	return jsonify(summary=summary, zones=zones, apps=apps)
 
 @viz_api.route("/viz/web/bootstrap")
+@loggedin
 def hosts():
 	hosts = hostsforuser().keys()
 	return jsonify(hosts=hosts)
 
 @viz_api.route("/viz/web/domainsummary")
 @viz_api.route("/viz/admin/web/domainsummary")
+@loggedin
 def domainsummary():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
@@ -257,6 +268,7 @@ def domainsummary():
 
 @viz_api.route("/viz/tag/urlsfortagging")
 @viz_api.route("/viz/admin/tag/urlsfortagging")
+@loggedin
 def urlsfortagging():
 	host 	= request.args.get('host')
 	fromts 	= request.args.get('fromts') or None
@@ -268,6 +280,7 @@ def urlsfortagging():
 
 @viz_api.route("/viz/tag/urlsfortag")
 @viz_api.route("/viz/admin/tag/urlsfortag")
+@loggedin
 def urlsfortag():
 	host 	= request.args.get('host')
 	tag		= request.args.get('tag')
@@ -277,6 +290,7 @@ def urlsfortag():
 	
 @viz_api.route("/viz/tag/tagurls")
 @viz_api.route("/viz/admin/tag/tagurls")
+@loggedin
 def tagurls():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
@@ -291,6 +305,7 @@ def tagurls():
 
 @viz_api.route("/viz/tag/add")
 @viz_api.route("/viz/admin/tag/add")
+@loggedin
 def addtag():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
@@ -299,6 +314,7 @@ def addtag():
 
 @viz_api.route("/viz/tag/removetag")
 @viz_api.route("/viz/admin/tag/removetag")
+@loggedin
 def removetag():
 	host = request.args.get('host')
 	tag	 = request.args.get('tag')
@@ -308,6 +324,7 @@ def removetag():
 
 @viz_api.route("/viz/tag/removeassociation")
 @viz_api.route("/viz/admin/tag/removeassociation")
+@loggedin
 def removeassociation():
 	host = request.args.get('host')
 	domain	 = request.args.get('domain')
@@ -318,6 +335,7 @@ def removeassociation():
 
 @viz_api.route("/viz/tag/activity")
 @viz_api.route("/viz/admin/tag/activity")
+@loggedin
 def activity():
 	host 	= request.args.get('host') or None
 	fromts 	= request.args.get('fromts') or None
@@ -341,6 +359,7 @@ def activity():
 
 @viz_api.route("/viz/note/delete",  methods=['POST'])
 @viz_api.route("/viz/admin/note/delete",  methods=['POST'])
+@loggedin
 def deletenote():
 	success = False
 	noteid = request.form.get("id")
@@ -349,6 +368,7 @@ def deletenote():
 
 @viz_api.route("/viz/note/add",  methods=['POST'])
 @viz_api.route("/viz/admin/note/add",  methods=['POST'])
+@loggedin
 def addnote():
 	note = request.form.get("note")
 	fromts = request.form.get("fromts")
