@@ -11,6 +11,7 @@ from viz import viz_api
 from moves import moves_api
 from ios import ios_api
 from admin import admin_api
+from calendar import calendar_api
 
 app = Flask(__name__)
 app.config.from_object(config.TestingConfig)
@@ -26,6 +27,7 @@ logger.setLevel(logging.DEBUG)
 #register blueprints (additional routes)
 app.register_blueprint(viz_api)
 app.register_blueprint(moves_api)
+app.register_blueprint(calendar_api)
 app.register_blueprint(ios_api)
 app.register_blueprint(admin_api)
 

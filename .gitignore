@@ -1,4 +1,5 @@
 static/data/
+client_secrets.json
 config.py
 *.db
 *.pyc
