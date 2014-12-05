@@ -12,6 +12,7 @@ import httplib2
 
 logger = logging.getLogger( "collect_logger" )
 
+#https://developers.google.com/api-client-library/python/start/get_started#simple
 def fetchevents():
 	
 	tokens = collectdb.fetch_tokens('calendar')
