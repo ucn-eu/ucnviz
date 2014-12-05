@@ -9,6 +9,10 @@ from config import TestingConfig
 logger = logging.getLogger( "collect_logger" )
 
 def insert_urls(datafile):
+	if path.isfile(datafile) is False:
+		logger.debug("no squid log file to read from")
+		return
+
         logger.debug("adding data from squid logs")	
 	fpos = collectdb.fetch_filepos_for('squid')
 	
