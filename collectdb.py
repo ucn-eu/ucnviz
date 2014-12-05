@@ -13,42 +13,43 @@ class CollectDB(object):
 		if self.connected is False:
 			self.conn = sqlite3.connect("%s" % self.name, check_same_thread = False)
 			self.connected = True
+	
 			
 			
-	def insert_token_for_host(self, host, token):
+	def insert_token_for_host(self, api, host, token):
 		
 		if self.connected is not True:
 			self.connect()
 		
 		try:
-			self.conn.execute("INSERT INTO TOKENS(host, token) VALUES(?,?)", (host, token))
+			self.conn.execute("INSERT INTO TOKENS(api, host, token) VALUES(?,?,?)", (api, host, token))
 			self.conn.commit()
 		except Exception, e:
 			logger.error("error saving token!!")
 			
-	def fetch_tokens(self):
+	def fetch_tokens(self, api):
 		if self.connected is not True:
 			self.connect()
-		sql = "SELECT token, host, lastUpdate FROM TOKENS"
+		sql = "SELECT token, host, lastUpdate FROM TOKENS WHERE api = '%s'" % api
 		result = self.conn.execute(sql)
 		
 		return [{"token":row[0], "host":row[1], "lastUpdate":row[2]} for row in result]
 		
-	def fetch_token_for_host(self, host):
+	def fetch_token_for_host(self, api, host):
 		if self.connected is not True:
 			self.connect()
-		result = self.conn.execute("SELECT token FROM TOKENS WHERE host = '%s'" % host)
+		result = self.conn.execute("SELECT token FROM TOKENS WHERE host = '%s' AND api ='%s'" % (host,api))
 		token = result.fetchone()
 		if token:
 			return token[0]
 		else:
 			return None
 	
-	def update_ts(self, host, ts):
+	def update_ts(self, api, host, ts):
 		if self.connected is not True:
 			self.connect()	
 		
-		result = self.conn.execute("UPDATE TOKENS SET lastUpdate='%s' WHERE host = '%s'" % (ts, host))
+		result = self.conn.execute("UPDATE TOKENS SET lastUpdate='%s' WHERE host = '%s' AND api='%s'" % (ts, host,api))
 		self.conn.commit()
 		return result
 	
@@ -73,10 +74,11 @@ class CollectDB(object):
 		
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS TOKENS
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			api CHAR(255),
 			host CHAR(16),
 			token CHAR(255),
 			lastUpdate CHAR(32),
-			UNIQUE(host) ON CONFLICT REPLACE);''')	
+			UNIQUE(host,api) ON CONFLICT REPLACE);''')	
 			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS LOGACCESS
 			(name PRIMARY KEY,

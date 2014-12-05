@@ -67,6 +67,6 @@ def authcallback():
 	logger.debug("swapped code for token for host %s" % host)
 	token = j.json()['access_token']
 	
-	current_app.config["collectdb"].insert_token_for_host(host, token)
+	current_app.config["collectdb"].insert_token_for_host('moves',host, token)
 	logger.debug("saved token for host %s" % host)
 	return render_template('moves_callback.html')

@@ -1,4 +1,4 @@
-from flask import current_app, Blueprint, render_template, request, redirect
+from flask import current_app, Blueprint, render_template, request, redirect,jsonify
 from vpnresolve import VPNResolve
 import requests
 import logging
@@ -14,6 +14,10 @@ logger = logging.getLogger( "ucn_logger" )
 @calendar_api.route("/viz/calendar", methods=['GET'])
 @calendar_api.route("/viz/calendar/", methods=['GET'])
 def start():	
+
+	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
+	host = vpnres.clientip(request)
+	
 	flow = client.flow_from_clientsecrets(
 		'client_secrets.json',
 		scope='https://www.googleapis.com/auth/calendar',
@@ -25,6 +29,13 @@ def start():
 
 @calendar_api.route("/viz/calendar/callback")	
 def gcallback():
+	
+	if len(request.access_route) > 1:
+		host = request.access_route[-1]
+	else:
+		host = request.access_route[0]
+			
+	
 	flow = client.flow_from_clientsecrets(
 		'client_secrets.json',
 		scope='https://www.googleapis.com/auth/calendar',
@@ -32,5 +43,10 @@ def gcallback():
 	)
 	auth_code = request.args.get('code')
 	credentials = flow.step2_exchange(auth_code)
-	print credentials.to_json()
-	return "nice, thanks!!"
+
+	try:
+		token = credentials.to_json()
+		current_app.config["collectdb"].insert_token_for_host('calendar',host, token)
+		return jsonify({"success":True})
+	except:
+		return jsonify({"success":False})

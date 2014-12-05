@@ -20,7 +20,7 @@ logger = logging.getLogger( "collect_logger" )
 
 def fetchlocations():
 	logger.debug("fetching tokens")
-	tokens = collectdb.fetch_tokens()
+	tokens = collectdb.fetch_tokens('moves')
  	
  	for token in tokens:
  		
@@ -82,7 +82,7 @@ def fetchlocations():
 						
 		if latestUpdate is not None:
 			logger.debug("set latest update for host %s to %s" %  (token['host'],lastUpdate.strftime("%Y%m%dT%H%M%S%z")))
-			collectdb.update_ts(token['host'], lastUpdate.strftime("%Y%m%dT%H%M%S%z"))
+			collectdb.update_ts('moves',token['host'], lastUpdate.strftime("%Y%m%dT%H%M%S%z"))
 			
 	#print result
 	#return jsonify({"result":result})
