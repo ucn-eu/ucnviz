@@ -12,7 +12,6 @@ import httplib2
 
 logger = logging.getLogger( "collect_logger" )
 
-#https://developers.google.com/api-client-library/python/start/get_started#simple
 def fetchevents():
 	
 	tokens = collectdb.fetch_tokens('calendar')
@@ -23,20 +22,32 @@ def fetchevents():
 		http = httplib2.Http()
    		http = credentials.authorize(http)
 		service = build('calendar', 'v3', http=http)
+		
 		try:
-			request = service.events().list(calendarId='primary')
-   			 # Loop until all pages have been processed.
+			if token['attr'] is None:	
+				request = service.calendarList().list()
+				while request != None:
+					response = request.execute()
+					for clist in response.get('items', []):
+						if clist.get("summary") == 'ucn':
+							token['attr'] = clist.get("id")
+							collectdb.update_calendar_id(token['host'], 'calendar', token['attr'])
+							break
+					request =  service.calendarList().list_next(request, response)
+			
+		 	request = service.events().list(calendarId=token['attr'])
 			while request != None:
 			  # Get the next page.
 			  response = request.execute()
 			
 			  for event in response.get('items', []):
-				print repr(event.get('summary', 'NO SUMMARY')) + '\n'
+			  	print "%s %s %s" %  (event.get("start"), event.get("end"), event.get("summary"))
+				
 			  # Get the next request object by passing the previous request object to
 			  # the list_next method.
 			  request = service.events().list_next(request, response)
 
-  		except AccessTokenRefreshError:
+  		except client.AccessTokenRefreshError:
    			print ('The credentials have been revoked or expired, please re-run the application to re-authorize')
 	
 

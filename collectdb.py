@@ -30,10 +30,10 @@ class CollectDB(object):
 	def fetch_tokens(self, api):
 		if self.connected is not True:
 			self.connect()
-		sql = "SELECT token, host, lastUpdate FROM TOKENS WHERE api = '%s'" % api
+		sql = "SELECT token, host, lastUpdate, attr FROM TOKENS WHERE api = '%s'" % api
 		result = self.conn.execute(sql)
 		
-		return [{"token":row[0], "host":row[1], "lastUpdate":row[2]} for row in result]
+		return [{"token":row[0], "host":row[1], "lastUpdate":row[2], "attr":row[3]} for row in result]
 		
 	def fetch_token_for_host(self, api, host):
 		if self.connected is not True:
@@ -67,7 +67,12 @@ class CollectDB(object):
 		if fpos is not None:
 			return fpos[0]
 		return 0
-			
+	
+	def update_calendar_id(self, host, api, calendarId):
+		result = self.conn.execute("UPDATE TOKENS SET attr='%s' WHERE host = '%s' AND api='%s'" % (calendarId, host,api))
+		self.conn.commit()
+		return result
+				
 	def createTables(self):
 		if self.connected is not True:
 			self.connect()
@@ -77,6 +82,7 @@ class CollectDB(object):
 			api CHAR(255),
 			host CHAR(16),
 			token CHAR(255),
+			attr CHAR(255),
 			lastUpdate CHAR(32),
 			UNIQUE(host,api) ON CONFLICT REPLACE);''')	
 			
