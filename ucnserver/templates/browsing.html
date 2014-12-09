@@ -121,7 +121,7 @@
   			</div>
 			<div class="col-md-2 col-md-offset-5">
 				<div class="tagactivitycontainer">
-					<button class="btn btn-danger pull-right" data-bind="click:function(){toggletagger();}">tag activity</button>
+					<button class="btn btn-danger pull-right" data-bind="css:{disabled:tagdisabled}, click:function(){toggletagger();}">tag activity</button>
 				</div>
 			</div>
   		</div>
@@ -253,7 +253,7 @@
 			</div>
 		</div>
 		
-		<div class="row hideonload">
+		<div class="row">
 			<div class="col-md-3 tagchartbar" style="background:#30363c;">
 				<div class="row" style="background:#3b5998;">
 					<div class="col-md-12">
