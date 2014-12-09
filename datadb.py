@@ -462,8 +462,8 @@ class NetDB( object ):
 	
 	def fetch_notes_for_hosts(self,hosts,fromts,tots):
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
-		result = self.conn.execute("SELECT host, fromts, tots, note, id  FROM notes WHERE host in(%s) AND fromts >= %s AND tots <= %s ORDER BY host" % (hlist,fromts,tots))
-		notes = [{'host': row[0], 'fromts': row[1], 'tots': row[2], 'note': row[3], 'id':row[4]} for row in result]
+		result = self.conn.execute("SELECT host, fromts, tots, note, id, source  FROM notes WHERE host in(%s) AND fromts >= %s AND tots <= %s ORDER BY host" % (hlist,fromts,tots))
+		notes = [{'host': row[0], 'fromts': row[1], 'tots': row[2], 'note': row[3], 'id':row[4], 'source':row[5]} for row in result]
 		return notes
 	
 	#return foregrounded apps along with timerange that have been in foreground
@@ -603,11 +603,11 @@ class NetDB( object ):
 		return True
 		
 	@reconnect
-	def insert_note(self,note,host,fromts,tots):
+	def insert_note(self,note,host,fromts,tots,source='viz'):
 		noteid = None
 		
 		try:
-			result = self.conn.execute("INSERT INTO NOTES(note,host,fromts,tots) VALUES (?,?,?,?)", (note,host,fromts,tots))
+			result = self.conn.execute("INSERT INTO NOTES(note,host,fromts,tots,source) VALUES (?,?,?,?,?)", (note,host,fromts,tots,source))
 			noteid = result.lastrowid
 			self.conn.commit()
 			
@@ -940,6 +940,7 @@ class NetDB( object ):
 			fromts INTEGER,
 			tots INTEGER,
 			note TEXT,
+			source CHAR(16),
 			UNIQUE(host,fromts,tots) ON CONFLICT REPLACE);''')		
 		
 	

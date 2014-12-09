@@ -159,10 +159,14 @@
 							<div class="modal-content">
 								<div class="modal-header">
 									<strong class="modal-title" id="myModalLabel"> add a note </strong>
-									<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>		
 								</div>
 								<div class="modal-body">
-									<textarea class="form-control" rows="3" data-bind="value:note().note"></textarea>
+									<!--ko if: note().source=="viz"-->
+										<textarea class="form-control" rows="3" data-bind="value:note().note"></textarea>
+									<!--/ko-->
+									<!--ko ifnot: note().source=="viz" -->
+										<span data-bind="text:note().note"> </span>
+									<!--/ko-->
 								</div> <!-- end of modal body! -->
 								<div class="modal-footer">
 									<button type="button" class="btn btn-default" data-dismiss="modal" data-bind="click:function(){recordnote()}">Add</button>

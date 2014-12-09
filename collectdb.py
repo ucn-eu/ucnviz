@@ -12,15 +12,11 @@ class CollectDB(object):
 		log.debug( "connecting to sqllite database %s" % self.name )
 		if self.connected is False:
 			self.conn = sqlite3.connect("%s" % self.name, check_same_thread = False)
-			self.connected = True
-	
-			
+			self.connected = True	
 			
 	def insert_token_for_host(self, api, host, token):
-		
 		if self.connected is not True:
 			self.connect()
-		
 		try:
 			self.conn.execute("INSERT INTO TOKENS(api, host, token) VALUES(?,?,?)", (api, host, token))
 			self.conn.commit()

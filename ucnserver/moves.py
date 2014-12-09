@@ -33,8 +33,11 @@ def root():
 	
 	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 
-	myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
+
+	#myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
+	
 	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
+	
 	host = vpnres.clientip(request)
 	
 	if host is None:

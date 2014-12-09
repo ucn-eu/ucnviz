@@ -10,6 +10,10 @@ from oauth2client import client
 from apiclient.discovery import build
 import httplib2
 
+from datetime import datetime
+import dateutil.parser
+
+
 logger = logging.getLogger( "collect_logger" )
 
 def fetchevents():
@@ -41,8 +45,9 @@ def fetchevents():
 			  response = request.execute()
 			
 			  for event in response.get('items', []):
-			  	print "%s %s %s" %  (event.get("start"), event.get("end"), event.get("summary"))
-				
+			  	start = int(time.mktime(dateutil.parser.parse(event.get("start")['dateTime']).timetuple()))
+				end  = int(time.mktime(dateutil.parser.parse(event.get("end")['dateTime']).timetuple()))
+				noteid = datadb.insert_note(event.get("summary"),token['host'],start,end,'calendar')
 			  # Get the next request object by passing the previous request object to
 			  # the list_next method.
 			  request = service.events().list_next(request, response)
@@ -61,4 +66,5 @@ if __name__ == "__main__":
 	logger.setLevel(logging.DEBUG)
 
 	collectdb = CollectDB(name=cfg.COLLECTDB)
+	datadb = NetDB(name=cfg.DATADB)
 	fetchevents()

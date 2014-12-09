@@ -15,6 +15,29 @@ logger = logging.getLogger( "ucn_logger" )
 @calendar_api.route("/viz/calendar/", methods=['GET'])
 def start():	
 
+	if 'connect.sid' not in request.cookies:
+			return redirect("%s/ucn/auth/login" % current_app.config["BASEURL"])
+
+	cookie = urllib.unquote(request.cookies['connect.sid'])
+	sessionid = "sess:%s" % cookie[2:].split(".")[0]
+	
+	user = json.loads(current_app.config["redis"].get(sessionid))
+	
+	if "passport" not in user:
+		return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+		
+	if "user" not in user['passport']:
+		return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+	
+	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
+	
+	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
+	
+	host = vpnres.clientip(request)
+	
+	if host is None:
+		return render_template('vpn_connect.html')
+		
 	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
 	host = vpnres.clientip(request)
 	
@@ -24,17 +47,16 @@ def start():
 		redirect_uri='https://horizab4.memset.net/viz/calendar/callback'
 	)	
 	auth_uri = flow.step1_get_authorize_url()
-	print auth_uri
 	return render_template('calendar.html', url=auth_uri)
 
 @calendar_api.route("/viz/calendar/callback")	
 def gcallback():
 	
-	if len(request.access_route) > 1:
-		host = request.access_route[-1]
-	else:
-		host = request.access_route[0]
-			
+	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
+	host = vpnres.clientip(request)
+	
+	if host is None:
+		return render_template('vpn_connect.html')
 	
 	flow = client.flow_from_clientsecrets(
 		'client_secrets.json',
