@@ -122,11 +122,11 @@ def overview():
 	t5 = time.time()
 	
 
-	#print "zones for hosts %s" %(t1-t0)
-	#print "apps for hosts %s" %(t2-t1)
-	#print "timebins for hosts %s" %(t3-t2)
-	#print "tagged for hosts %s" %(t4-t3)
-	#print "notes for hosts %s" %(t5-t4)
+	print "zones for hosts %s" %(t1-t0)
+	print "apps for hosts %s" %(t2-t1)
+	print "timebins for hosts %s" %(t3-t2)
+	print "tagged for hosts %s" %(t4-t3)
+	print "notes for hosts %s" %(t5-t4)
 	
 	
 	values['zones'] = zones

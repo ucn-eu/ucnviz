@@ -853,7 +853,7 @@ class NetDB( object ):
 		zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
 
 		return zones	
-				
+			
 	@reconnect	
 	def add_host_to_house(self, host):
 		try:
@@ -861,7 +861,16 @@ class NetDB( object ):
 			self.conn.commit()
 		except Exception, e:
 			logger.error("error adding host to house %s" % str(host))
-			
+	
+	@reconnect
+	def copy_across(self, db):
+		print "copying %s across now.." % db
+		fromconn = sqlite3.connect("%s" % db, check_same_thread = False)
+		result = fromconn.execute("SELECT ts,host,tld,domain,datasource,path from URLS")
+		for row in result:
+			self.conn.execute("INSERT INTO URLS(ts,host,tld,domain,datasource,path) VALUES(?,?,?,?,?,?)", (row[0],row[1],row[2],row[3],row[4],row[5]))
+		self.conn.commit()
+				
 	@reconnect			
 	def createTables(self):
 		
@@ -879,15 +888,8 @@ class NetDB( object ):
 			domain CHAR(255),
 			datasource CHAR(16),
 			path TEXT,
-			UNIQUE(ts, host, tld, domain,datasource) ON CONFLICT IGNORE);''')
+			UNIQUE(ts, host, tld, domain, datasource) ON CONFLICT IGNORE);''')
 		
-# 		self.conn.execute('''CREATE TABLE IF NOT EXISTS DNS
-# 			(id INTEGER PRIMARY KEY AUTOINCREMENT,
-# 			ts INTEGER,
-# 			host CHAR(16),
-# 			tld CHAR(255),
-# 			domain CHAR(255),
-# 			UNIQUE(ts, host, tld, domain) ON CONFLICT IGNORE);''')
 			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS ZONES
 			(id INTEGER PRIMARY KEY AUTOINCREMENT,

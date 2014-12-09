@@ -36,7 +36,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		}),
 		
 		_rangeListener = ko.postbox.subscribe("range", function(data) {
-
+					
 				if (!data)
 					return;
 				
@@ -48,9 +48,11 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		}),
 		
 		/*
-		 * Listen on updates on associations between tags and domains.  If an association is changes, reload the urls for tagging
+		 * Listen on updates on associations between tags and domains.  If an association is changes (from tags module), reload the urls for tagging
 		 */
 		_domainListener = ko.postbox.subscribe("association", function(data){
+			console.log("IN ASSOCIATION - CALLING URLS FOR TAGGING!");
+			console.log(data);
 			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);
 		}),
 		
@@ -146,6 +148,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			//fire off an event to the tags module, which will refresh the activity chart.
 			domainstagged({tag:tag, ts:new Date().getTime()});
 			//update the current tag data!
+			console.log("IN URLS TAGGED - CALLING URLS FOR TAGGING!");
 			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);
 		},
 		

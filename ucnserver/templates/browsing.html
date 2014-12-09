@@ -161,7 +161,7 @@
 									<strong class="modal-title" id="myModalLabel"> add a note </strong>
 								</div>
 								<div class="modal-body">
-									<!--ko if: note().source=="viz"-->
+									<!--ko if: !(note().source) ||note().source=="viz"-->
 										<textarea class="form-control" rows="3" data-bind="value:note().note"></textarea>
 									<!--/ko-->
 									<!--ko ifnot: note().source=="viz" -->
@@ -234,26 +234,26 @@
 	<div id="tags">
 		
 		<div class="hideonload">
-		<div data-bind="bootstrapModal:showtagdetails" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-sm">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-						<strong class="modal-title" id="myModalLabel" data-bind="text: 'tag: ' + selectedtag()"></strong>
-					</div>
-					<div class="modal-body">
-						<strong data-bind="text:selecteddomain"></strong>
-					    <a href="#" data-bind="click:function(){$root.removeassociation(selectedtag,selecteddomain)}">remove</a>
-					</div> <!-- end of modal body! -->
-					<div class="modal-footer">
-						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			<div data-bind="bootstrapModal:showtagdetails" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog modal-sm">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+							<strong class="modal-title" id="myModalLabel" data-bind="text: 'tag: ' + selectedtag()"></strong>
+						</div>
+						<div class="modal-body">
+							<strong data-bind="text:selecteddomain"></strong>
+							<a href="#" data-bind="click:function(){$root.removeassociation(selectedtag,selecteddomain)}">remove</a>
+						</div> <!-- end of modal body! -->
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		</div>
 		
-		<div class="row">
+		<div class="row hideonload">
 			<div class="col-md-3 tagchartbar" style="background:#30363c;">
 				<div class="row" style="background:#3b5998;">
 					<div class="col-md-12">

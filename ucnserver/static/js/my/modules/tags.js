@@ -15,7 +15,9 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		newtag 		  	= ko.observable("").syncWith("newtag", true),
 		
-		domainsfortag 	= ko.observableArray([]).publishOn("association"),
+		domainsfortag 	= ko.observableArray([]), //.publishOn("association"),
+		
+		tagevent		= ko.observable("").publishOn("association"),
 		
 		tags			= ko.observableArray([]).publishOn("tags"),
 		
@@ -44,7 +46,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			if (!data)
 				return;
 		
-			console.log("setting selected hist to " + data.host);
+			
 			selectedhost(data.host);
 			fromts = data.fromts;
 			tots = data.tots;
@@ -54,7 +56,6 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
 			
 			// update activity too!
-			console.log("And now am updating activity!");
 			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);	
 			
 		}),
@@ -127,7 +128,11 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 		
 		updatedomainsfortag = function(data){
 			domainsfortag(data.urls);
-			domainsfortag.notifySubscribers();
+		},
+		
+		updateandnotify = function(data){
+			domainsfortag(data.urls);
+			tagevent(data.urls);
 		},
 		
 		getdomainsfortag	 = function(tag){
@@ -158,7 +163,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			
 			//need to pass in tag, NOT data, which is the domain that was deleted!
 			
-			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updatedomainsfortag);
+			ajaxservice.ajaxGetJson('tag/urlsfortag',{host:selectedhost(), tag:tag}, updateandnotify);
 		},
 		
 	
@@ -183,8 +188,7 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			 
 			var activity = data.activity;	
 			tags(data.tags);		
-			console.log("set tags to ");
-			console.log(tags());
+			
 				
     		var start 	= Number.MAX_VALUE;
 			var end 	= 0;
@@ -204,12 +208,6 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 				readings[tags().indexOf(activity[i].tag)].push([activity[i].fromts*1000, tags().indexOf(activity[i].tag)-0.5, timespan, activity[i].domain ]);
 			}
 				
-				
-			console.log("rendering FROM")
-			console.log(new Date(start*1000));
-			console.log("to!");
-			console.log(new Date(end*1000));
-			
 			var tickFormatter = function(x){
 				m1 = moment.unix(x/1000);
 				
