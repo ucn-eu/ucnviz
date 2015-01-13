@@ -169,6 +169,9 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 	
 		intimerange = function(ts, trange){
 			
+			if (!trange)
+				return false;
+				
 			var ranges = trange.filter(function(item){
 				if ((ts >=  item[0])  && (ts <= item[0] + item[2]))
 					return item;

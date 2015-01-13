@@ -21,7 +21,6 @@ def fetchevents():
 	tokens = collectdb.fetch_tokens('calendar')
 	
 	for token in tokens:
-		
 		credentials = client.OAuth2Credentials.from_json(token['token'])
 		http = httplib2.Http()
    		http = credentials.authorize(http)
@@ -53,7 +52,7 @@ def fetchevents():
 			  request = service.events().list_next(request, response)
 
   		except client.AccessTokenRefreshError:
-   			print ('The credentials have been revoked or expired, please re-run the application to re-authorize')
+			logger.error('The credentials have been revoked or expired for %s' % token)
 	
 
 
