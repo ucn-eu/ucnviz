@@ -7,7 +7,8 @@ logger = logging.getLogger( "ucn_logger" )
 class VPNResolve(object):
 
 	def __init__( self, cidr, dbcfg):
-		self.mongocollection = dbcfg['collection']
+		self.logscollection = dbcfg['logscollection']
+		self.devicecollection = dbcfg['devicecollection']
 		self.db = dbcfg['db']
 		self.cidr = cidr
 		self.mc = MongoClient(dbcfg['host'], dbcfg['port'])
@@ -18,6 +19,7 @@ class VPNResolve(object):
 			host = request.access_route[-1]
 		else:
 			host = request.access_route[0]
+		
 		logger.debug("seen a client ip %s" % host)
 		
 		if IPAddress(host) not in IPNetwork(self.cidr):
@@ -29,26 +31,28 @@ class VPNResolve(object):
 
 	def findlocal(self, host):
 		db = self.mc[self.db]
-		device = db[self.mongocollection].find_one({"untrusted_client_ip": host}, sort=[('$natural', -1)])
+		devices = db[self.logscollection].find({"untrusted_client_ip": host}).sort("ts", -1).limit(1)
 		
+		devicename = None
+		protocol = None
+		for device in devices:
+			devicename = device['common_name'] 
+			protocol = device['proto']
+			
+		 
+		#now lookup device name in the devices collection
+		device = db[self.devicecollection].find_one({"login":devicename})
+	
 		if device is not None:
-			if 'ifconfig_local' in device:
-				logger.debug("retreived ip %s" %  device['ifconfig_local'])
-				return device['ifconfig_local']	
+			if protocol is not None:
+				if protocol == "udp":
+					if 'vpn_udp_ip' in device:
+						logger.debug("retreived udp ip %s" %  device['vpn_udp_ip'])
+						return device['vpn_udp_ip']	
+				elif protocol == "tcp":
+					if 'vpn_tcp_ip' in device:
+						logger.debug("retreived tcp ip %s" %  device['vpn_tcp_ip'])
+						return device['vpn_tcp_ip']	
+		
 		logger.debug("no corresponding ip for %s in db" % host)
 		return None
-		
-# 		openvpnstatus = open(self.statusfile)
-# 		for line in openvpnstatus:
-# 			columns = line.split(",")
-# 			try:
-# 				IPAddress(columns[0]) #throw exception if not valid IP..
-# 				external = columns[2].split(":")[0]
-# 				IPAddress(external) #throw exception if not valid IP..
-# 				logger.debug("checking %s against %s" % (external, host))
-# 				if external == host:
-# 					return columns[0]
-# 			except:
-# 				pass
-# 		return None
-	

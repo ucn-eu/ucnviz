@@ -22,6 +22,8 @@ def start():
 	sessionid = "sess:%s" % cookie[2:].split(".")[0]
 	
 	user = json.loads(current_app.config["redis"].get(sessionid))
+	print "user is"
+	print user
 	
 	if "passport" not in user:
 		return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
@@ -31,16 +33,13 @@ def start():
 	
 	db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 	
-	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
+	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"logscollection":current_app.config["VPNLOGSCOLLECTION"],"devicecollection":current_app.config["DEVICECOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
 	
 	host = vpnres.clientip(request)
 	
 	if host is None:
 		return render_template('vpn_connect.html')
 		
-	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
-	host = vpnres.clientip(request)
-	
 	flow = client.flow_from_clientsecrets(
 		'client_secrets.json',
 		scope='https://www.googleapis.com/auth/calendar',
@@ -52,7 +51,7 @@ def start():
 @calendar_api.route("/viz/calendar/callback")	
 def gcallback():
 	
-	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"collection":current_app.config["VPNLOGSCOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
+	vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"logscollection":current_app.config["VPNLOGSCOLLECTION"],"devicecollection":current_app.config["DEVICECOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
 	host = vpnres.clientip(request)
 	
 	if host is None:
