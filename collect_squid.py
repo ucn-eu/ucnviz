@@ -10,10 +10,13 @@ logger = logging.getLogger( "collect_logger" )
 
 def insert_urls(datafile):
 	if path.isfile(datafile) is False:
-		logger.debug("no squid log file to read from")
-		return
+		logger.debug("no access.log, trying date suffix %s-%s" % (datafile, time.strftime("%Y%m%d")))
+		datafile =  "%s-%s" % (datafile, time.strftime("%Y%m%d"))
+		if path.isfile(datafile) is False:
+			return
+	
 
-        logger.debug("adding data from squid logs")	
+	logger.debug("adding data from squid logs")	
 	fpos = collectdb.fetch_filepos_for('squid')
 	
 	if fpos > path.getsize(datafile):
@@ -42,6 +45,6 @@ if __name__ == "__main__":
 
 	collectdb = CollectDB(name=cfg.COLLECTDB)
 	collectdb.createTables()
-        logger.debug("using dbase %s" % cfg.DATADB)
+	logger.debug("using dbase %s" % cfg.DATADB)
 	datadb = NetDB(name=cfg.DATADB)
 	insert_urls(cfg.SQUIDLOG)
