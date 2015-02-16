@@ -26,6 +26,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		note       =  ko.observable({}),
 		
+		updatecallback,
+		
+		_earliest,
+		_latest,
 		
 		_notes	   = [],
 		_queries   = [],
@@ -35,18 +39,35 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
 			
+			
 			if (range){
-				var minfrom 		= (x2.domain()[0]).getTime();
-				var maxto   		= (x2.domain()[1]).getTime();
-				var selectedfrom 	= range.fromts * 1000;
-				var selectedto		= range.tots * 1000;
+				console.log("from ts is " + range.fromts + " which = ");
+				console.log(new Date(range.fromts * 1000));
 				
-				if (minfrom < selectedfrom && maxto > selectedto){
-					zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
-					brushed();
+				console.log("to ts is " + range.tots + " which = ");
+				console.log(new Date(range.tots * 1000));
+				
+				console.log("earliest is " + _earliest + " which = ");
+				console.log(new Date(_earliest * 1000));
+				
+				console.log("latest is " + _latest + " which = ");
+				console.log(new Date(_latest * 1000));
+				
+				if (range.fromts < _earliest || range.tots > _latest){
+					updatecallback([_earliest,_latest], range);
 				}else{
-					//zoom out!
-					d3.select(".brush").call(brush.clear());
+					var minfrom 		= (x2.domain()[0]).getTime();
+					var maxto   		= (x2.domain()[1]).getTime();
+					var selectedfrom 	= range.fromts * 1000;
+					var selectedto		= range.tots * 1000;
+				
+					if (minfrom < selectedfrom && maxto > selectedto){
+						zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
+						brushed();
+					}else{
+						//zoom out!
+						d3.select(".brush").call(brush.clear());
+					}
 				}
 			}
 		}),
@@ -129,46 +150,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.x(function(d){return x(d.date)})
 				.y(function(d){return d.y}),
 				
-		svg  = d3.select("#context").append("svg")
-				.attr("width", width + margin.left + margin.right)
-				.attr("height", height + margin.top + margin.bottom)
-				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),		
+		//top level chart containers
 		
-		zoom = d3.select("#zoom").append("svg")
-				.attr("width", width + margin2.left + margin2.right)
-				.attr("height", height2 + margin2.top + margin2.bottom)
-				.append("g")
-				.attr("transform", "translate(" + margin2.left + "," + margin2.top + ")"),
+		svg,
+		zoom,
+		hostkey,
+				
 		
-		hostkey = d3.select("#activitykey").append("svg")
-				.attr("width", width + margin.left + margin.right)
-				.attr("height",50)
-				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + (margin.top + 10) + ")")
-				.attr("class", "activitykey"),
-		
-				
-		init = function(data, cf){
-			
-			if (data && data.hosts && Object.keys(data.hosts).length > 0){
-				var hosts = Object.keys(data.hosts);
-				_device_lookup = data.devices;
-				color = cf.colourfor;
-				renderactivity(data);
-				
-				if (hosts.length == 1){
-					updatefilters(hosts[0]);
-				}
-				
-				_notes = data.notes			
-				
-			}
-			
-			d3.select(".chartcontainer")
-					.style("height", (height+margin.top+margin.bottom) + "px");
-			
-		},
 		
 		
 		deviceforhost = function(host){
@@ -338,6 +326,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		},
 		
 		renderactivity = function(d){
+			
+			svg.select("defs").remove();
+			svg.select("g.topg").remove();
+			svg.select("g.axis").remove();
+			
 			svg.append("defs").append("clipPath")
 				.attr("id", "clip")
 				.append("rect")
@@ -352,12 +345,17 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			data = d;
 			
 			tsdata = [];
-			
+			_earliest = 9999999999;
+			_latest = -1;
+		
 			data.keys.forEach(function(d){
 				tsdata.push(d*1000);
+				_earliest = Math.min(_earliest, d);
+				_latest = Math.max(_latest, d);
 			});
 			
 			browsers = stack(Object.keys(data.hosts).map(function(name){
+				
 				return {
 					name:name,
 					values: data.hosts[name].map(function(d, i){
@@ -367,6 +365,8 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			}));
 			
 			x.domain(d3.extent(tsdata, function(d){return d}));
+			console.log("min " + _earliest + " max..." + _latest);
+			
 			fromto(x.domain());
 			
 			y.domain([0, d3.max(browsers, function(c){
@@ -481,9 +481,14 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.attr("dy", ".35em")
 				.text(function(d) { return deviceforhost(d)})
 				.on("click", keyclicked)
-			},
+		
+			keys.exit()
+				.remove();
+		},
 		
 		renderzoomer = function(data){
+			
+			zoom.selectAll("g.ztopg").remove();
 			
 			zoom.append("g")
 				.attr("class", "ztopg")
@@ -1123,10 +1128,65 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				.duration(1000)
 				.call(yAxis2);
 			
+		},
+			
+		init = function(data, cf, uc){
+			
+			
+			d3.select("#context").select("svg").remove();
+			d3.select("#zoom").select("svg").remove();
+			d3.select("#activitykey").select("svg").remove();
+			
+			svg  = d3.select("#context").append("svg")
+					 .attr("width", width + margin.left + margin.right)
+					 .attr("height", height + margin.top + margin.bottom)
+					 .append("g")
+					 .attr("class", "mainchart")
+					 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		
+			zoom = d3.select("#zoom").append("svg")
+									 .attr("width", width + margin2.left + margin2.right)
+									 .attr("height", height2 + margin2.top + margin2.bottom)
+									 .append("g")
+					   				 .attr("class", "zoomchart")
+					   				 .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+		
+			hostkey = d3.select("#activitykey").append("svg")
+											   .attr("width", width + margin.left + margin.right)
+												.attr("height",50)
+												.append("g")
+							 					.attr("transform", "translate(" + margin.left + "," + (margin.top + 10) + ")")
+							 					.attr("class", "activitykey");	
+			
+			if (uc){
+				updatecallback = uc;
+			}
+			
+			if (data && data.hosts && Object.keys(data.hosts).length > 0){
+				var hosts = Object.keys(data.hosts);
+				_device_lookup = data.devices;
+				
+				if (cf){
+					color = cf.colourfor;
+				}
+				
+				renderactivity(data);
+				
+				if (hosts.length == 1){
+					updatefilters(hosts[0]);
+				}
+				
+				_notes = data.notes			
+				
+			}
+			
+			d3.select(".chartcontainer").style("height", (height+margin.top+margin.bottom) + "px");
+			
 		}
 		
 	return {
 		init: init,
+		
 		subtitle: subtitle,
 		//note stuff should sit inside own module...(as should all other overlays)
 		deletenote:deletenote,
