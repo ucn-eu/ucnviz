@@ -41,17 +41,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			
 			
 			if (range){
-				console.log("from ts is " + range.fromts + " which = ");
-				console.log(new Date(range.fromts * 1000));
-				
-				console.log("to ts is " + range.tots + " which = ");
-				console.log(new Date(range.tots * 1000));
-				
-				console.log("earliest is " + _earliest + " which = ");
-				console.log(new Date(_earliest * 1000));
-				
-				console.log("latest is " + _latest + " which = ");
-				console.log(new Date(_latest * 1000));
 				
 				if (range.fromts < _earliest || range.tots > _latest){
 					updatecallback([_earliest,_latest], range);
@@ -365,7 +354,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			}));
 			
 			x.domain(d3.extent(tsdata, function(d){return d}));
-			console.log("min " + _earliest + " max..." + _latest);
 			
 			fromto(x.domain());
 			
@@ -538,7 +526,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		noteclicked = function(d){
 			 svg.select(".brushnote").call(notebrush.extent([new Date(d.fromts*1000), new Date(d.tots*1000)]));
 			 noterange = notebrush.extent();
-			 console.log(d);
+			
 			 shownote(true);
 			 note(d)
 		},
