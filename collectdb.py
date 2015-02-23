@@ -21,7 +21,8 @@ class CollectDB(object):
 			self.conn.execute("INSERT INTO TOKENS(api, host, token) VALUES(?,?,?)", (api, host, token))
 			self.conn.commit()
 		except Exception, e:
-			logger.error("error saving token!!")
+			log.error("error saving token!!")
+			log.error(e);
 			
 	def fetch_tokens(self, api):
 		if self.connected is not True:

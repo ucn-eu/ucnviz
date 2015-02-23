@@ -14,7 +14,6 @@ def duplicate(ts,host, domain, lastline):
 	return ts == lastline['ts'] and host == lastline['host'] and domain == lastline['domain']
 	
 def insert_dns(datafile):
-	
 	logger.debug("adding data from dns logs")	
 	fpos = collectdb.fetch_filepos_for('dns')
 	
@@ -48,7 +47,6 @@ def insert_dns(datafile):
 				if not duplicate(ts,host,domain, lastline):
 					lines.append({'ts':ts,'host':host,"domain":domain})
 				lastline = {'ts':ts,'host':host,"domain":domain}
-				
 			logger.debug("adding %d new entries" % len(lines))
 			
 			datadb.bulk_insert_dns(lines)

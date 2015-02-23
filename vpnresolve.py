@@ -32,13 +32,13 @@ class VPNResolve(object):
 	def findlocal(self, host):
 		db = self.mc[self.db]
 		devices = db[self.logscollection].find({"untrusted_client_ip": host}).sort("ts", -1).limit(1)
-		
 		devicename = None
 		protocol = None
 		for device in devices:
+			print "am in here!"
 			devicename = device['common_name'] 
 			protocol = device['proto']
-			
+			print devicename		
 		 
 		#now lookup device name in the devices collection
 		device = db[self.devicecollection].find_one({"login":devicename})
