@@ -35,10 +35,9 @@ class VPNResolve(object):
 		devicename = None
 		protocol = None
 		for device in devices:
-			print "am in here!"
 			devicename = device['common_name'] 
 			protocol = device['proto']
-			print devicename		
+				
 		 
 		#now lookup device name in the devices collection
 		device = db[self.devicecollection].find_one({"login":devicename})

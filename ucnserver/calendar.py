@@ -55,7 +55,6 @@ def start():
 def gcallback():
 
 	login = request.args.get('state')
-	#print "login is %s" % login
 	
 	#vpnres = VPNResolve(current_app.config["CIDR"], {"db":current_app.config["MONGODB"],"logscollection":current_app.config["VPNLOGSCOLLECTION"],"devicecollection":current_app.config["DEVICECOLLECTION"],"host":current_app.config["MONGOHOST"], "port":current_app.config["MONGOPORT"]})
 	#host = vpnres.clientip(request)
@@ -70,18 +69,21 @@ def gcallback():
 	)
 	auth_code = request.args.get('code')
 	credentials = flow.step2_exchange(auth_code)
-
-	try:
-		token = credentials.to_json()
-		db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
-		device = db[current_app.config["DEVICECOLLECTION"]].find_one({"login":login})
 	
-		if device is not None:
-			current_app.config["collectdb"].insert_token_for_host('calendar',device['vpn_udp_ip'], token)
-			current_app.config["collectdb"].insert_token_for_host('calendar',device['vpn_tcp_ip'], token)
-			logger.debug("calendar: saved token for user %s, udp_ip %s tcp_ip %s" % (login, device['vpn_udp_ip'],  device['vpn_tcp_ip']))
+	try:
+		
+		token = credentials.to_json()
+		
+		logger.debug("calendar token exch %s %s " % (login, token))
+		db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
+		user = db[current_app.config["USERCOLLECTION"]].find_one({"username":login})
+	
+		if user is not None:
+			current_app.config["collectdb"].insert_calendar_token_for_user(login, token)
+			logger.debug("calendar: saved calendar token for user %s" % (login))
 		else:
-			logger.debug("calendar: failed to lookup device for %s" % login)
+			logger.debug("calendar: failed to lookup user for %s" % login)
+			return jsonify({"success":False})
 			
 		return jsonify({"success":True})
 	except:

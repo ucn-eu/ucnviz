@@ -23,7 +23,30 @@ class CollectDB(object):
 		except Exception, e:
 			log.error("error saving token!!")
 			log.error(e);
-			
+	
+	def insert_calendar_token_for_user(self, username, token):
+		
+		if self.connected is not True:
+			self.connect()
+		try:
+			self.conn.execute("INSERT INTO CALENDARTOKENS(username, token) VALUES(?,?)", (username, token))
+			self.conn.commit()
+		except Exception, e:
+			log.error("error saving calendar token!!")
+			log.error(e);		
+	
+	def fetch_calendar_tokens(self):
+		if self.connected is not True:
+			self.connect()
+		sql = "SELECT token, username, lastUpdate, attr FROM CALENDARTOKENS"
+		result = self.conn.execute(sql)
+		return [{"token":row[0], "username":row[1], "lastUpdate":row[2], "attr":row[3]} for row in result]
+	
+	def update_calendar_id(self, username, calendarId):
+		result = self.conn.execute("UPDATE CALENDARTOKENS SET attr='%s' WHERE username = '%s'" % (calendarId, username))
+		self.conn.commit()
+		return result
+					
 	def fetch_tokens(self, api):
 		if self.connected is not True:
 			self.connect()
@@ -65,10 +88,7 @@ class CollectDB(object):
 			return fpos[0]
 		return 0
 	
-	def update_calendar_id(self, host, api, calendarId):
-		result = self.conn.execute("UPDATE TOKENS SET attr='%s' WHERE host = '%s' AND api='%s'" % (calendarId, host,api))
-		self.conn.commit()
-		return result
+	
 				
 	def createTables(self):
 		if self.connected is not True:
@@ -82,6 +102,14 @@ class CollectDB(object):
 			attr CHAR(255),
 			lastUpdate CHAR(32),
 			UNIQUE(host,api) ON CONFLICT REPLACE);''')	
+		
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS CALENDARTOKENS
+			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			username CHAR(128),
+			token CHAR(255),
+			attr CHAR(255),
+			lastUpdate CHAR(32),
+			UNIQUE(username,token) ON CONFLICT REPLACE);''')	
 			
 		self.conn.execute('''CREATE TABLE IF NOT EXISTS LOGACCESS
 			(name PRIMARY KEY,

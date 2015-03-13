@@ -18,7 +18,7 @@ logger = logging.getLogger( "collect_logger" )
 
 def fetchevents():
 	
-	tokens = collectdb.fetch_tokens('calendar')
+	tokens = collectdb.fetch_calendar_tokens()
 	
 	for token in tokens:
 		credentials = client.OAuth2Credentials.from_json(token['token'])
@@ -34,7 +34,7 @@ def fetchevents():
 					for clist in response.get('items', []):
 						if clist.get("summary") == 'ucn':
 							token['attr'] = clist.get("id")
-							collectdb.update_calendar_id(token['host'], 'calendar', token['attr'])
+							collectdb.update_calendar_id(token['username'], token['attr'])
 							break
 					request =  service.calendarList().list_next(request, response)
 			
@@ -46,7 +46,7 @@ def fetchevents():
 			  for event in response.get('items', []):
 			  	start = int(time.mktime(dateutil.parser.parse(event.get("start")['dateTime']).timetuple()))
 				end  = int(time.mktime(dateutil.parser.parse(event.get("end")['dateTime']).timetuple()))
-				noteid = datadb.insert_note(event.get("summary"),token['host'],start,end,'calendar')
+			  	noteid = datadb.insert_calendar_entry(event.get("summary"),token['username'],start,end)
 			  # Get the next request object by passing the previous request object to
 			  # the list_next method.
 			  request = service.events().list_next(request, response)

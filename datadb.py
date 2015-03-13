@@ -55,15 +55,19 @@ class NetDB( object ):
 		whereclause = ""
 		
 		if fromts is not None and tots is not None:
-			whereclause = "AND (u.ts >= %d AND u.ts < %d)" % (fromts, tots)
+			whereclause = "AND (u.ts >= %d AND u.ts <= %d)" % (fromts, tots)
+		
 		
 		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s" % (hlist,whereclause)
+		
+		
 			
 		#minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s UNION SELECT  min(d.ts), max(d.ts) from DNS d WHERE d.host IN(%s) %s" % (hlist,whereclause,hlist,dnswhereclause)
 		result = self.conn.execute(minmaxsql)
 		row = result.fetchone()
 		mints = row[0]
 		maxts = row[1]
+		
 		
 		sql = "SELECT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
 		
@@ -82,6 +86,7 @@ class NetDB( object ):
 		indexes = {}
 		
 		c = 0
+		
 		while ts < maxts+binsize:
 			keys.append(self.binlabel(binsize, ts))
 			indexes[self.binlabel(binsize, ts)] = c
@@ -361,7 +366,7 @@ class NetDB( object ):
 		
 		#sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
 		sql = "SELECT t.tag, u.ts, u.tld FROM TAGS t, URLS u WHERE t.host = '%s' AND (u.domain = t.domain OR u.tld = t.domain) AND (u.ts <=  t.tots AND u.ts >= t.fromts) %s ORDER BY u.domain" % (host,timerange)
-		print sql
+		
 		result = self.conn.execute(sql)
 		
 		currenttag = None
@@ -613,6 +618,21 @@ class NetDB( object ):
 			
 		except Exception, e:
 			logger.error("failed to insert note %s for host %s %s %s" % (note, host, fromts, tots))
+			return None
+		
+		return noteid
+	
+	@reconnect
+	def insert_calendar_entry(self,note,username,fromts,tots):
+		noteid = None
+		 
+		try:
+			result = self.conn.execute("INSERT INTO calendar(note,username,fromts,tots) VALUES (?,?,?,?)", (note,username,fromts,tots))
+			noteid = result.lastrowid
+			self.conn.commit()
+			
+		except Exception, e:
+			logger.error("failed to insert calendar note %s for username %s %s %s" % (note, username, fromts, tots))
 			return None
 		
 		return noteid
@@ -945,4 +965,11 @@ class NetDB( object ):
 			source CHAR(16),
 			UNIQUE(host,fromts,tots) ON CONFLICT REPLACE);''')		
 		
+		self.conn.execute('''CREATE TABLE IF NOT EXISTS CALENDAR
+			(id INTEGER PRIMARY KEY AUTOINCREMENT,
+			username CHAR(128),
+			fromts INTEGER,
+			tots INTEGER,
+			note TEXT,
+			UNIQUE(username,fromts,tots) ON CONFLICT IGNORE);''')
 	

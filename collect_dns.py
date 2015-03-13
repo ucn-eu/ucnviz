@@ -22,7 +22,6 @@ def insert_dns(datafile):
 		fpos = 0
 
 	logger.debug("reading from file position %d, dns file size is %d" % (fpos,path.getsize(datafile)))
-	
 	lastline = None
 	
 	if fpos < path.getsize(datafile):
@@ -32,21 +31,27 @@ def insert_dns(datafile):
 			lines = []
 			for line in content:
 				tokens = line.split()
-				ts = tokens[0].split(".")[0]
-				hlist = tokens[1].split(".")
 				
-				if len(hlist) >= 5:
-					hlist = hlist[:4]
+				if len(tokens) >= 3:
+					ts = tokens[0].split(".")[0]
+					hlist = tokens[1].split(".")
 				
-				host = ".".join(hlist)
+					if len(hlist) >= 5:
+						hlist = hlist[:4]
+				
+					host = ".".join(hlist)
 					
-				domain = tokens[2]
-				if domain[len(domain)-1] == ".":
-					domain = domain[:-1]
+					domain = tokens[2]
 					
-				if not duplicate(ts,host,domain, lastline):
-					lines.append({'ts':ts,'host':host,"domain":domain})
-				lastline = {'ts':ts,'host':host,"domain":domain}
+					if domain[len(domain)-1] == ".":
+						domain = domain[:-1]
+					
+					if not duplicate(ts,host,domain, lastline):
+						lines.append({'ts':ts,'host':host,"domain":domain})
+					
+					lastline = {'ts':ts,'host':host,"domain":domain}
+				
+			
 			logger.debug("adding %d new entries" % len(lines))
 			
 			datadb.bulk_insert_dns(lines)
