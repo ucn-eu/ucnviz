@@ -1,0 +1,68 @@
+from datadb import NetDB
+from collectdb import CollectDB
+from os import path
+import logging
+from datetime import datetime
+import time
+from config import TestingConfig
+
+logger = logging.getLogger( "collect_logger" )
+
+def duplicate(ts,host, domain, lastline):
+	if lastline is None:
+		return False
+	return ts == lastline['ts'] and host == lastline['host'] and domain == lastline['domain']
+	
+def insert_dns(datafile):
+	
+	fpos = 0
+
+	lastline = None
+	
+	if fpos < path.getsize(datafile):
+		with open(datafile) as f:
+			f.seek(fpos)
+			content = f.readlines()
+			lines = []
+			for line in content:
+				tokens = line.split()
+				
+				if len(tokens) >= 3:
+					ts = tokens[0].split(".")[0]
+					hlist = tokens[1].split(".")
+				
+					if len(hlist) >= 5:
+						hlist = hlist[:4]
+				
+					host = ".".join(hlist)
+					
+					domain = tokens[2]
+					
+					if domain[len(domain)-1] == ".":
+						domain = domain[:-1]
+					
+					if not duplicate(ts,host,domain, lastline):
+						lines.append({'ts':ts,'host':host,"domain":domain})
+					
+					lastline = {'ts':ts,'host':host,"domain":domain}
+					print lastline
+			
+			print("adding %d new entries" % len(lines))
+			
+			datadb.bulk_insert_dns(lines)
+			
+			print("written %d bytes of dns log to db" % (f.tell() - fpos))	
+
+if __name__ == "__main__":
+	cfg = TestingConfig()
+	hdlr = logging.FileHandler(cfg.COLLECT_LOGFILE or '/var/tmp/collect.log') 
+	formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+	hdlr.setFormatter(formatter)
+	logger.addHandler(hdlr)
+	logger.setLevel(logging.DEBUG)
+
+	collectdb = CollectDB(name=cfg.COLLECTDB)
+	collectdb.createTables()
+	logger.debug("using dbase %s" % cfg.DATADB)
+	datadb = NetDB(name=cfg.DATADB)
+	insert_dns('/home/txl/logs/pcap/dns.log')
