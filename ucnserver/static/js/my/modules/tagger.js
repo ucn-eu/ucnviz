@@ -161,7 +161,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			//fire off an event to the tags module, which will refresh the activity chart.
 			domainstagged({tag:tag, ts:new Date().getTime()});
 			//update the current tag data!
-			console.log("IN URLS TAGGED - CALLING URLS FOR TAGGING!");
+		
 			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);
 		},
 		

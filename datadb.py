@@ -46,10 +46,38 @@ class NetDB( object ):
 		return range
 	
 	
+	@reconnect
+	def fetch_browsing_for_hosts(self, hosts, fromts=None, tots=None):
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		whereclause = ""
+		
+		if fromts is not None and tots is not None:
+			whereclause = "AND (u.ts >= %d AND u.ts <= %d)" % (fromts, tots)
+		
+		
+		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s" % (hlist,whereclause)
+		result = self.conn.execute(minmaxsql)
+		row = result.fetchone()
+		mints = row[0]
+		maxts = row[1]
+		sql = "SELECT DISTINCT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
+		
+		try:
+			result = self.conn.execute(sql)
+		except Exception, e:
+			print "error %s" % e
+			logger.error("error fetching timebins for hosts %s" % hosts)
+			logger.error(e)
+			return None
+		
+		lastrow = None
+		results = [row for row in result]
+		return {"mints":mints, "maxts":maxts, "results":results}
+	
 	#could perhaps simplify to return count UNIQUE top level domains seen within timerange rather than count of all
 	#not too crucial as the purpose here is just to give an indication of activity levels. 
 	@reconnect
-	def fetchtimebins_for_hosts(self, binsize,hosts,fromts=None, tots=None):
+	def fetch_timebins_for_hosts(self, binsize,hosts,fromts=None, tots=None):
 	
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		whereclause = ""
@@ -74,7 +102,8 @@ class NetDB( object ):
 		try:
 			result = self.conn.execute(sql)
 		except Exception, e:
-			logger.error("error fetching timebins for home %s" % home)
+			logger.error("error fetching timebins for home %s" % hosts)
+			logger.error(e)
 			return None
 			 
 		hosts = {}

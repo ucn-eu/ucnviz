@@ -1119,7 +1119,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		},
 			
 		init = function(data, cf, uc){
-			
+			console.log("AM IN GERE!!");
 			
 			d3.select("#context").select("svg").remove();
 			d3.select("#zoom").select("svg").remove();

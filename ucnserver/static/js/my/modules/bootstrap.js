@@ -1,12 +1,11 @@
-define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/tagger', 'modules/tags', 'knockout', 'ajaxservice'], function(module, $, calendar,cf,overlays, overview, tagger, tags, ko, ajaxservice) {
+define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/tagger', 'modules/tags', 'modules/timespan', 'knockout', 'ajaxservice'], function(module, $, calendar,cf,overlays, overview, tagger, tags, timespan, ko, ajaxservice) {
    
     var 
     	family,
     	
     	update = function(current, selected){
     		
-    		console.log("UPDATING!");
-    		
+    	
     		var newmin, newmax;
     		
     		currentmindate = current[0];
@@ -34,6 +33,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
     		ajaxservice.ajaxGetJson('overview/activity', {family:family}, function(data){
 				
 				cf.init(data.hosts);
+				timespan.init(data.raw);
 				
 				if (data.keys && data.keys.length > 0){
 					calendar.init(new Date(data.keys.reduce(function(a,b){return Math.max(a,b)}) * 1000));
@@ -48,11 +48,12 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
 				ajaxservice.ajaxGetJson('web/bootstrap', {family:family}, function(data){
 					tags.init(cf);
 					tagger.init();
-			
+					
 					ko.applyBindings(calendar, $("#calendar")[0]);
 					ko.applyBindings(tagger, $("#tagger")[0]);
 					ko.applyBindings(tags, $("#tags")[0]);
 					ko.applyBindings(overlays, $("#overlays")[0]);
+					ko.applyBindings(timespan, $("#timespan")[0]);
 					$('.hideonload').css('display','block');
 				});
 			});

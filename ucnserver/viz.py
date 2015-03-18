@@ -128,12 +128,13 @@ def overview():
 	t1 = time.time()
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
 	t2 = time.time()
-	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
+	values = current_app.config["datadb"].fetch_timebins_for_hosts(bin,hosts,fromts, tots)
 	t3 = time.time()
 	tags   = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
 	t4 = time.time()
 	notes  = current_app.config["datadb"].fetch_notes_for_hosts(hosts,fromts,tots)
 	t5 = time.time()
+	
 	
 	# print "zones for hosts %d" %(t1-t0)
 # 	print "apps for hosts %d" %(t2-t1)

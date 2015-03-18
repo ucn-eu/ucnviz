@@ -55,6 +55,9 @@ path {
 	clip-path: url(#clip);
 }
 
+.timespan{
+	clip-path: url(#timeclip);
+}
 
 .keylabel{
   	    letter-spacing: 13;

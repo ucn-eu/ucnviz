@@ -5,6 +5,7 @@ import json
 import redis
 import viz
 import time
+import math
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from bson.code import Code
@@ -108,27 +109,24 @@ def overview():
  		#set bin to hourly
  		bin = 60 * 60
  
- 
- 	t0 = time.time()
+ 	tstart = time.time()
+ 	raw = current_app.config["datadb"].fetch_browsing_for_hosts(hosts,fromts, tots)
+ 	values = binned(bin, raw['mints'], raw['maxts'], raw['results'])
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
-	t1 = time.time()
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
-	t2 = time.time()
-	values = current_app.config["datadb"].fetchtimebins_for_hosts(bin,hosts,fromts, tots)
-	t3 = time.time()
+	#t2 = time.time()
+	#values = current_app.config["datadb"].fetch_timebins_for_hosts(bin,hosts,fromts,tots)
 	tags   = current_app.config["datadb"].fetch_tagged_for_hosts(hosts,fromts,tots)
-	t4 = time.time()
 	notes  = current_app.config["datadb"].fetch_notes_for_hosts(hosts,fromts,tots)
-	t5 = time.time()
+	tend = time.time()
 	
-
 	
 	values['zones'] = zones
 	values['apps'] = apps
 	values['devices'] = devices
 	values['tags'] = tags
 	values['notes'] = notes
-	
+	values['raw'] = raw
 	return jsonify(values)
 
 
@@ -140,20 +138,45 @@ def hosts():
 	return jsonify(hosts=hosts)
 
 
-#-------- non admin dependent routes, so pass through to standard user routes ------------#
-
-#@admin_api.route("/admin/tag/urlsfortagging")
-#def urlsfortagging():
-#	return viz.urlsfortagging();
-
-#@admin_api.route("/admin/tag/activity")
-#def activity():
-#	return viz.activity();
-
-#@admin_api.route("/admin/web/queries")
-#def queries():
-#	return viz.queries();
-
+def binlabel(binsize, ts):
+	return int(math.floor(ts/binsize)*binsize)
+	
+def binned(binsize, mints, maxts, result):
+	
+	if len(result) <= 0:
+		return
+		
+	hosts = {}
+	seen = {} #for filtering out duplicate tlds within timebin
+	ts = mints
+	keys = []
+	indexes = {}
+	
+	c = 0
+	
+	while ts < maxts+binsize:
+		keys.append(binlabel(binsize, ts))
+		indexes[binlabel(binsize, ts)] = c
+		c = c + 1
+		ts = ts + binsize
+	
+	for row in result:		
+		host = row[2]
+		ts   = row[0]
+		idx = indexes[binlabel(binsize, ts)]
+		if host not in hosts:
+			hosts[host] = [0]*len(keys)
+			seen[host] = {}
+			seen[host][idx] = [row[1]]
+			hosts[host][idx] = hosts[host][idx] + 1
+		else:
+			if idx not in seen[host]:
+				seen[host][idx] = []
+			if row[1] not in seen[host][idx]:
+				seen[host][idx].append(row[1])
+				hosts[host][idx] = hosts[host][idx] + 1
+	
+	return {"keys":keys, "hosts":hosts}
 
 	
 def hostsforfamily(family):
