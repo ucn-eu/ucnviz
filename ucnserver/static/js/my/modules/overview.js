@@ -711,7 +711,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				d3.select(".leftchart")
 					.transition()
 					.duration(1000)
-					.style("height", "530px");
+					.style("height", "666px");
 						
 					
 				return;
@@ -935,7 +935,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 				d3.select(".leftchart")
 					.transition()
 					.duration(1000)
-					.style("height", (530 + (lineno*lineheight) + 30) + "px");
+					.style("height", (636 + (lineno*lineheight) + 30) + "px");
 		},
 		
 		overlayqueries = function(){
