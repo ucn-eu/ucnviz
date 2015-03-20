@@ -3,15 +3,19 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 	"use strict";
 	
 	var
+	
+		timerange	  = ko.observable().syncWith("range"),
 		
 		colours   = ["#3f51b5","#f44336", "#009688"],
 		
 		margin    = {top:10, right:0, bottom:10,left:50},	
 		width 	  = 900 - margin.left - margin.right,
 		height    = 100 - margin.top - margin.bottom,
+		currenthost,
 		data,
 		filtered,
 		xscale,
+		brush,
 		
 		lines = [null,null,null],
 		
@@ -24,17 +28,28 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 		
 		
 		_rangeListener = ko.postbox.subscribe("range", function(range) {
+			
 			if (xscale === undefined){
 				return;
 			}
 			
-			xscale.domain([new Date(range.fromts * 1000), new Date(range.tots * 1000)])
+			var from = new Date(range.fromts * 1000);
+			var to = new Date(range.tots * 1000);
+			
+			if (xscale.domain()[0] == from && xscale.domain()[1] == to){
+				return;
+			}
+			
+			xscale.domain([from, to]);
+			svg.select(".brush").call(brush.clear());
 			render();
 		}),
 		
 		
 		_hostListener = ko.postbox.subscribe("host", function(host) {
-			console.log(host);
+			
+			currenthost = host;
+			
 			if (!data)
 				return;
 			
@@ -43,6 +58,8 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 				filtered = data.results;
 				return;	
 			}
+			
+			
 			
 			filtered = data.results.filter(function (item){
 				return item[2] == host;
@@ -53,11 +70,8 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			//ok need to filter out hosts then will work!
 			
 			
-			
-			
-			
-			
-			var points = svg.selectAll("line.datapoint")
+			var points = svg.select("g.points")
+							.selectAll("line.datapoint")
 							.data(filtered, function(d){return d[0]+""+d[1]+""+d[2]})
 							
 			points.enter()
@@ -102,10 +116,20 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			
 			points.exit()
 				  .remove();
-				  
-									
+				  				
 		},
-			
+		
+		brushend = function(){
+			var xrange = brush.empty() ? xscale.domain() : brush.extent();
+			var from = xrange[0].getTime(); 
+			var to   = xrange[1].getTime();
+			if (currenthost){
+				timerange({host:currenthost, fromts:parseInt(from/1000), tots:parseInt(to/1000)});
+			}
+		},
+		
+		 				
+		 					
 		init = function(d){
 			data = d;
 			filtered = d.results;
@@ -113,7 +137,11 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			xscale  = d3.time.scale()
 						.domain([new Date(data.mints*1000), new Date(data.maxts*1000)])
 						.range([0,width]);
-			
+						
+			brush = d3.svg.brush()
+		 				.x(xscale)
+		 				.on("brushend", brushend);
+		
 			d3.select("#timespan")
 				.select("svg")
 				.insert("defs", ":first-child")
@@ -124,11 +152,22 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 				.attr("height", height)	
 			
 			var labeldata = ["previous url","current url", "next url"];
+			
 			var tscale = d3.scale.linear()
 							.domain([0,2])
 							.range([width/4,width-width/4]);
-							
-			var labels = svg.selectAll("text.label")
+			
+			var mybrush = svg.append("g")
+							.attr("class", "x brush")
+							.call(brush)
+							.selectAll("rect")
+							.attr("y", (height/2) - 6)
+							.attr("height", (height/2)+7);				
+			
+			var labels = svg
+							.append("g")
+							.attr("class", "labels")
+							.selectAll("text.label")
 			   				.data(labeldata)
 			   				.enter()
 			   				.append("text")
@@ -139,6 +178,10 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			   				.attr("y", height / 4)
 			   				.style("fill", function(d,i){return colours[i]})
 			   				.text(function(d){return d})
+			
+			var points = svg.append("g")
+							.attr("class", "points");	
+			
 				
 			
 			render();
