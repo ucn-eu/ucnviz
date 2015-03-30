@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th style="width:150px"> from </th>
+				<th style="width:150px"> to </th>
+				<th> entry </th>
+			</tr>
+		</thead>
+		{% for entry in entries %}
+		<tr>
+			<td>{{entry.fromts}}</td>
+			<td>{{entry.tots}}</td>
+			<td>{{entry.note}}</td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+{% endblock %}

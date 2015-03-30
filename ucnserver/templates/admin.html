@@ -9,6 +9,7 @@
 						<th style="width:150px"> family name </th>
 						<th> members </th>
 						<th> devices </th>
+						<th> diary </th>
 					</tr>
 				</thead>
 				{% for family in families %}
@@ -22,6 +23,11 @@
 					<td> 	
 						{% for device in family.devices %}
 							{{device}}
+						{% endfor %}
+					</td>
+					<td>
+						{% for user in family.users %}
+							<a href="admin/calendarentries?username={{user}}">{{user}} diary </a>
 						{% endfor %}
 					</td>
 				</tr>

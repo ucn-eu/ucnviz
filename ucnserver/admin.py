@@ -69,6 +69,15 @@ def admin():
 			
 	return render_template('admin.html', families=familylist)
 	
+@admin_api.route("/viz/admin/calendarentries", methods=['GET'])
+@adminloggedin
+def calendarentries():
+	username  	= request.args.get('username') or None
+	entries = current_app.config["datadb"].fetch_calendar_entries_for_username(username)
+	if entries is not None:
+		return render_template("calendarentries.html", entries=entries)	
+	else:
+		return ""
 
 @admin_api.route("/viz/admin/web", methods=['GET'])
 @adminloggedin

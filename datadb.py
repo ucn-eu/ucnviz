@@ -665,6 +665,12 @@ class NetDB( object ):
 			return None
 		
 		return noteid
+	
+	@reconnect
+	def fetch_calendar_entries_for_username(self, username):
+		result = self.conn.execute("SELECT fromts, tots, note FROM CALENDAR where username = ?", (username,))
+		entries = [{'fromts':row[0], 'tots':row[1], 'note':row[2]} for row in result]
+		return entries
 		
 	@reconnect		
 	def insert_tag_for_host(self, host,tld,tag,fromts,tots):
