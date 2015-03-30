@@ -669,7 +669,7 @@ class NetDB( object ):
 	@reconnect
 	def fetch_calendar_entries_for_username(self, username):
 		result = self.conn.execute("SELECT fromts, tots, note FROM CALENDAR where username = ?", (username,))
-		entries = [{'fromts':row[0], 'tots':row[1], 'note':row[2]} for row in result]
+		entries = [{'fromts':date_from_ts(row[0]), 'tots':date_from_ts(row[1]), 'note':row[2]} for row in result]
 		return entries
 		
 	@reconnect		
