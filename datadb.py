@@ -61,7 +61,7 @@ class NetDB( object ):
 		mints = row[0]
 		maxts = row[1]
 		sql = "SELECT DISTINCT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
-		
+		print sql
 		try:
 			result = self.conn.execute(sql)
 		except Exception, e:

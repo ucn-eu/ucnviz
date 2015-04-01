@@ -43,6 +43,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			if (range){
 				
 				if (range.fromts < _earliest || range.tots > _latest){
+					console.log("OK - am updating everything...");
 					updatecallback([_earliest,_latest], range);
 				}else{
 					var minfrom 		= (x2.domain()[0]).getTime();
