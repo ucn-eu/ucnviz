@@ -40,49 +40,19 @@ define(['jquery','ajaxservice', 'knockout','moment', 'knockoutpb', 'flotr', 'kno
 			tagadded();
 		}),
 		
-		/* listen to a change in the overview chart */
-		_rangeListener = ko.postbox.subscribe("range", function(data) {
-			
-			if (!data)
-				return;
-		
-			
-			selectedhost(data.host);
-			fromts = data.fromts;
-			tots = data.tots;
-			mints = Math.min(mints, fromts);
-			maxts = Math.max(maxts, tots);
-			bin = calculatebin(tots-fromts);	
-			tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
-			
-			// update activity too!
-			ajaxservice.ajaxGetJson('tag/activity',{host: selectedhost(), fromts:fromts, tots:tots, bin:bin}, renderactivity);	
-			
-		}),
-		
-		
-		calculatebin = function(difference){
-		
-			var b;
-			
-			if (difference < 60 * 60){ // if range < 1 hour, minute by minute bins
-				b = 1;
+		_dispatchListener = ko.postbox.subscribe("tags_changed", function(data) {
+			if (data){
+				selectedhost(data.host);
+				fromts = data.fromts;
+				tots = data.tots;
+				mints = Math.min(mints, fromts);
+				maxts = Math.max(maxts, tots);	
+				tagparameters[0] = {host:selectedhost(), fromts:fromts, tots:tots};
+				renderactivity(data);
 			}
-			else if(difference <= (2 * 24 * 60 * 60)){ //if range is > 1hr and less than 2 days, show hourly bins
-				b = 60; //60 * 60;
-			}else if (difference < (24*60*60*7)){ //if range is > 2 days and <= 1 week
-				b = 60 * 60; //60 * 60 * 24;
-			}else{
-				b = 60 * 60 * 24;//60 * 60 * 24 * 30;
-			} 
-			
-			return b;
-		},
-		
-		
+		}),
+				
 		hosts	= ko.observableArray([]),
-		
-	
 		subtitle = ko.observable(""),
 	
 		
