@@ -34,7 +34,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		_apps = [],
 		_device_lookup = {},
 		
-		
 		_dispatch_listener = ko.postbox.subscribe("browsing_changed", function(range) {
 			
 			if (range){

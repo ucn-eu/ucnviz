@@ -16,7 +16,6 @@ define(['jquery','knockout','knockout-kendo','knockoutpb'], function($,ko){
 			}	
 		}),
 		
-		
 		_dateListener = calendardate.subscribe(function(date){
 			
 			if (date){

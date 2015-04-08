@@ -14,6 +14,7 @@ from functools import wraps
 admin_api = Blueprint('admin_api', __name__)
 logger = logging.getLogger( "ucn_logger" )
 
+
 def adminloggedin(fn):
 	@wraps(fn)
 	def wrapped(*args, **kwargs):
@@ -129,14 +130,16 @@ def overview():
 	notes  = current_app.config["datadb"].fetch_notes_for_hosts(hosts,fromts,tots)
 	tend = time.time()
 	
-	
-	values['zones'] = zones
-	values['apps'] = apps
-	values['devices'] = devices
-	values['tags'] = tags
-	values['notes'] = notes
-	values['raw'] = raw
-	return jsonify(values)
+	if values is not None:
+		values['zones'] = zones
+		values['apps'] = apps
+		values['devices'] = devices
+		values['tags'] = tags
+		values['notes'] = notes
+		values['raw'] = raw
+		return jsonify(values)
+	else:
+		return jsonify({})
 
 
 @admin_api.route("/viz/admin/web/bootstrap")

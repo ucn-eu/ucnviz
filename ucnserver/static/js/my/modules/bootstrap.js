@@ -25,6 +25,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
 			selectedhost = data;
 		}),
 		
+		
     	dispatcher = ko.postbox.subscribe("range", function(range) {
     			
     		var newmin, newmax;

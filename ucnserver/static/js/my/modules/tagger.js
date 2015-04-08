@@ -37,18 +37,16 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			}
 		}),
 		
-		_rangeListener = ko.postbox.subscribe("range", function(data) {
-					
-				if (!data){
-					return;
-				}
-				
-				selectedhost(data.host);
-    			urlsfortagging([]);
-    			fromts = data.fromts;
-    			tots = data.tots;
-    			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);	
+		_dispatchListener = ko.postbox.subscribe("tagger_changed", function(data) {
+			if (!data){
+				return;
+			}
+			fromts = data.fromts;
+    		tots = data.tots;
+			selectedhost(data.host);
+		    urlsfortagging(data.urls);			
 		}),
+		
 		
 		/*
 		 * Listen on updates on associations between tags and domains.  If an association is changes (from tags module), reload the urls for tagging
@@ -109,11 +107,6 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		
 		tagdisabled = ko.computed(function(){
 			return selectedhost() == null;
-		}),
-		
-		_subs = selectedhost.subscribe(function(item){
-			console.log("selected hots cjange");
-			console.log(selectedhost());
 		}),
 		
 		amselectedhost = function(ahost){
