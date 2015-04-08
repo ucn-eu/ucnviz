@@ -19,6 +19,8 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			if (!data){
 				urlsfortagging([]);
 				selectedhost(null);
+			}else{
+				selectedhost(data);	
 			}
 		}),
 		
@@ -38,6 +40,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		}),
 		
 		_dispatchListener = ko.postbox.subscribe("tagger_changed", function(data) {
+			
 			if (!data){
 				return;
 			}
@@ -52,7 +55,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		 * Listen on updates on associations between tags and domains.  If an association is changes (from tags module), reload the urls for tagging
 		 */
 		_domainListener = ko.postbox.subscribe("association", function(data){
-		
+			
 			ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost(), fromts:fromts, tots:tots}, updatetagdata);
 		}),
 		
@@ -101,8 +104,6 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 			showtagger.notifySubscribers();
 		},
 		
-		
-	
 		selectedhost = ko.observable(null),
 		
 		tagdisabled = ko.computed(function(){
@@ -151,6 +152,7 @@ define(['jquery','ajaxservice', 'knockout', 'moment', 'knockoutpb', 'bootstrap',
 		
 		
 		urlstagged = function(tag, data){
+			
 			//fire off an event to the tags module, which will refresh the activity chart.
 			domainstagged({tag:tag, ts:new Date().getTime()});
 			//update the current tag data!

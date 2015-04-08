@@ -1,4 +1,4 @@
-define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/tagger', 'modules/tags', 'modules/timespan', 'knockout', 'ajaxservice', 'knockoutpb'], function(module, $, calendar,cf,overlays, overview, tagger, tags, timespan, ko, ajaxservice) {
+define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'modules/overlays', 'modules/overview', 'modules/tagger', 'modules/tags', 'modules/timespan', 'knockout', 'ajaxservice', 'knockoutpb'], function(module, $, moment, calendar,cf,overlays, overview, tagger, tags, timespan, ko, ajaxservice) {
    
     var 
     	family,
@@ -40,6 +40,7 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
     		//find out if need to pull new data from server for browsing
     		
     		if (range.fromts < _earliest || range.tots > _latest){
+    			
     			ajaxservice.ajaxGetJson('overview/activity', {family:family, fromts:newmin, tots:newmax}, function(data){
     				if (data && data.keys){
 						//set the new earliest and latest
@@ -47,34 +48,44 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
 							_earliest = Math.min(_earliest, d);
 							_latest = Math.max(_latest, d);
 						});
-					
+						
 						//update all of the components!
 						cf.init(data.hosts);
 						overview.init(data);
 						overlays.init(data.zones, data.apps);
 						timespan.update(data.raw);
+						_updatetaggerdata(newmin, newmax);
     				}
-    			});
-    			
+    			});	
     		}
     		else{
     			//let browsing know that the selected range has changed (no need to pull in new data)
     			dispatch_overview(range);
-    		}	
-    		
-    		//pull in new data for tags / taggers regardless of whether new data
+    			//pull in new data for tags / taggers regardless of whether new data
+    			_updatetaggerdata(range.fromts, range.tots);
+    		}		
+    	}),
+    	
+    	
+    	_updatetaggerdata = function(fromts, tots){
     		if (selectedhost){
-				ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost, fromts:newmin, tots:newmax}, function(tagdata){
+				ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost, fromts:fromts, tots:tots}, function(tagdata){
+					tagdata.fromts=fromts;
+					tagdata.tots=tots;
+					tagdata.host=selectedhost;
 					dispatch_tagger(tagdata);
 				});
 			
-				var bin = _calculatebin(newmax-newmin);
+				var bin = _calculatebin(tots-fromts);
 				//and update the tag data as appropriate
-				ajaxservice.ajaxGetJson('tag/activity',{host:selectedhost, fromts:newmin, tots:newmax, bin:bin}, function(tagdata){	
+				ajaxservice.ajaxGetJson('tag/activity',{host:selectedhost, fromts:fromts, tots:tots, bin:bin}, function(tagdata){	
+					tagdata.fromts=fromts;
+					tagdata.tots=tots;
+					tagdata.host=selectedhost;
 					dispatch_tags(tagdata);
 				});
 			}
-    	}),
+    	},
     	
     	_calculatebin = function(difference){
 		
