@@ -34,8 +34,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		_apps = [],
 		_device_lookup = {},
 		
+
+		
 		_dispatch_listener = ko.postbox.subscribe("browsing_changed", function(range) {
-			
 			if (range){
 				var minfrom 		= (x2.domain()[0]).getTime();
 				var maxto   		= (x2.domain()[1]).getTime();

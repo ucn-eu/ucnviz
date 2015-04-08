@@ -25,7 +25,6 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
 			selectedhost = data;
 		}),
 		
-		
     	dispatcher = ko.postbox.subscribe("range", function(range) {
     			
     		var newmin, newmax;
@@ -57,7 +56,8 @@ define(['module', 'jquery', 'modules/calendar', 'modules/colours', 'modules/over
     				}
     			});
     			
-    		}else{
+    		}
+    		else{
     			//let browsing know that the selected range has changed (no need to pull in new data)
     			dispatch_overview(range);
     		}	
