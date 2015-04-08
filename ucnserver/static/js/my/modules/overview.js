@@ -26,42 +26,33 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		note       =  ko.observable({}),
 		
-		updatecallback,
-		
-		_earliest,
-		_latest,
-		
+		//updatecallback,
+
 		_notes	   = [],
 		_queries   = [],
 		_locations = [],
 		_apps = [],
 		_device_lookup = {},
 		
-		_rangeListener = ko.postbox.subscribe("range", function(range) {
-			
+		
+		_dispatch_listener = ko.postbox.subscribe("browsing_changed", function(range) {
 			
 			if (range){
+				var minfrom 		= (x2.domain()[0]).getTime();
+				var maxto   		= (x2.domain()[1]).getTime();
+				var selectedfrom 	= range.fromts * 1000;
+				var selectedto		= range.tots * 1000;
 				
-				if (range.fromts < _earliest || range.tots > _latest){
-					console.log("OK - am updating everything...");
-					updatecallback([_earliest,_latest], range);
+				if (minfrom < selectedfrom && maxto > selectedto){
+					zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
+					brushed();
 				}else{
-					var minfrom 		= (x2.domain()[0]).getTime();
-					var maxto   		= (x2.domain()[1]).getTime();
-					var selectedfrom 	= range.fromts * 1000;
-					var selectedto		= range.tots * 1000;
-				
-					if (minfrom < selectedfrom && maxto > selectedto){
-						zoom.select(".brush").call(brush.extent([new Date(range.fromts*1000), new Date(range.tots*1000)]));
-						brushed();
-					}else{
-						//zoom out!
-						d3.select(".brush").call(brush.clear());
-					}
+					//zoom out!
+					console.log("am clearing brush!!");
+					d3.select(".brush").call(brush.clear());
 				}
 			}
-		}),
-		
+		}),	
 		
 		_notesListener = ko.postbox.subscribe("notes", function(value){
 			if (value)
@@ -335,13 +326,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			data = d;
 			
 			tsdata = [];
-			_earliest = 9999999999;
-			_latest = -1;
 		
 			data.keys.forEach(function(d){
 				tsdata.push(d*1000);
-				_earliest = Math.min(_earliest, d);
-				_latest = Math.max(_latest, d);
 			});
 			
 			browsers = stack(Object.keys(data.hosts).map(function(name){
@@ -1119,7 +1106,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			
 		},
 			
-		init = function(data, cf, uc){
+		init = function(data, cf){
 			console.log("AM IN GERE!!");
 			
 			d3.select("#context").select("svg").remove();
@@ -1147,9 +1134,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 							 					.attr("transform", "translate(" + margin.left + "," + (margin.top + 10) + ")")
 							 					.attr("class", "activitykey");	
 			
-			if (uc){
-				updatecallback = uc;
-			}
+			//if (uc){
+			//	updatecallback = uc;
+			//}
 			
 			if (data && data.hosts && Object.keys(data.hosts).length > 0){
 				var hosts = Object.keys(data.hosts);

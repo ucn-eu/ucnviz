@@ -26,9 +26,9 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 				.attr("clip-path", "url(#clip)")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),	
 		
-		
-		_rangeListener = ko.postbox.subscribe("range", function(range) {
-			
+		//"browsing_changed"
+		_dispatch_listener = ko.postbox.subscribe("browsing_changed", function(range) {
+			console.log("timespan, dispatch listener change");
 			if (xscale === undefined){
 				return;
 			}
@@ -43,8 +43,7 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			xscale.domain([from, to]);
 			svg.select(".brush").call(brush.clear());
 			render();
-		}),
-		
+		}),	
 		
 		_hostListener = ko.postbox.subscribe("host", function(host) {
 			
@@ -128,7 +127,18 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			}
 		},
 		
-		 				
+		update = function(d){
+			data = d;
+			filtered = d.results;
+			
+			xscale  = d3.time.scale()
+						.domain([new Date(data.mints*1000), new Date(data.maxts*1000)])
+						.range([0,width]);
+			
+			brush.x(xscale);
+			lines = [null,null,null];
+			render();
+		},				
 		 					
 		init = function(d){
 			data = d;
@@ -189,6 +199,7 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 		
 	return {
 		init: init,
+		update: update,
 	}
 	
 });
