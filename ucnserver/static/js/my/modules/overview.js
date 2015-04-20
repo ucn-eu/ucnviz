@@ -434,7 +434,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		renderkey = function(){
 		
-			var padding = 100;
+			var padding = 200;
 		
 			var keys = hostkey.selectAll("g")
 				.data(Object.keys(data.hosts));	
