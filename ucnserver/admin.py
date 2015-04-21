@@ -18,15 +18,18 @@ logger = logging.getLogger( "ucn_logger" )
 def adminloggedin(fn):
 	@wraps(fn)
 	def wrapped(*args, **kwargs):
+		
 		if 'connect.sid' not in request.cookies:
 			return redirect("%s/ucn/auth/login" % current_app.config["BASEURL"])
 
 		cookie = urllib.unquote(request.cookies['connect.sid'])
 	
 		sessionid = "sess:%s" % cookie[2:].split(".")[0]
-	
+		print sessionid
+
 		user = json.loads(current_app.config["redis"].get(sessionid))
-	
+		
+		
 		if "passport" not in user:
 			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 		
@@ -36,12 +39,13 @@ def adminloggedin(fn):
 		db = current_app.config["mongoclient"][current_app.config["MONGODB"]]
 
 		myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
-		#print myuser
 		
-		if myuser is None:
-			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
-		if myuser['isadmin'] is False:
-			return redirect("%s/web" % current_app.config["BASEURL"])
+		
+		
+		#if myuser is None:
+		#	return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+		#if myuser['isadmin'] is False:
+		#	return redirect("%s/web" % current_app.config["BASEURL"])
 			
 		return fn(*args, **kwargs)
 	
@@ -121,7 +125,7 @@ def overview():
  
  	tstart = time.time()
  	raw = current_app.config["datadb"].fetch_browsing_for_hosts(hosts,fromts, tots)
- 	values = binned(bin, raw['mints'], raw['maxts'], raw['results'])
+ 	values = _binned(bin, raw['mints'], raw['maxts'], raw['results'])
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)
 	#t2 = time.time()
@@ -153,7 +157,7 @@ def hosts():
 def binlabel(binsize, ts):
 	return int(math.floor(ts/binsize)*binsize)
 	
-def binned(binsize, mints, maxts, result):
+def _binned(binsize, mints, maxts, result):
 	
 	if len(result) <= 0:
 		return
@@ -198,7 +202,7 @@ def hostsforfamily(family):
 	for user in usernames:
 		dresult = db[current_app.config["DEVICECOLLECTION"]].find({"username":user['username']})
 		for device in dresult:
-			devices[device['vpn_udp_ip']] = {'name':device['login'], 'type':device['type']}
+			#devices[device['vpn_udp_ip']] = {'name':device['login'], 'type':device['type']}
 			devices[device['vpn_tcp_ip']] = {'name':device['login'], 'type':device['type']}
 			#devices.append(device['vpn_udp_ip'])
 			

@@ -36,8 +36,8 @@ def loggedin(fn):
 
 		myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
 
-		if myuser is None:
-			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+		#if myuser is None:
+		#	return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 	
 		return fn(*args, **kwargs)
 	
@@ -195,13 +195,26 @@ def netdata():
 	return jsonify(netdata=netdata)
 	
 @viz_api.route("/viz/web/browsing")
+@viz_api.route("/viz/admin/web/browsing")
 @loggedin
 def browsing():
  	host = request.args.get('host')
- 	fromts = request.args.get('fromts')
- 	tots   = request.args.get('tots')
-	traffic = current_app.config["datadb"].fetch_urls_for_host(host=host, fromts=fromts, tots=tots, filters=current_app.config["blocked"])
-	return jsonify(traffic=traffic)
+ 	fromts = request.args.get('fromts') or None
+ 	tots   = request.args.get('tots') or None
+ 	
+ 	if fromts is not None:
+ 		fromts = int(fromts)
+ 		
+ 	if tots is not None:
+ 		tots = int(tots)
+ 	
+ 	print "fromts is " 
+ 	print fromts
+ 	print "tots is "
+ 	print tots
+ 		
+	traffic = current_app.config["datadb"].fetch_browsing_for_hosts([host], fromts, tots)
+	return jsonify(raw=traffic)
 	
 @viz_api.route("/viz/web/queries")
 @viz_api.route("/viz/admin/web/queries")

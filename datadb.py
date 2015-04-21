@@ -46,8 +46,27 @@ class NetDB( object ):
 		return range
 	
 	
+	def _unify(self, host):
+		modhost = host.split(".")
+		modhost[1] = '1'
+		return ".".join(modhost)
+	
+	def _deunify(self, host):
+		modhost = host.split(".")
+		modhost[1] = '2'
+		return ".".join(modhost)
+			
 	@reconnect
 	def fetch_browsing_for_hosts(self, hosts, fromts=None, tots=None):
+		#add in the 10.2 addresses if don't exist
+		unifiedhosts = []
+		
+		for host in hosts:
+			unifiedhosts.append(host)
+			unifiedhosts.append(self._deunify(host))
+		
+		hosts = list(set(unifiedhosts))
+		print hosts
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		whereclause = ""
 		
@@ -61,7 +80,7 @@ class NetDB( object ):
 		mints = row[0]
 		maxts = row[1]
 		sql = "SELECT DISTINCT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
-		print sql
+		
 		try:
 			result = self.conn.execute(sql)
 		except Exception, e:
@@ -71,7 +90,7 @@ class NetDB( object ):
 			return None
 		
 		lastrow = None
-		results = [row for row in result]
+		results = [[row[0], row[1], self._unify(row[2])] for row in result]
 		return {"mints":mints, "maxts":maxts, "results":results}
 	
 	#could perhaps simplify to return count UNIQUE top level domains seen within timerange rather than count of all
@@ -300,7 +319,10 @@ class NetDB( object ):
 	
 	@reconnect
 	def fetch_urls_for_tag(self, host, tag):
-		sql = "SELECT domain FROM tags WHERE tag = '%s' AND host = '%s'" % (tag, host)
+		
+		hostlike = ".".join(host.split(".")[-2:])
+		
+		sql = "SELECT domain FROM tags WHERE tag = '%s' AND host LIKE '%%%s'" % (tag, hostlike)
 		
 		result = self.conn.execute(sql)
 		urls = [row[0] for row in result]
@@ -354,7 +376,7 @@ class NetDB( object ):
 		tags = {}
 		
 		for row in result:
-			host = row[3]
+			host = self._unify(row[3])
 			if host not in tags:
 				tags[host] = []
 				if lasthost:
@@ -431,7 +453,11 @@ class NetDB( object ):
 			
 	@reconnect	
 	def fetch_urls_for_tagging(self, host, fromts=None, tots=None, filters=None):
-
+		
+		#hack--need to match on 10.2.0.x and 10.1.0.x
+		#so do a like on the latter part of the host
+		hostlike = ".".join(host.split(".")[-2:])
+		
 		whereclause = ""
 		
 		if fromts and tots:
@@ -448,7 +474,7 @@ class NetDB( object ):
 		#sql = "SELECT DISTINCT(u.tld), c.tldcount as requests,GROUP_CONCAT(DISTINCT(t.tag)) FROM urls u LEFT JOIN (SELECT tld, count(tld) as tldcount FROM urls WHERE ts >= %s AND ts <= %s GROUP BY tld) c ON c.tld = u.tld LEFT JOIN TAGS t ON (u.tld = t.domain OR u.domain = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld ORDER BY requests DESC" % (fromts, tots, host, whereclause)
 		
 		#..just don't count requests for now..
-		sql = "SELECT DISTINCT(u.tld), GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host = '%s' %s GROUP BY u.tld  ORDER BY u.tld" % (host, whereclause)
+		sql = "SELECT DISTINCT(u.tld), GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host LIKE '%%%s' %s GROUP BY u.tld  ORDER BY u.tld" % (hostlike, whereclause)
 		
 		result = self.conn.execute(sql)
 		urls = [{"domain":row[0], "requests":0, "tag":row[1]} for row in result]
@@ -470,7 +496,7 @@ class NetDB( object ):
 		lasthost = None
 		
 		for row in result:
-			host = row[2]
+			host = self._unify(row[2])
 			if host not in apps:
 				apps[host] = []
 				if lasthost:
@@ -497,7 +523,7 @@ class NetDB( object ):
 	def fetch_notes_for_hosts(self,hosts,fromts,tots):
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		result = self.conn.execute("SELECT host, fromts, tots, note, id, source  FROM notes WHERE host in(%s) AND fromts >= %s AND tots <= %s ORDER BY host" % (hlist,fromts,tots))
-		notes = [{'host': row[0], 'fromts': row[1], 'tots': row[2], 'note': row[3], 'id':row[4], 'source':row[5]} for row in result]
+		notes = [{'host': self._unify(row[0]), 'fromts': row[1], 'tots': row[2], 'note': row[3], 'id':row[4], 'source':row[5]} for row in result]
 		return notes
 	
 	#return foregrounded apps along with timerange that have been in foreground
@@ -889,9 +915,9 @@ class NetDB( object ):
 		#zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
 		zones = {}
 		for row in result:
-			if row[3] not in zones:
-				zones[row[3]] = []
-			zones[row[3]].append({"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]})
+			if self._unify(row[3]) not in zones:
+				zones[self._unify(row[3])] = []
+			zones[self._unify(row[3])].append({"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]})
 			
 		return zones	
 			

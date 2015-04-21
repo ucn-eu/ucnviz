@@ -7,6 +7,7 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 			
 		_latest = -1,
 		
+		currentrange			= {},
 		//dispatch events
 		
 		selectedhost        = null,
@@ -17,12 +18,18 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
     	
     	dispatch_overview	= ko.observable().publishOn("browsing_changed"),
     	
+    	//when a new host is selected, we need to pull in the raw activity data,
+    	//the urls for tagging and the tags that belong to this host
     	_hostListener = ko.postbox.subscribe("host", function(data){
-			console.log(data);
+			
 			if (!data){
 				selectedhost = null;
 			}
-			selectedhost = data;
+			else{
+				selectedhost = data;
+				_updatetaggerdata();
+				_updatetimespandata();
+			}
 		}),
 		
     	dispatcher = ko.postbox.subscribe("range", function(range) {
@@ -44,6 +51,8 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
     			ajaxservice.ajaxGetJson('overview/activity', {family:family, fromts:newmin, tots:newmax}, function(data){
     				if (data && data.keys){
 						//set the new earliest and latest
+						currentrange.fromts = newmin;
+						currentrange.tots = newmax;
 						data.keys.forEach(function(d){
 							_earliest = Math.min(_earliest, d);
 							_latest = Math.max(_latest, d);
@@ -54,20 +63,35 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 						overview.init(data);
 						overlays.init(data.zones, data.apps);
 						timespan.update(data.raw);
-						_updatetaggerdata(newmin, newmax);
+						_updatetaggerdata();
     				}
     			});	
     		}
     		else{
     			//let browsing know that the selected range has changed (no need to pull in new data)
-    			dispatch_overview(range);
+    			currentrange.fromts = range.fromts;
+    			currentrange.tots = range.tots;
+    			dispatch_overview(currentrange);
     			//pull in new data for tags / taggers regardless of whether new data
-    			_updatetaggerdata(range.fromts, range.tots);
+    			_updatetaggerdata();
     		}		
     	}),
     	
+    	_updatetimespandata = function(){
+    		if (selectedhost){
+    			console.log("about to query with currentrange");
+    			console.log(currentrange);
+    			
+    			ajaxservice.ajaxGetJson('web/browsing',{host:selectedhost, fromts:currentrange.fromts, tots:currentrange.tots}, function(data){
+					timespan.update(data.raw);
+				});
+    		}
+    	},
     	
-    	_updatetaggerdata = function(fromts, tots){
+    	_updatetaggerdata = function(){
+    		var fromts = currentrange.fromts;
+    		var tots = currentrange.tots;
+    		
     		if (selectedhost){
 				ajaxservice.ajaxGetJson('tag/urlsfortagging',{host:selectedhost, fromts:fromts, tots:tots}, function(tagdata){
 					tagdata.fromts=fromts;
@@ -135,7 +159,8 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 				
 				cf.init(data.hosts);
 				timespan.init(data.raw);
-				
+				currentrange.fromts = data.raw.mints;
+				currentrange.tots = data.raw.maxts;
 				if (data.keys && data.keys.length > 0){
 					calendar.init(new Date(data.keys.reduce(function(a,b){return Math.max(a,b)}) * 1000));
 				}else{
@@ -147,6 +172,7 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 				ko.applyBindings(overview, $("#overall")[0]);
 		
 				ajaxservice.ajaxGetJson('web/bootstrap', {family:family}, function(data){
+					
 					tags.init(cf);
 					tagger.init();
 					

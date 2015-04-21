@@ -48,7 +48,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 					brushed();
 				}else{
 					//zoom out!
-					console.log("am clearing brush!!");
+					
 					d3.select(".brush").call(brush.clear());
 				}
 			}
@@ -539,11 +539,11 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			
 			if (filters().length == 1){
 				selectedhost(filters()[0]);
-				triggerupdate(filters()[0]);
+				//triggerupdate(filters()[0]);
 			}else{
 				selectedhost(null);
+				
 			}
-			
 			redraw();
 			updatekey();
 			redrawoverlays();			
@@ -1107,7 +1107,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		},
 			
 		init = function(data, cf){
-			console.log("AM IN GERE!!");
 			
 			d3.select("#context").select("svg").remove();
 			d3.select("#zoom").select("svg").remove();

@@ -7,6 +7,8 @@ define(['jquery', 'knockout', 'knockoutpb'], function($,ko){
 		selectedhost = ko.observable().publishOn("host"),
 		
 		selectnewhost = function(host){
+			console.log("hosts,  selected new host");
+			console.log(host);
 			selectedhost(host);
 		},
 		
@@ -15,6 +17,7 @@ define(['jquery', 'knockout', 'knockoutpb'], function($,ko){
 		},
 		
 		init = function(hlist){
+			console.log("IN HOSTS INIT!");
 			//hosts(hlist);
 			//selectedhost(hosts()[0]);
 		}
