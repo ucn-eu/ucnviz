@@ -36,8 +36,8 @@ def loggedin(fn):
 
 		myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
 
-		#if myuser is None:
-		#	return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+		if myuser is None:
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 	
 		return fn(*args, **kwargs)
 	
@@ -207,11 +207,7 @@ def browsing():
  		
  	if tots is not None:
  		tots = int(tots)
- 	
- 	print "fromts is " 
- 	print fromts
- 	print "tots is "
- 	print tots
+ 
  		
 	traffic = current_app.config["datadb"].fetch_browsing_for_hosts([host], fromts, tots)
 	return jsonify(raw=traffic)

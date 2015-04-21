@@ -42,10 +42,10 @@ def adminloggedin(fn):
 		
 		
 		
-		#if myuser is None:
-		#	return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
-		#if myuser['isadmin'] is False:
-		#	return redirect("%s/web" % current_app.config["BASEURL"])
+		if myuser is None:
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+		if myuser['isadmin'] is False:
+			return redirect("%s/web" % current_app.config["BASEURL"])
 			
 		return fn(*args, **kwargs)
 	
