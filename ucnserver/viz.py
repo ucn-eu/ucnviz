@@ -208,9 +208,7 @@ def browsing():
  	if tots is not None:
  		tots = int(tots)
  
- 	print "in REST endpoint and host is"
- 	print host	
-	
+ 	
 	traffic = current_app.config["datadb"].fetch_browsing_for_hosts([host], fromts, tots)
 	return jsonify(raw=traffic)
 	
