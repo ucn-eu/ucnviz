@@ -124,7 +124,7 @@ def overview():
  		bin = 60 * 60
  
  	tstart = time.time()
- 	raw = current_app.config["datadb"].fetch_browsing_for_hosts(hosts,fromts, tots)
+ 	raw = current_app.config["datadb"].fetch_browsing_for_hosts(hosts,fromts, tots, current_app.config["blocked"])
  	values = _binned(bin, raw['mints'], raw['maxts'], raw['results'])
 	zones  = current_app.config["datadb"].fetch_zones_for_hosts(hosts,fromts, tots)
 	apps   = current_app.config["datadb"].fetch_apps_for_hosts(hosts,fromts, tots)

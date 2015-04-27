@@ -57,8 +57,11 @@ class NetDB( object ):
 		return ".".join(modhost)
 			
 	@reconnect
-	def fetch_browsing_for_hosts(self, hosts, fromts=None, tots=None):
+	def fetch_browsing_for_hosts(self, hosts, fromts=None, tots=None, filters=None):
 		#add in the 10.2 addresses if don't exist
+		print "in fetch browing and hosts are"
+		print hosts
+		
 		unifiedhosts = []
 		
 		for host in hosts:
@@ -66,7 +69,9 @@ class NetDB( object ):
 			unifiedhosts.append(self._deunify(host))
 		
 		hosts = list(set(unifiedhosts))
+		print "hosts are"
 		print hosts
+		
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		whereclause = ""
 		
@@ -74,12 +79,20 @@ class NetDB( object ):
 			whereclause = "AND (u.ts >= %d AND u.ts <= %d)" % (fromts, tots)
 		
 		
+		
 		minmaxsql = "SELECT min(u.ts), max(u.ts) from URLS u WHERE u.host IN(%s) %s" % (hlist,whereclause)
 		result = self.conn.execute(minmaxsql)
 		row = result.fetchone()
 		mints = row[0]
 		maxts = row[1]
+		
+		if filters is not None:
+			whereclause = "%s %s " % (whereclause, "AND tld NOT IN (%s)" % ",".join("'{0}'".format(w) for w in filters))
+		
 		sql = "SELECT DISTINCT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
+		
+		
+		print sql
 		
 		try:
 			result = self.conn.execute(sql)

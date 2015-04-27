@@ -33,7 +33,10 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 		}),
 		
     	dispatcher = ko.postbox.subscribe("range", function(range) {
-    			
+    		
+    		console.log("ok the range is");
+    		console.log(range);
+    		
     		var newmin, newmax;
     			
     		if (range.fromts < _earliest){
@@ -47,7 +50,7 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
     		//find out if need to pull new data from server for browsing
     		
     		if (range.fromts < _earliest || range.tots > _latest){
-    			
+    			console.log("pulling in new data from the server!!");
     			ajaxservice.ajaxGetJson('overview/activity', {family:family, fromts:newmin, tots:newmax}, function(data){
     				if (data && data.keys){
 						//set the new earliest and latest
@@ -128,28 +131,6 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 			
 			return b;
 		},
-    	/*update = function(current, selected){
-    		
-    	
-    		var newmin, newmax;
-    		
-    		currentmindate = current[0];
-    		currentmaxdate = current[1];
-    		
-    		if (selected.fromts < currentmindate){
-    			newmin	   = selected.fromts;
-    			newmax	   = newmin + 60*60*24*7;
-    		}else{
-    			newmax 	   = selected.tots;
-    			newmin     = newmax - 60*60*24*7;
-    		}
-    		
-    		ajaxservice.ajaxGetJson('overview/activity', {family:family, fromts:newmin, tots:newmax}, function(data){
-    			cf.init(data.hosts);
-    			overview.init(data);
-    			overlays.init(data.zones, data.apps);
-    		});
-    	},*/
     	
     	init = function(){
     	 	//this is passed in through require.js (see browsing.html)
@@ -161,6 +142,8 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 				timespan.init(data.raw);
 				currentrange.fromts = data.raw.mints;
 				currentrange.tots = data.raw.maxts;
+				_earliest =  data.raw.mints;
+				_latest = data.raw.maxts;
 				if (data.keys && data.keys.length > 0){
 					calendar.init(new Date(data.keys.reduce(function(a,b){return Math.max(a,b)}) * 1000));
 				}else{
