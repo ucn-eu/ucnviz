@@ -101,6 +101,7 @@ def overview():
   	devices  =  hostsforfamily(family)
  	hosts	 = devices.keys()
  	
+ 	
  	activitybins = []
  	
  	if fromts is not None:
