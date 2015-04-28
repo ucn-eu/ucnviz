@@ -59,7 +59,7 @@ class NetDB( object ):
 	@reconnect
 	def fetch_browsing_for_hosts(self, hosts, fromts=None, tots=None, filters=None):
 		#add in the 10.2 addresses if don't exist
-		print "fetching browsing for hosts"
+		
 		unifiedhosts = []
 		
 		for host in hosts:
@@ -86,7 +86,7 @@ class NetDB( object ):
 			whereclause = "%s %s " % (whereclause, "AND tld NOT IN (%s)" % ",".join("'{0}'".format(w) for w in filters))
 		
 		sql = "SELECT DISTINCT u.ts, u.tld, u.host from URLS u WHERE u.host IN (%s) %s ORDER BY u.host, u.ts ASC" % (hlist,whereclause)
-		print sql
+		
 		
 		try:
 			result = self.conn.execute(sql)

@@ -25,7 +25,7 @@ def adminloggedin(fn):
 		cookie = urllib.unquote(request.cookies['connect.sid'])
 	
 		sessionid = "sess:%s" % cookie[2:].split(".")[0]
-		print sessionid
+		
 
 		user = json.loads(current_app.config["redis"].get(sessionid))
 		
