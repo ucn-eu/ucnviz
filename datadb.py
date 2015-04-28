@@ -338,7 +338,17 @@ class NetDB( object ):
 	@reconnect
 	def fetch_tags_for_host(self, host):
 		
-		result = self.conn.execute("SELECT tag FROM tag WHERE host = ?", (host,))
+		#add in the 10.2 addresses if don't exist
+		
+		unifiedhosts = []
+		unifiedhosts.append(host)
+		unifiedhosts.append(self._deunify(host))
+		hosts = list(set(unifiedhosts))
+		
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		sql = "SELECT DISTINCT tag FROM tag WHERE host IN(%s)" % hlist
+		
+		result = self.conn.execute(sql)
 		
 		tags = [row[0] for row in result]
 		
@@ -363,6 +373,14 @@ class NetDB( object ):
 	
 	
 	def fetch_tagged_for_hosts(self, hosts, fromts=None, tots=None):
+	
+		for host in hosts:
+			unifiedhosts = []
+			unifiedhosts.append(host)
+			unifiedhosts.append(self._deunify(host))
+		
+		hosts = list(set(unifiedhosts))
+		
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 		#milliseconds
 		delta = 10000
@@ -372,8 +390,9 @@ class NetDB( object ):
 		if fromts and tots:
 			timerange = "AND (u.ts >= %s AND u.ts < %s)" % (fromts, tots)
 			
-
-		result = self.conn.execute("SELECT t.tag, u.ts, u.domain, t.host FROM TAGS t, URLS u WHERE t.host IN(%s) %s AND (t.domain = u.domain OR t.domain = u.tld) ORDER BY t.tag, u.ts ASC" % (hlist, timerange))
+		sql = "SELECT t.tag, u.ts, u.domain, t.host FROM TAGS t, URLS u WHERE t.host IN(%s) %s AND (t.domain = u.domain OR t.domain = u.tld) ORDER BY t.tag, u.ts ASC" % (hlist, timerange)
+		
+		result = self.conn.execute(sql)
 		
 		currenttag = None
 		reading = None
@@ -412,6 +431,13 @@ class NetDB( object ):
 	@reconnect
 	def fetch_tagged_for_host(self, host, fromts=None, tots=None):
 		
+		
+		unifiedhosts = []
+		unifiedhosts.append(host)
+		unifiedhosts.append(self._deunify(host))
+		hosts = list(set(unifiedhosts))
+		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
+		
 		#IF FROMTS AND TOTS ARE NONE, SET THEM TO MAX, MIN OF TIMEFRAME
 		
 		#milliseconds grouping (so two ts with a difference less than delta will be combined into one)
@@ -423,7 +449,7 @@ class NetDB( object ):
 			timerange = "AND (u.ts >= %s AND u.ts <= %s)" % (fromts, tots)
 		
 		#sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
-		sql = "SELECT t.tag, u.ts, u.tld FROM TAGS t, URLS u WHERE t.host = '%s' AND (u.domain = t.domain OR u.tld = t.domain) AND (u.ts <=  t.tots AND u.ts >= t.fromts) %s ORDER BY u.domain" % (host,timerange)
+		sql = "SELECT t.tag, u.ts, u.tld FROM TAGS t, URLS u WHERE t.host IN(%s) AND (u.domain = t.domain OR u.tld = t.domain) AND (u.ts <=  t.tots AND u.ts >= t.fromts) %s ORDER BY u.domain" % (hlist,timerange)
 		
 		result = self.conn.execute(sql)
 		
