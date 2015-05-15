@@ -94,7 +94,9 @@ def defaulttimerange(hosts):
 @loggedin
 def overview():
 	hosts   = hostsforuser().keys()
+	print hosts
 	devices = hostsforuser()
+	print devices
 	bin 	= request.args.get('bin') or None
 	fromts  = request.args.get('fromts') or None
  	tots    = request.args.get('tots') or None
