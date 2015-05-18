@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div id="classification">
+    <h1> My classification </h1>
+</div>
+
+<script data-main="{{url_for('static', filename='js/classifyapp.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
+
+{% endblock %}

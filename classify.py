@@ -75,11 +75,12 @@ class Classifier( object ):
 				r =  requests.get(url, params=payload)
 				try:
 					result = r.json()
-					print result['status']
+					print "url %s status %s" % (tld,result['status'])
 
 					if result['status'] == "OK":
 						maxscore = 0
 						label = None
+   						print result['taxonomy']
 						for classification in result['taxonomy']:
 							score = classification["score"]
 
@@ -89,8 +90,11 @@ class Classifier( object ):
 
 						if label is not None:
 							self.classify(tld=tld, success=True, classifier="alchemy", classification=label, error=None, score=maxscore)
+						else:
+							self.classify(tld=tld, success=False, classifier="alchemy", classification=None, error="no classification")
 
 					elif result['status'] == "ERROR":
+
 						if result['statusInfo'] == "daily-transaction-limit-exceeded":
 							print "limit exceeded"
 							limitexceeded = True
@@ -106,7 +110,7 @@ class Classifier( object ):
 
 		if success is True:
 			try:
-				sql = "INSERT INTO CLASSIFICATION(tld,success,classifier,score,classification) VALUES ('%s',%d,'%s',%f,'%s')" % (tld, 1, classifier, float(score), classification)
+				sql = 'INSERT INTO CLASSIFICATION(tld,success,classifier,score,classification) VALUES ("%s",%d,"%s",%f,"%s")' % (tld, 1, classifier, float(score), classification)
 				print sql
 				result = self.conn.execute(sql)
 				self.conn.commit()
