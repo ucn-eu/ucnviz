@@ -1,4 +1,4 @@
-define(['module','ajaxservice','d3'], function(module,ajaxservice,d3){
+define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,ajaxservice,d3, ko){
 	var
 
 	 	m = [20, 120, 20, 120],
@@ -8,15 +8,17 @@ define(['module','ajaxservice','d3'], function(module,ajaxservice,d3){
     root,
 		totalsize = 0,
 		extra = {},
-		tree = d3.layout.tree().size([h, w]);
+		tree = d3.layout.tree().size([h, w]),
 
-		diagonal = d3.svg.diagonal().projection(function(d) { return [d.y, d.x]; });
+		diagonal = d3.svg.diagonal().projection(function(d) { return [d.y, d.x]; }),
 
- 	  vis = d3.select("#partition").append("svg:svg")
+ 	  vis = d3.select("#tree").append("svg:svg")
     												.attr("width", w + m[1] + m[3])
     												.attr("height", h + m[0] + m[2])
   													.append("svg:g")
-    											  .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+    											  .attr("transform", "translate(" + m[3] + "," + m[0] + ")"),
+
+		nodechanged = ko.observable().publishOn("node_changed"),
 
 		init = function(){
 				host = module.config().host;
@@ -56,8 +58,14 @@ define(['module','ajaxservice','d3'], function(module,ajaxservice,d3){
 						var subtree  = node.classification.reduce(function(obj, key){
 								if (obj[key]){
 									obj[key].size += size;
-									extra[key].ts  += node.ts;
-									extra[key].urls += node.tld;
+
+									var combinedts = extra[key].ts + "," + node.ts;
+									var combinedurls = extra[key].urls +  "," + node.tld;
+
+									extra[key].ts = combinedts;
+									extra[key].urls = combinedurls;
+
+			
 									obj[key].children = obj[key].children || {}
 									return obj[key].children;
 								}else{
@@ -102,14 +110,13 @@ define(['module','ajaxservice','d3'], function(module,ajaxservice,d3){
 						}
 						return item;
 				},{});
-		}
+		},
 
-		function getextrafor(node){
-			console.log("gettimng extra for " + node.name);
-			console.log(extra[node.name]);
-		}
+		getextrafor = function(node){
+			nodechanged(extra[node.name]);
+		},
 
-		function render(source) {
+		render = function(source) {
 
 		  var duration = d3.event && d3.event.altKey ? 5000 : 500;
 		  // Compute the new tree layout.
@@ -198,10 +205,10 @@ define(['module','ajaxservice','d3'], function(module,ajaxservice,d3){
 		    d.y0 = d.y;
 		  });
 
-	}//end of render
+	},//end of render
 
 	// Toggle children.
-	function toggle(d) {
+	toggle = function(d) {
 	  if (d.children) {
 	    d._children = d.children;
 	    d.children = null;
