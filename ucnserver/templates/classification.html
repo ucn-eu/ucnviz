@@ -1,9 +1,66 @@
 {% extends "layout.html" %}
 {% block body %}
 
+<style>
+body{
+  margin-top: 0px;
+  padding-top: 0px;
+}
+.chart {
+  display: block;
+  margin: auto;
+  margin-top: 0px;
+  font-size: 11px;
+}
+
+rect {
+  stroke: #eee;
+  fill: #aaa;
+  fill-opacity: .8;
+}
+
+rect.parent {
+  cursor: pointer;
+  fill: steelblue;
+}
+
+text {
+  pointer-events: none;
+}
+
+
+.node circle {
+  cursor: pointer;
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font-size: 11px;
+}
+
+path.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+
+
+</style>
+
 <div id="classification">
-    <h1> My classification </h1>
+    <div id="partition">
+    </div>
+
 </div>
+<script>
+var require = {
+    config: {
+        'modules/classify': {host:'{{host}}'}
+    }
+};
+</script>
 
 <script data-main="{{url_for('static', filename='js/classifyapp.js')}}" src="{{url_for('static', filename='js/require/require.js')}}"></script>
 

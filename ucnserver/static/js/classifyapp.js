@@ -7,5 +7,6 @@ require.config({
 });
 
 require(['modules/classify'], function(classify) {
-  	classify.init("10.2.0.5");
+    
+    classify.init();
 });

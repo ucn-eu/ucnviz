@@ -268,7 +268,7 @@ class NetDB( object ):
 		hostlike = ".".join(host.split(".")[-2:])
 		sql = "SELECT GROUP_CONCAT(u.ts), GROUP_CONCAT(u.tld), c.classification FROM URLS u, CLASSIFICATION c WHERE host LIKE '%%%s' AND u.tld = c.tld AND c.success = 1 GROUP BY c.classification" % (hostlike);
 		result = self.conn.execute(sql)
-		data = [{"ts":row[0], "tld":row[1], "classification":row[2].split("/")}  for row in result]
+		data = [{"ts":row[0], "tld":row[1], "classification":row[2].strip().split("/")[1:]}  for row in result]
 		return data
 
 	@reconnect

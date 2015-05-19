@@ -182,7 +182,10 @@ def processes():
 @viz_api.route("/viz/admin/classify")
 #@loggedin
 def classification():
-	return render_template('classification.html')
+
+	host = request.args.get('host')
+	print "ok host is %s" % host
+	return render_template('classification.html', host=host)
 
 @viz_api.route("/viz/classify/host")
 @viz_api.route("/viz/admin/classify/host")
