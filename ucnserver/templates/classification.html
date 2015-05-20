@@ -28,6 +28,9 @@ text {
   pointer-events: none;
 }
 
+a{
+  text-decoration: underline;
+}
 
 .node circle {
   cursor: pointer;
@@ -46,12 +49,44 @@ path.link {
   stroke-width: 1.5px;
 }
 
+#title{
+  text-align: center;
+}
 
 </style>
 
 <div id="classification">
-    <div id="timeline"></div>
-    <div id="tree"></div>    
+
+   <div class="row">
+    <div class="col-md-12">
+        <div id="title">
+          <h4 data-bind="text:title"></h4>
+        </div>
+        <hr>
+      </div>
+   </div>
+
+    <div class="row">
+      <div class="col-md-12">
+          <div id="timeline"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-9">
+        <div id="tree"></div>
+      </div>
+      <div class="col-md-3">
+        <div id="summary">
+          <ul class="list-unstyled">
+          <!--ko foreach: urls-->
+            <li><a data-bind="attr:{href: $data}, text:$data"></a></li>
+          <!-- /ko -->
+          <li>
+        </div>
+      </div>
+    </div>
+
 </div>
 <script>
 var require = {

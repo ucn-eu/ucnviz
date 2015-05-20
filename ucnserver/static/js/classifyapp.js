@@ -12,7 +12,9 @@ require.config({
         }
 });
 
-require(['modules/classify', 'modules/classifytimeline'], function(classify,ctl) {
+require(['knockout','modules/classify', 'modules/classifytimeline','modules/classifysummary','modules/classifytitle'], function(ko,classify,ctl,cs,ct) {
     classify.init();
     ctl.init();
+    ko.applyBindings(cs, $("#summary")[0]);
+    ko.applyBindings(ct, $("#title")[0]);
 });

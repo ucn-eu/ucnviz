@@ -6,11 +6,11 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 
 
 		colours   = ["#3f51b5","#f44336", "#009688"],
-		margin    = {top:10, right:0, bottom:10,left:50},
-		width 	  = 900 - margin.left - margin.right,
+		margin    = {top:0, right:0, bottom:40,left:50},
+		width 	  = 1100 - margin.left - margin.right,
 		height    = 100 - margin.top - margin.bottom,
 		xscale,
-
+		xAxis,
 		svg  = d3.select("#timeline").append("svg")
 				.attr("width", width + margin.left + margin.right)
 				.attr("height", height + margin.top + margin.bottom)
@@ -18,17 +18,15 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 				.attr("clip-path", "url(#clip)")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
 
+
 		//"browsing_changed"
 		_node_listener = ko.postbox.subscribe("node_changed", function(node) {
 			if (node){
-				console.log("classify timespan, dispatch listener change");
-				console.log(node);
 				var d = node.ts.map(function(item, i){
 					return [item, node.urls[i]]
 				})
-				console.log(d);
 			}
-			//update(d);
+			update(d);
 		}),
 
 		_hostListener = ko.postbox.subscribe("host", function(host) {
@@ -54,6 +52,8 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 				.attr("stroke", "#607D8b")
 				.attr("class", function(d,i){return "datapoint id_" + i})
 
+			svg.select(".x.axis").transition().duration(1000).call(xAxis);
+
 			points.exit()
 				  .remove();
 
@@ -61,7 +61,18 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 
 
 		update = function(d){
-			xscale.domain([new Date(data.mints*1000), new Date(data.maxts*1000)]);
+			var mints = 99999999999;
+			var maxts = 0;
+
+			d.forEach(function(val){
+					mints = Math.min(mints, parseInt(val[0]));
+					maxts = Math.max(maxts, parseInt(val[0]));
+			})
+
+			console.log("max ts is " + maxts + " min ts is " + mints);
+
+			xscale.domain([new Date(mints*1000), new Date(maxts*1000)]);
+			xAxis.scale(xscale);
 			render(d);
 		},
 
@@ -69,16 +80,24 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			xscale  = d3.time.scale()
 									.range([0,width]);
 
-			d3.select("#timespan")
-				.select("svg")
+			xAxis = d3.svg.axis()
+										.orient("bottom"),
+
+
+			/*svg
 				.insert("defs", ":first-child")
 				.append("clipPath")
 				.attr("id", "clip")
 				.append("rect")
 				.attr("width", width)
-				.attr("height", height)
+				.attr("height", height)*/
 
-			var points = svg.append("g")
+		svg.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis);
+
+		var points = svg.append("g")
 							.attr("class", "points");
 
 		}

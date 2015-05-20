@@ -2,11 +2,12 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 	var
 
 	 	m = [20, 120, 20, 120],
-    w = 1280 - m[1] - m[3],
+    w = 1000 - m[1] - m[3],
     h = 550 - m[0] - m[2],
     i = 0,
     root,
 		totalsize = 0,
+		_selected = "",
 		extra = {},
 		tree = d3.layout.tree().size([h, w]),
 
@@ -43,7 +44,6 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 				 // toggle(root.children[9]);
 				 // toggle(root.children[9].children[0]);
 
-				console.log(root);
 					render(root);
 				});
 		},
@@ -65,7 +65,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 									extra[key].ts = combinedts;
 									extra[key].urls = combinedurls;
 
-			
+
 									obj[key].children = obj[key].children || {}
 									return obj[key].children;
 								}else{
@@ -113,8 +113,18 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		},
 
 		getextrafor = function(node){
-			nodechanged(extra[node.name]);
+			var details = extra[node.name]
+			details.name = node.name;
+			nodechanged(details);
 		},
+
+		nodeselected = function(node){
+			return _selected == node.name;
+		},
+
+		selectnode = function(node){
+			_selected = node.name;
+		}
 
 		render = function(source) {
 
@@ -133,11 +143,11 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		  var nodeEnter = node.enter().append("svg:g")
 		      .attr("class", "node")
 		      .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-		      .on("click", function(d) { toggle(d); render(d); getextrafor(d)});
+		      .on("click", function(d) { toggle(d);selectnode(d); render(d);  getextrafor(d);});
 
 		  nodeEnter.append("svg:circle")
 		      .attr("r", 1e-6)
-		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+		      .style("fill", function(d) { return nodeselected(d) ? "#ff0000" : d._children ? "lightsteelblue" : "#fff"; });
 
 		  nodeEnter.append("svg:text")
 		      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
@@ -153,7 +163,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 
 		  nodeUpdate.select("circle")
 		      .attr("r", 4.5)
-		      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+		      .style("fill", function(d) { return nodeselected(d) ? "#ff0000" : d._children ? "lightsteelblue" : "#fff"; });
 
 		  nodeUpdate.select("text")
 		      .style("fill-opacity", 1);
