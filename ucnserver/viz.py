@@ -180,7 +180,7 @@ def processes():
 
 @viz_api.route("/viz/classify")
 @viz_api.route("/viz/admin/classify")
-#@loggedin
+@loggedin
 def classification():
 
 	host = request.args.get('host')
