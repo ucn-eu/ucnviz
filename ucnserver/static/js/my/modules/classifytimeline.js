@@ -7,7 +7,7 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 
 		colours   = ["#3f51b5","#f44336", "#009688"],
 		margin    = {top:0, right:0, bottom:40,left:50},
-		width 	  = 1100 - margin.left - margin.right,
+		width 	  = 1300 - margin.left - margin.right,
 		height    = 100 - margin.top - margin.bottom,
 		xscale,
 		xAxis,
@@ -69,8 +69,7 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 					maxts = Math.max(maxts, parseInt(val[0]));
 			})
 
-			console.log("max ts is " + maxts + " min ts is " + mints);
-
+		
 			xscale.domain([new Date(mints*1000), new Date(maxts*1000)]);
 			xAxis.scale(xscale);
 			render(d);

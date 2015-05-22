@@ -2,7 +2,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 	var
 
 	 	m = [20, 120, 20, 120],
-    w = 1000 - m[1] - m[3],
+    w = 1200 - m[1] - m[3],
     h = 550 - m[0] - m[2],
     i = 0,
     root,
@@ -51,29 +51,12 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 				});
 		},
 
-		addchild = function(parent, key, ts, tld){
-
-			//do a union of the children ts and tlds with its parent
-			ts = ts.split(",");
-			tld = tld.split(",");
-
-			parent.size += ts.length;
-			parent.urls.concat(tld);
-			parent.ts.concat(ts);
-			parent.children = parent.children || {};
-			parent.children[key] = {name:key, size: ts.length, ts:ts, urls:tld}
-
-			nodefor[key] 	 = parent.children[key];
-			parentfor[key] = parent;
-		},
-
 		createnewparent = function(parentkey, key, ts, tld){
-
+			//will have already added tlds,size to this node
 			ts = ts.split(",");
 			tld = tld.split(",");
 
 			var parent = nodefor[parentkey];
-
 			parent.children = parent.children || {};
 			parent.children[key] = {name:key, size: ts.length, ts:ts, urls:tld}
 			parentfor[key] = parent;
@@ -82,7 +65,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 
 		createroot = function(tree, key, ts, tld){
 
-			ts = ts.split();
+			ts = ts.split(",");
 			tree[key] = {name:key, size: ts.length, ts:ts, urls:tld.split(",")}
 			nodefor[key] = tree[key];
 		},
@@ -97,6 +80,8 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 				totalsize = 0;
 				data.forEach(function(node,i){
 						var size = node.ts.split(",").length;
+						var ts = node.ts.split(",");
+						var tld = node.tld.split(",");
 
 						totalsize += size;
 
@@ -105,20 +90,13 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 						//can either be a sub of
 						node.classification.forEach(function(key, i){
 
-								var parent = parentfor[key] //if this node already has a parent
+								//var parent = parentfor[key] //if this node already has a parent
 
 								//if node has been seen before
-								var n = nodefor[key]; //global parent.
+								var n = nodefor[key];
 
-
-								if (parentfor[key] != null){ //if this node has a global parent..
-
-										addchild(n, key, node.ts, node.tld);
-								}else if (n){ //if this node has been seen before, so is root (since doesn't have parent)
-										//add size and tlds, nothing else...
-										var ts = node.ts.split();
-										var tld = node.tld.split();
-										n.size += ts.length;
+								if (n) { //if this node has been seen before.
+										n.size += size;
 										n.urls.concat(tld);
 										n.ts.concat(ts);
 								}
@@ -137,7 +115,10 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 				//});
 
 				//now need to turn all children objects into arrays for format required by d3
+				console.log(tree);
+
 				var arraytree = convertchildrentoarrays(tree);
+
 
 				return Object.keys(arraytree).map(function(key){
 					return arraytree[key];
@@ -173,18 +154,19 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 
 
 		getextrafor = function(node){
-			var details = extra[node.name]
-			details.name = node.name;
+			//var details = extra[node.name]
+			var details = {ts: node.ts, urls: node.urls, name: node.name};
 			details.percentage = Math.ceil(((node.size/totalsize)*100));
 			nodechanged(details);
 		},
 
 		nodeselected = function(node){
-			return _selected == node.name;
+
+			return _selected.name == node.name;
 		},
 
 		selectnode = function(node){
-			_selected = node.name;
+			_selected = node;
 		}
 
 		render = function(source) {
