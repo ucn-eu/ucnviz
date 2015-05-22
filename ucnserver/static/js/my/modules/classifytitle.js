@@ -6,16 +6,18 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 
     title = ko.observable("browsing"),
 
+		percentage = ko.observable("100% of all categorised browsing"),
+
     _node_listener = ko.postbox.subscribe("node_changed", function(node) {
 			if (node){
-				console.log("node name is ");
-				console.log(node.name);
-			   title(node.name);
+			  title(node.name);
+				percentage(node.percentage + "% of all categorised browsing");
 			}
 		})
 
   return{
-    title: title
+    title: title,
+		percentage: percentage
   }
 
 });

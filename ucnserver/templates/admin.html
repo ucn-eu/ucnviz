@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block body %}	
+{% block body %}
 	<div class="container">
 		<div class="jumbotron">
 			<h1> admin <small>interface</small></h1>
@@ -15,14 +15,14 @@
 				{% for family in families %}
 				<tr>
 					<td><a href="admin/web?family={{family.name}}">{{family.name}}</a></td>
-					<td> 	
+					<td>
 						{% for user in family.users %}
 							{{user}}
 						{% endfor %}
 					</td>
-					<td> 	
+					<td>
 						{% for device in family.devices %}
-							{{device}}
+							<a href="admin/classify?host={{device}}">{{device}}</a>
 						{% endfor %}
 					</td>
 					<td>

@@ -79,9 +79,6 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 				Object.keys(extra).forEach(function(key){
 						extra[key] = {ts: extra[key].ts.split(","), urls: extra[key].urls.split(",")};
 				});
-				console.log("extra are");
-				console.log(extra);
-
 
 				//now need to turn all children objects into arrays for format required by d3
 				convertchildrentoarrays(tree);
@@ -115,6 +112,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		getextrafor = function(node){
 			var details = extra[node.name]
 			details.name = node.name;
+			details.percentage = Math.ceil(((node.size/totalsize)*100));
 			nodechanged(details);
 		},
 
@@ -162,7 +160,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		      .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
 		  nodeUpdate.select("circle")
-		      .attr("r", 4.5)
+		      .attr("r", function(d) { return Math.max(3,(d.size/totalsize) * 20)})
 		      .style("fill", function(d) { return nodeselected(d) ? "#ff0000" : d._children ? "lightsteelblue" : "#fff"; });
 
 		  nodeUpdate.select("text")
