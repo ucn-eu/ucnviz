@@ -52,7 +52,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		},
 
 		addchild = function(parent, key, ts, tld){
-			console.log("adding child "  + key + " to parent " + parent.name);
+
 			//do a union of the children ts and tlds with its parent
 			ts = ts.split(",");
 			tld = tld.split(",");
@@ -68,7 +68,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		},
 
 		createnewparent = function(parentkey, key, ts, tld){
-			console.log("adding "  + key + " as child of " + parentkey);
+
 			ts = ts.split(",");
 			tld = tld.split(",");
 
@@ -81,17 +81,13 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		},
 
 		createroot = function(tree, key, ts, tld){
-			console.log("creating ROOT .."  + key);
+
 			ts = ts.split();
 			tree[key] = {name:key, size: ts.length, ts:ts, urls:tld.split(",")}
 			nodefor[key] = tree[key];
 		},
 
 		getparentfor = function(key){
-			console.log("cheking for parent for key " + key);
-			console.log("in ");
-			console.log(parent);
-
 			return parentfor[key];
 		},
 
