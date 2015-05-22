@@ -25,8 +25,8 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 				var d = node.ts.map(function(item, i){
 					return [item, node.urls[i]]
 				})
+				update(d);
 			}
-			update(d);
 		}),
 
 		_hostListener = ko.postbox.subscribe("host", function(host) {

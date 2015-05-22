@@ -11,6 +11,9 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		extra = {},
 		tree = d3.layout.tree().size([h, w]),
 
+		parentfor = {},
+		nodefor = {},
+
 		diagonal = d3.svg.diagonal().projection(function(d) { return [d.y, d.x]; }),
 
  	  vis = d3.select("#tree").append("svg:svg")
@@ -48,66 +51,130 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 				});
 		},
 
+		addchild = function(parent, key, ts, tld){
+			console.log("adding child "  + key + " to parent " + parent.name);
+			//do a union of the children ts and tlds with its parent
+			ts = ts.split(",");
+			tld = tld.split(",");
+
+			parent.size += ts.length;
+			parent.urls.concat(tld);
+			parent.ts.concat(ts);
+			parent.children = parent.children || {};
+			parent.children[key] = {name:key, size: ts.length, ts:ts, urls:tld}
+
+			nodefor[key] 	 = parent.children[key];
+			parentfor[key] = parent;
+		},
+
+		createnewparent = function(parentkey, key, ts, tld){
+			console.log("adding "  + key + " as child of " + parentkey);
+			ts = ts.split(",");
+			tld = tld.split(",");
+
+			var parent = nodefor[parentkey];
+
+			parent.children = parent.children || {};
+			parent.children[key] = {name:key, size: ts.length, ts:ts, urls:tld}
+			parentfor[key] = parent;
+			nodefor[key] 	 = parent.children[key];
+		},
+
+		createroot = function(tree, key, ts, tld){
+			console.log("creating ROOT .."  + key);
+			ts = ts.split();
+			tree[key] = {name:key, size: ts.length, ts:ts, urls:tld.split(",")}
+			nodefor[key] = tree[key];
+		},
+
+		getparentfor = function(key){
+			console.log("cheking for parent for key " + key);
+			console.log("in ");
+			console.log(parent);
+
+			return parentfor[key];
+		},
+
 		buildtree = function(data){
+
 				var tree = {};
 				totalsize = 0;
 				data.forEach(function(node,i){
 						var size = node.ts.split(",").length;
+
 						totalsize += size;
 
-						var subtree  = node.classification.reduce(function(obj, key){
-								if (obj[key]){
-									obj[key].size += size;
+						//var parent = node;
+						var lastkey;
+						//can either be a sub of
+						node.classification.forEach(function(key, i){
 
-									var combinedts = extra[key].ts + "," + node.ts;
-									var combinedurls = extra[key].urls +  "," + node.tld;
+								var parent = parentfor[key] //if this node already has a parent
 
-									extra[key].ts = combinedts;
-									extra[key].urls = combinedurls;
+								//if node has been seen before
+								var n = nodefor[key]; //global parent.
 
 
-									obj[key].children = obj[key].children || {}
-									return obj[key].children;
-								}else{
-									obj[key] = {name:key, size:size}
-									extra[key] = {ts: node.ts, urls:node.tld};
+								if (parentfor[key] != null){ //if this node has a global parent..
+
+										addchild(n, key, node.ts, node.tld);
+								}else if (n){ //if this node has been seen before, so is root (since doesn't have parent)
+										//add size and tlds, nothing else...
+										var ts = node.ts.split();
+										var tld = node.tld.split();
+										n.size += ts.length;
+										n.urls.concat(tld);
+										n.ts.concat(ts);
 								}
-								return obj;
-						},tree);
+								else if (lastkey){ //add as child to previous node if one exists
+										createnewparent(lastkey, key, node.ts, node.tld);
+								}
+								else{ //this is a brand new node
+										createroot(tree, key, node.ts, node.tld)
+								}
+								lastkey = key;
+						});
 				});
 
-				Object.keys(extra).forEach(function(key){
-						extra[key] = {ts: extra[key].ts.split(","), urls: extra[key].urls.split(",")};
-				});
+			//	Object.keys(extra).forEach(function(key){
+				//		extra[key] = {ts: extra[key].ts.split(","), urls: extra[key].urls.split(",")};
+				//});
 
 				//now need to turn all children objects into arrays for format required by d3
-				convertchildrentoarrays(tree);
+				var arraytree = convertchildrentoarrays(tree);
 
-				return Object.keys(tree).map(function(key){
-					return tree[key];
+				return Object.keys(arraytree).map(function(key){
+					return arraytree[key];
 				});
 		},
 
+
 		convertchildrentoarrays = function(tree){
-			  return Object.keys(tree).map(function(key){
-						var subtree = tree[key];
-						var item		= {name:subtree.name,size:subtree.size};
-						if (subtree.children){
-								subtree.children = Object.keys(subtree.children).map(function (key){
-									if (subtree.children[key].children){
-										return {
-											name:subtree.children[key].name,
-											size: subtree.children[key].size,
-											children: convertchildrentoarrays(subtree.children[key].children)
-										};
-									}else{
-										return subtree.children[key];
-									}
-								});
+				return Object.keys(tree).map(function(key){
+					 	//base case - if no chilren, don't do anything.
+						var node = tree[key];
+
+						if (!node.children){
+
+								return{
+									name:node.name,
+									ts: node.ts,
+									urls: node.urls,
+									size: node.size,
+							}
 						}
-						return item;
-				},{});
+
+						return {
+							name:node.name,
+							ts: node.ts,
+							urls: node.urls,
+							size: node.size,
+							children:  convertchildrentoarrays(node.children)
+						}
+
+				});
 		},
+
 
 		getextrafor = function(node){
 			var details = extra[node.name]
