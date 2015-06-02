@@ -29,7 +29,6 @@ def adminloggedin(fn):
 
 		user = json.loads(current_app.config["redis"].get(sessionid))
 
-
 		if "passport" not in user:
 			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
 
@@ -42,10 +41,10 @@ def adminloggedin(fn):
 
 
 
-		if myuser is None:
-			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
-		if myuser['isadmin'] is False:
-			return redirect("%s/web" % current_app.config["BASEURL"])
+		#if myuser is None:
+		#	return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+		#if myuser['isadmin'] is False:
+		#	return redirect("%s/web" % current_app.config["BASEURL"])
 
 		return fn(*args, **kwargs)
 

@@ -156,7 +156,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		getextrafor = function(node){
 			//var details = extra[node.name]
 			var details = {ts: node.ts, urls: node.urls, name: node.name};
-			details.percentage = Math.ceil(((node.size/totalsize)*100));
+			details.percentage = ((node.size/totalsize)*100).toFixed(2);
 			nodechanged(details);
 		},
 
@@ -196,7 +196,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 		      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
 		      .attr("dy", ".35em")
 		      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-		      .text(function(d) { return d.name + " ("  + Math.ceil(((d.size/totalsize)*100)) + ")"; })
+		      .text(function(d) { return d.name + " ("  + ((d.size/totalsize)*100).toFixed(2) + ")"; })
 		      .style("fill-opacity", 1e-6);
 
 		  // Transition nodes to their new position.
