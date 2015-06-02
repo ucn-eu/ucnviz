@@ -189,7 +189,7 @@ def classification():
 
 @viz_api.route("/viz/classify/host")
 @viz_api.route("/viz/admin/classify/host")
-#@loggedin
+@loggedin
 def classifyforhost():
 	host = request.args.get('host')
 	data = current_app.config["datadb"].fetch_classifications_for_host(host)

@@ -39,12 +39,10 @@ def adminloggedin(fn):
 
 		myuser = db[current_app.config["USERCOLLECTION"]].find_one({"_id": ObjectId(user['passport']['user'])})
 
-
-
-		#if myuser is None:
-		#	return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
-		#if myuser['isadmin'] is False:
-		#	return redirect("%s/web" % current_app.config["BASEURL"])
+		if myuser is None:
+			return redirect("%s/ucn/auth/login" %  current_app.config["BASEURL"])
+		if myuser['isadmin'] is False:
+			return redirect("%s/web" % current_app.config["BASEURL"])
 
 		return fn(*args, **kwargs)
 
