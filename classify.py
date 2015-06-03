@@ -130,8 +130,9 @@ class Classifier( object ):
 			
 		try:
 			print "translated is "
-			print result
+			print r
 			result = r.json()
+			print result
 			return ' '.join(result['text'])
 				
 		except Exception, e:
