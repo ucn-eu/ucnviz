@@ -105,8 +105,8 @@ class Classifier( object ):
 		r =  requests.get(url, params=payload)
 		
 		try:
-			print result
 			
+			print r
 			result = r.json()
 			
 			return result
