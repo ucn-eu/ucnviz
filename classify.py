@@ -79,6 +79,8 @@ class Classifier( object ):
 			
 			if result is not None:
 				if result['status'] == "OK":
+					print "result is "
+					print result
 					text = result["text"]
 					#now translate the text!
 					translated = self.translate_text(zandexkey, text)
@@ -103,7 +105,10 @@ class Classifier( object ):
 		r =  requests.get(url, params=payload)
 		
 		try:
+			print result
+			
 			result = r.json()
+			
 			return result
 			print "url %s status %s" % (tld,result['status'])
 					
@@ -124,6 +129,8 @@ class Classifier( object ):
 		r =  requests.get(url, params=payload)
 			
 		try:
+			print "translated is "
+			print result
 			result = r.json()
 			return ' '.join(result['text'])
 				
