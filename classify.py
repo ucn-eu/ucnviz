@@ -56,7 +56,7 @@ class Classifier( object ):
 
 	@reconnect
 	def fetch_to_translate(self, classifier):
-		sql = "SELECT DISTINCT(tld) FROM CLASSIFICATION WHERE classifier='%s' AND error='%s' AND success=%d LIMIT 2" % (classifier, "unsupported-text-language", 0)
+		sql = "SELECT DISTINCT(tld) FROM CLASSIFICATION WHERE classifier='%s' AND error='%s' AND success=%d" % (classifier, "unsupported-text-language", 0)
 		result = self.conn.execute(sql)
 		return [row[0] for row in result]
 
