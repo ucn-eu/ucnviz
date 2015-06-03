@@ -54,6 +54,115 @@ class Classifier( object ):
 
 		return classified
 
+	@reconnect
+	def fetch_to_translate(self, classifier):
+		sql = "SELECT DISTINCT(tld) FROM CLASSIFICATION WHERE classifier='%s' AND error='%s' AND success=%d LIMIT 2" % (classifier, "unsupported-text-language", 0)
+		result = self.conn.execute(sql)
+		return [row[0] for row in result]
+
+		
+	#this first will extract the text from the foreign language site (using the alchemy api)
+	#then it will translate the text to english (using the zandex api)
+	#then it will post this text to the alchemy keyword api
+	def translate_urls(self, alchemykey, zandexkey):
+		totranslate = self.fetch_to_translate("alchemy")
+		limitexceeded = False
+		
+		for tld in totranslate:
+			
+			print "translating %s" % tld
+			
+			if limitexceeded:
+				return
+				
+			result = self.extract_text(tld, alchemykey)
+			
+			if result is not None:
+				if result['status'] == "OK":
+					text = result["text"]
+					#now translate the text!
+					translated = self.translate_text(zandexkey, text)
+					#now categorise the text
+					self.classify_text_with_alchemy(tld, translated, alchemykey)
+					
+				elif result['status'] == "ERROR":
+					if result['statusInfo'] == "daily-transaction-limit-exceeded":
+						print "limit exceeded"
+						limitexceeded = True
+			
+		
+	def extract_text(self, tld, apikey):
+			
+		payload = {
+			'url':tld,
+			'outputMode': 'json',
+			'apikey':apikey,
+		}
+		url =  "http://access.alchemyapi.com/calls/url/URLGetText" 
+		
+		r =  requests.get(url, params=payload)
+		
+		try:
+			result = r.json()
+			return result
+			print "url %s status %s" % (tld,result['status'])
+					
+		except Exception, e:
+			print "error extracting text!"
+			print e
+			return None
+	
+	def translate_text(self, apikey, text):
+		
+		payload = {
+			'lang':'en',
+			'key':apikey,
+			'text':text
+		}
+		
+		url = "https://translate.yandex.net/api/v1.5/tr.json/translate"
+		r =  requests.get(url, params=payload)
+			
+		try:
+			result = r.json()
+			return ' '.join(result['text'])
+				
+		except Exception, e:
+			print "error extracting text!"
+			print e
+			return None	
+
+	def classify_text_with_alchemy(self, tld, text, apikey):
+		
+		payload = {
+			'text':text,
+			'outputMode': 'json',
+			'apikey':apikey,
+		}
+		
+		url = "http://access.alchemyapi.com/calls/text/TextGetRankedTaxonomy"
+		r =  requests.post(url, params=payload)
+		
+		try:
+			result = r.json()
+						
+			if result['status'] == "OK":
+				maxscore = 0
+				label = None
+				print result['taxonomy']
+				for classification in result['taxonomy']:
+					score = classification["score"]
+
+					if score > maxscore:
+						maxscore = score
+						label = classification["label"]
+
+				if label is not None:
+					self.updateclassification(tld=tld, success=True, classifier="alchemy", classification=label, score=maxscore)
+				
+		except:
+			print "oh well - error!"
+						
 	def classify_urls_with_alchemy(self, tlds, apikey):
 
 		alreadyclassified = self.fetch_classified_tlds("alchemy")
@@ -104,7 +213,18 @@ class Classifier( object ):
 					#print result
 				except:
 					print "oh well - error!"
-
+	
+	@reconnect
+	def updateclassification(self, tld, success, classifier, classification, score):
+		try:
+			sql = 'UPDATE CLASSIFICATION SET success=%d,score=%f,classification="%s" WHERE tld="%s" AND classifier="%s" ' % (1, float(score),classification,tld, classifier)
+			print sql
+			result = self.conn.execute(sql)
+			self.conn.commit()
+		except Exception, e:
+			print "error storing in database"
+			print e
+				
 	@reconnect
 	def classify(self, tld, success, classifier, classification, error=None, score=None):
 
@@ -138,4 +258,5 @@ if __name__ == "__main__":
 		blocked = [x.strip() for x in f.readlines()]
 
 	toclassify = classifier.fetch_distinct_tlds(blocked)
-	classifier.classify_urls_with_alchemy(toclassify,cfg.ALCHEMYAPI)
+	#classifier.classify_urls_with_alchemy(toclassify,cfg.ALCHEMYAPI)
+	classifier.translate_urls(cfg.ALCHEMYAPI, cfg.ZANDEXAPI)
