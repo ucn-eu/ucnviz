@@ -62,7 +62,7 @@ class Classifier( object ):
 
 		
 	#this first will extract the text from the foreign language site (using the alchemy api)
-	#then it will translate the text to english (using the zandex api)
+	#then it will translate the text to english (using the yandex api)
 	#then it will post this text to the alchemy keyword api
 	def translate_urls(self, alchemykey, zandexkey):
 		totranslate = self.fetch_to_translate("alchemy")
@@ -79,8 +79,6 @@ class Classifier( object ):
 			
 			if result is not None:
 				if result['status'] == "OK":
-					print "result is "
-					print result
 					text = result["text"]
 					#now translate the text!
 					translated = self.translate_text(zandexkey, text)
@@ -88,11 +86,14 @@ class Classifier( object ):
 					self.classify_text_with_alchemy(tld, translated, alchemykey)
 					
 				elif result['status'] == "ERROR":
+ 					print result['statusInfo']
 					if result['statusInfo'] == "daily-transaction-limit-exceeded":
 						print "limit exceeded"
 						limitexceeded = True
 			
-		
+			else:
+			   print "result is none!"
+	
 	def extract_text(self, tld, apikey):
 			
 		payload = {
@@ -105,10 +106,7 @@ class Classifier( object ):
 		r =  requests.get(url, params=payload)
 		
 		try:
-			
-			print r
 			result = r.json()
-			
 			return result
 			print "url %s status %s" % (tld,result['status'])
 					
@@ -122,17 +120,14 @@ class Classifier( object ):
 		payload = {
 			'lang':'en',
 			'key':apikey,
-			'text':text
+			'text':text[:9950] if len(text) > 9950 else text
 		}
 		
 		url = "https://translate.yandex.net/api/v1.5/tr.json/translate"
 		r =  requests.get(url, params=payload)
 			
 		try:
-			print "translated is "
-			print r
 			result = r.json()
-			print result
 			return ' '.join(result['text'])
 				
 		except Exception, e:
@@ -141,19 +136,25 @@ class Classifier( object ):
 			return None	
 
 	def classify_text_with_alchemy(self, tld, text, apikey):
-		
+		if text is None:
+		   return
+		text = text[:5000] if len(text) > 5000 else text
+	
 		payload = {
 			'text':text,
 			'outputMode': 'json',
 			'apikey':apikey,
 		}
-		
+		print "text len is "
+	        print len(text)
+		print text	
 		url = "http://access.alchemyapi.com/calls/text/TextGetRankedTaxonomy"
 		r =  requests.post(url, params=payload)
 		
 		try:
+			print "converting alchemy result"
 			result = r.json()
-						
+			print result			
 			if result['status'] == "OK":
 				maxscore = 0
 				label = None
@@ -168,8 +169,11 @@ class Classifier( object ):
 				if label is not None:
 					self.updateclassification(tld=tld, success=True, classifier="alchemy", classification=label, score=maxscore)
 				
-		except:
-			print "oh well - error!"
+		except Exception, e:
+			print "Exception ----->"
+			print r
+			print r.content
+			print e
 						
 	def classify_urls_with_alchemy(self, tlds, apikey):
 
