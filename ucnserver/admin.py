@@ -110,6 +110,8 @@ def overview():
  	#if time range is not provided, set it to the last 24 hours of recorded data
  	if tots is None or fromts is None:
  		tots 	= current_app.config["datadb"].fetch_latest_ts_for_hosts(hosts)
+		print "tots is"
+		print tots
  		if tots is None:
  			return jsonify({"keys":[], "hosts":[]})
 

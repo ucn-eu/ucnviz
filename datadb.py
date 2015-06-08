@@ -695,8 +695,8 @@ class NetDB( object ):
 		unifiedhosts = []
 
 
-		sql = "SELECT max(u.ts) FROM URLS u WHERE u.host IN (%s)" % (hlist)
-
+		sql = "SELECT max(u.ts) FROM URLS u WHERE u.host IN (%s) AND ts != ''" % (hlist)
+                print sql
 		result = self.conn.execute(sql)
 		ts = result.fetchone()
 		return ts[0]
