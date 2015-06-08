@@ -44,9 +44,9 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 
 			//update and enter
 			points
-				.attr("x1", function(d){return xscale(d[0]*1000)})
+				.attr("x1", function(d){return d[0] ? xscale(parseInt(d[0])*1000) : 0})
 				.attr("y1", height/2)
-				.attr("x2", function(d){return xscale(d[0]*1000)})
+				.attr("x2", function(d){return d[0] ? xscale(parseInt(d[0])*1000) : 0})
 				.attr("y2", height)
 				.attr("stroke-width", 1)
 				.attr("stroke", "#607D8b")
@@ -65,11 +65,16 @@ define(['jquery', 'd3', 'ajaxservice', 'knockout', 'moment', 'knockoutpb'], func
 			var maxts = 0;
 
 			d.forEach(function(val){
-					mints = Math.min(mints, parseInt(val[0]));
-					maxts = Math.max(maxts, parseInt(val[0]));
+				if (val[0]){
+				  mints = Math.min(mints, parseInt(val[0]));
+			          maxts = Math.max(maxts, parseInt(val[0]));
+				}else{
+				  console.log("timestamp conversion error:");
+			          console.log(val);	
+				}		
+
 			})
 
-		
 			xscale.domain([new Date(mints*1000), new Date(maxts*1000)]);
 			xAxis.scale(xscale);
 			render(d);
