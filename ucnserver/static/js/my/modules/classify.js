@@ -1,4 +1,4 @@
-define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,ajaxservice,d3, ko){
+define(['module','ajaxservice','d3', 'modules/dispatcher', 'knockout', 'knockoutpb'], function(module,ajaxservice,d3, dispatcher, ko){
 	var
 
 	 	m = [20, 120, 20, 120],
@@ -22,7 +22,7 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
   													.append("svg:g")
     											  .attr("transform", "translate(" + m[3] + "," + m[0] + ")"),
 
-		nodechanged = ko.observable().publishOn("node_changed"),
+		//nodechanged = ko.observable().publishOn("node_changed"),
 
 		init = function(){
 				host = module.config().host;
@@ -157,7 +157,8 @@ define(['module','ajaxservice','d3', 'knockout', 'knockoutpb'], function(module,
 			//var details = extra[node.name]
 			var details = {ts: node.ts, urls: node.urls, name: node.name};
 			details.percentage = ((node.size/totalsize)*100).toFixed(2);
-			nodechanged(details);
+			//nodechanged(details);
+			dispatcher.dispatch("node_changed", details);
 		},
 
 		nodeselected = function(node){

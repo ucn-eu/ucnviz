@@ -53,6 +53,11 @@ path.link {
   text-align: center;
 }
 
+.active{
+  font-weight: bold;
+  font-size: 130%;
+}
+
 </style>
 
 <div id="classification">
@@ -80,7 +85,7 @@ path.link {
         <div id="summary">
           <ul class="list-unstyled">
           <!--ko foreach: urls-->
-            <li data-bind="text:$data"></li>
+            <li data-bind="text:$data, css:{active: $parent.selected.indexOf($data) != -1}, click:function(){$parent.selecturl($data)}, style:{color:$parent.colorfor($data)}" ></li>
           <!-- /ko -->
           <li>
         </div>
