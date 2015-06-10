@@ -1,5 +1,6 @@
 require.config({
         baseUrl: '/static/js/my',
+	waitSeconds: 0,
         paths:{
           "knockout" : "../knockout/knockout-3.1.0",
           "knockoutpb": "../knockout/knockout-postbox",
