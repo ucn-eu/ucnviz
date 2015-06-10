@@ -94,9 +94,9 @@ def defaulttimerange(hosts):
 @loggedin
 def overview():
 	hosts   = hostsforuser().keys()
-	print hosts
+
 	devices = hostsforuser()
-	print devices
+
 	bin 	= request.args.get('bin') or None
 	fromts  = request.args.get('fromts') or None
  	tots    = request.args.get('tots') or None
@@ -180,11 +180,11 @@ def processes():
 
 @viz_api.route("/viz/classify")
 @viz_api.route("/viz/admin/classify")
-#@loggedin
+@loggedin
 def classification():
 
 	host = request.args.get('host')
-	print "ok host is %s" % host
+
 	return render_template('classification.html', host=host)
 
 @viz_api.route("/viz/classify/host")
@@ -381,8 +381,11 @@ def activity():
 		tots   = tr['tots']
 
 	#current_app.config["datadb"].connect()
+
 	activity = current_app.config["datadb"].fetch_tagged_for_host(host,fromts,tots)
+
 	tags  = current_app.config["datadb"].fetch_tags_for_host(host)
+
 	return jsonify(activity=activity, tags=tags)
 
 

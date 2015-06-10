@@ -17,7 +17,7 @@ require.config({
 		  'bean':'../flotr2/lib/bean',
 		  'flotr': '../flotr2/flotr2-amd',
         },
-        
+
         shim: {
         	"knockout"	: ['jquery'],
         	"knockout-bootstrap": ["jquery"],
@@ -30,7 +30,7 @@ require.config({
 //'async!https://maps.google.com/maps/api/js?v=3&libraries=drawing&sensor=false'
 require(['modules/bootstrap'], function(bootstrap) {
   	//console.log(requirejs.s.contexts._.config);
-  	
+
   	bootstrap.init();
-  	
+
 });

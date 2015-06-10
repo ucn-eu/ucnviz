@@ -446,6 +446,7 @@ class NetDB( object ):
 		hosts = list(set(unifiedhosts))
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
 
+
 		#IF FROMTS AND TOTS ARE NONE, SET THEM TO MAX, MIN OF TIMEFRAME
 
 		#milliseconds grouping (so two ts with a difference less than delta will be combined into one)
@@ -454,13 +455,13 @@ class NetDB( object ):
 		timerange=""
 
 		if fromts and tots:
-			timerange = "AND (u.ts >= %s AND u.ts <= %s)" % (fromts, tots)
+			timerange = "(u.ts >= %s AND u.ts <= %s)" % (fromts, tots)
 
 		#sql = "SELECT t.tag, u.ts, u.domain FROM TAGS t LEFT JOIN urls u ON ((u.domain = t.domain AND  u.ts >= t.fromts AND u.ts <=  t.tots) %s)" % (timerange)
-		sql = "SELECT t.tag, u.ts, u.tld FROM TAGS t, URLS u WHERE t.host IN(%s) AND (u.domain = t.domain OR u.tld = t.domain) AND (u.ts <=  t.tots AND u.ts >= t.fromts) %s ORDER BY u.domain" % (hlist,timerange)
+		sql = "SELECT t.tag, u.ts, u.tld FROM TAGS t, URLS u WHERE %s AND t.host IN(%s) AND (u.domain = t.domain OR u.tld = t.domain) AND (u.ts <=  t.tots AND u.ts >= t.fromts) ORDER BY u.domain" % (timerange,hlist)
+
 
 		result = self.conn.execute(sql)
-
 		currenttag = None
 		reading = None
 		readings = []
@@ -517,7 +518,9 @@ class NetDB( object ):
 		#..just don't count requests for now..
 		sql = "SELECT DISTINCT(u.tld), GROUP_CONCAT(DISTINCT(t.tag)) FROM URLS u LEFT JOIN TAGS t ON (u.tld = t.domain) AND t.host = u.host WHERE u.host LIKE '%%%s' %s GROUP BY u.tld  ORDER BY u.tld" % (hostlike, whereclause)
 
+
 		result = self.conn.execute(sql)
+
 		urls = [{"domain":row[0], "requests":0, "tag":row[1]} for row in result]
 
 		return urls
@@ -696,7 +699,7 @@ class NetDB( object ):
 
 
 		sql = "SELECT max(u.ts) FROM URLS u WHERE u.host IN (%s) AND ts != ''" % (hlist)
-                print sql
+
 		result = self.conn.execute(sql)
 		ts = result.fetchone()
 		return ts[0]

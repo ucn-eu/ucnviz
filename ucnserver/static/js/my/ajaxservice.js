@@ -1,6 +1,6 @@
 define(['jquery'], function($){
     var
-    
+
         ajaxPostJson = function(url, jsonIn, success_callback, error_callback){
             $.ajax({
                     url: url,
@@ -9,16 +9,16 @@ define(['jquery'], function($){
                     data: jsonIn,
                     dataType: 'json',
                     success: function(result){
-                        success_callback(result)    
+                        success_callback(result)
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown){
                         if (error_callback){
                             error_callback(XMLHttpRequest, textStatus, errorThrown);
-                        }       
+                        }
                     }
             });
         }
-    
+
         ajaxGetJson = function(url, jsonIn, success_callback, error_callback){
          
             $.ajax({
@@ -27,21 +27,20 @@ define(['jquery'], function($){
                     type: "GET",
                     data: jsonIn,
                     dataType: 'json',
-                    
+
                     success: function(result){
-                        success_callback(result)    
+                        success_callback(result)
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown){
                         if (error_callback){
                             error_callback(XMLHttpRequest, textStatus, errorThrown);
-                        }       
+                        }
                     }
             });
         }
-        
+
         return{
             ajaxPostJson: ajaxPostJson,
             ajaxGetJson: ajaxGetJson
         }
 });
-
