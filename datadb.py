@@ -957,12 +957,17 @@ class NetDB( object ):
 
 	@reconnect
 	def fetch_zones_for_home(self, home,fromts=None, tots=None):
-		result = self.conn.execute("SELECT z.name,z.enter,z.exit, z.host FROM ZONES z, HOUSE h WHERE h.name= ? AND h.host = z.host ORDER BY z.host, z.enter DESC", (home,))
+		result = self.conn.execute("SELECT z.name,z.enter,z.exit, z.host, z.lat, z.lng  FROM ZONES z, HOUSE h WHERE h.name= ? AND h.host = z.host ORDER BY z.host, z.enter DESC", (home,))
 		#zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
 		zones = {}
 		for row in result:
 			if row[3] not in zones:
 				zones[row[3]] = []
+			
+			name = row[0]
+			if name.strip() == "":
+				name = "%f,%f" % (row[4],row[5])
+			
 			zones[row[3]].append({"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]})
 
 		return zones
@@ -970,13 +975,16 @@ class NetDB( object ):
 	@reconnect
 	def fetch_zones_for_hosts(self, hosts,fromts=None, tots=None):
 		hlist = "%s" % (",".join("'{0}'".format(h) for h in hosts))
-		result = self.conn.execute("SELECT z.name,z.enter,z.exit, z.host FROM ZONES z WHERE z.host IN (%s) ORDER BY z.host, z.enter DESC" % (hlist))
+		result = self.conn.execute("SELECT z.name,z.enter,z.exit, z.host, z.lat, z.lng FROM ZONES z WHERE z.host IN (%s) ORDER BY z.host, z.enter DESC" % (hlist))
 		#zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
 		zones = {}
 		for row in result:
 			if self._unify(row[3]) not in zones:
 				zones[self._unify(row[3])] = []
-			zones[self._unify(row[3])].append({"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]})
+			name = row[0]
+			if name.strip() == "":
+				name = "%f,%f" % (row[4],row[5])
+			zones[self._unify(row[3])].append({"name":name, "enter":row[1], "exit":row[2]})
 
 		return zones
 
@@ -989,8 +997,12 @@ class NetDB( object ):
 #  			timerange = "AND (enter >= %s AND exit <= %s)" % (fromts, tots)
 
 
-		result = self.conn.execute("SELECT name,enter,exit FROM ZONES WHERE host = ? ORDER BY enter DESC", (host,))
-		zones = [{"name":row[0] or "unlabelled", "enter":row[1], "exit":row[2]} for row in result]
+		result = self.conn.execute("SELECT name,enter,exit,lat,lng FROM ZONES WHERE host = ? ORDER BY enter DESC", (host,))
+		name = row[0]
+		if name.strip() == "":
+			name = "%f,%f" % (row[3],row[4])
+				
+		zones = [{"name":name, "enter":row[1], "exit":row[2]} for row in result]
 
 		return zones
 

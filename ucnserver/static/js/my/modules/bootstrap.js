@@ -34,8 +34,7 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 
     	dispatcher = ko.postbox.subscribe("range", function(range) {
 
-    		console.log("ok the range is");
-    		console.log(range);
+    	
 
     		var newmin, newmax;
 
@@ -50,7 +49,7 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
     		//find out if need to pull new data from server for browsing
 
     		if (range.fromts < _earliest || range.tots > _latest){
-    			console.log("pulling in new data from the server!!");
+    			
     			ajaxservice.ajaxGetJson('overview/activity', {family:family, fromts:newmin, tots:newmax}, function(data){
     				if (data && data.keys){
 						//set the new earliest and latest
@@ -82,9 +81,7 @@ define(['module', 'jquery', 'moment','modules/calendar', 'modules/colours', 'mod
 
     	_updatetimespandata = function(){
     		if (selectedhost){
-    			console.log("about to query with currentrange");
-    			console.log(currentrange);
-
+    			
     			ajaxservice.ajaxGetJson('web/browsing',{host:selectedhost, fromts:currentrange.fromts, tots:currentrange.tots}, function(data){
 					timespan.update(data.raw);
 				});

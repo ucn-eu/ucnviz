@@ -1,8 +1,9 @@
 define(['d3'], function(d3){
 	var 
+		
 		colours = {},
 		
-		colorfactory = d3.scale.category20(),
+		colorfactory = d3.scale.category10(),
 	 	
 	 	colourfor = function(host){
 	 	

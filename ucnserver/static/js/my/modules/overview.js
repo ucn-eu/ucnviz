@@ -37,7 +37,10 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 
 		
 		_dispatch_listener = ko.postbox.subscribe("browsing_changed", function(range) {
+			
 			if (range){
+				
+			
 				var minfrom 		= (x2.domain()[0]).getTime();
 				var maxto   		= (x2.domain()[1]).getTime();
 				var selectedfrom 	= range.fromts * 1000;
@@ -127,7 +130,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 						
 		stack = d3.layout.stack()
 				.offset("zero")
-				.values(function(d) {return d.values})
+				.values(function(d) {
+					return d.values;
+				})
 				.x(function(d){return x(d.date)})
 				.y(function(d){return d.y}),
 				
@@ -137,8 +142,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		zoom,
 		hostkey,
 				
-		
-		
 		
 		deviceforhost = function(host){
 			return _device_lookup[host].name || host;
@@ -528,6 +531,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		},
 
 		updatefilters = function(host){
+			
 			var hosts = Object.keys(data.hosts);
 			var idx = filters().indexOf(host);
 			
@@ -539,11 +543,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			
 			if (filters().length == 1){
 				selectedhost(filters()[0]);
+				
 				//triggerupdate(filters()[0]);
 			}else{
-				selectedhost(null);
 				
+				selectedhost(host);	
 			}
+			
 			redraw();
 			updatekey();
 			redrawoverlays();			
@@ -678,7 +684,6 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 		
 		
 		overlaylocations = function(){
-			
 			var xrange = brush.empty() ? x2.domain() : brush.extent();
 			var from = xrange[0].getTime()/1000; 
 			var to   = xrange[1].getTime()/1000; 
@@ -704,7 +709,7 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 					
 				return;
 			}
-			
+
 		
 			var distinctlocations = [];
 			
@@ -736,10 +741,13 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 						return {enter:d['enter'], exit:d['exit'], name:d['name']};
 					})
 				};
-			}).filter(function(item){
-				return selected.indexOf(item.name) != -1;
-			})
+			});//.filter(function(item){
+				//return selected.indexOf(item.name) != -1;
+			//})
 		
+			if (locations.length == 0){
+				return;
+			}
 			
 			var loc = svg.append("g")
 						  .attr("class", "locations")
@@ -999,14 +1007,20 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			}
 			
 			//regenerate the stack values based on the hosts that are currently selected.
-			var filtered = stack(selected.map(function(name){
-				return {
-					name:name,
-					values: data.hosts[name].map(function(d, i){
-						return {date:tsdata[i], y:+d};
-					})
-				};
-			}));
+			var todisplay = selected.map(function(name){
+				if (data.hosts[name]){
+					return {
+						name:name,
+						values: data.hosts[name].map(function(d, i){
+							return {date:tsdata[i], y:+d};
+						})
+					};
+				}
+			}).filter(function(item){
+				return item != undefined;
+			});
+			
+			var filtered = stack(todisplay);
 			
 			//set the y values from 0 to recalculated max y (based on calculating each stack height)
 			y.domain([0,d3.max(filtered.map(function(host){		
@@ -1138,7 +1152,9 @@ define(['jquery','ajaxservice', 'knockout','d3', 'moment', 'd3.tip','knockoutpb'
 			//}
 			
 			if (data && data.hosts && Object.keys(data.hosts).length > 0){
+				
 				var hosts = Object.keys(data.hosts);
+				
 				_device_lookup = data.devices;
 				
 				if (cf){
